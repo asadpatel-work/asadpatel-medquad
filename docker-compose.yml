@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: medquad-backend
+    environment:
+      - APP_NAME=MedQuAD Clinical Assistant
+      - APP_VERSION=0.1.0
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - GCP_PROJECT_ID=fde-medquad-sandbox-dev
+      - VERTEX_DATASTORE_ID=medquad-corpus-ds
+      - ROOT_ORCHESTRATOR_MODEL=gemini-2.5-flash
+      - RESEARCHER_MODEL=gemini-2.5-pro
+      - REVIEWER_MODEL=gemini-3.5-flash
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: medquad-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

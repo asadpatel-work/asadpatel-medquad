@@ -1,0 +1,28 @@
+# Version control & cache
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Raw XML files (not needed inside production runtime image)
+data/medquad_raw/
+data/*.zip
+data/*.tar.gz
+
+# Terraform local state and plugins
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/.terraform.lock.hcl
+
+# Local logs and scratches
+*.log
+scratch/

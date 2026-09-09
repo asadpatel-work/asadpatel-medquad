@@ -1,0 +1,9 @@
+- remove unncessary UI elements
+- check security posture
+- check that models are being used correctly
+- some form of post-hoc conversation validation
+- automated pipeline to ingest medquad data
+- plan for scaling up
+- proper doc
+- slideshow
+- future work
