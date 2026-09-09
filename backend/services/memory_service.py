@@ -227,8 +227,39 @@ class MemoryService:
 
         return list(session_ids)
 
+    def get_all_sessions(self) -> list[SessionState]:
+        """Retrieves all full SessionState objects across memory, local disk, and GCS."""
+        session_ids = self.list_sessions()
+        sessions = []
+        for sid in session_ids:
+            s = self.get_session(sid)
+            if s:
+                sessions.append(s)
+        sessions.sort(key=lambda x: x.updated_at, reverse=True)
+        return sessions
+
+    def export_sessions_to_jsonl(self, output_path: str | Path | None = None) -> Path:
+        """Exports all sessions and turns into an auditable JSONL format."""
+        if output_path is None:
+            output_dir = Path("data/conversations")
+            output_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+            target = output_dir / f"conversations_{timestamp}.jsonl"
+        else:
+            target = Path(output_path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+
+        sessions = self.get_all_sessions()
+        with open(target, "w", encoding="utf-8") as f:
+            for s in sessions:
+                f.write(s.model_dump_json() + "\n")
+
+        logger.info("Exported %d sessions to %s", len(sessions), target)
+        return target
+
 
 # Global singleton instance
+
 _memory_service_instance: MemoryService | None = None
 
 

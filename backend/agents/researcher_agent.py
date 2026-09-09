@@ -64,8 +64,9 @@ class ResearcherAgent:
         self.search_tool = search_tool or SearchTool()
         self.clinical_db = clinical_db or ClinicalDBTool()
 
+    @staticmethod
     def _extract_active_medical_topic(
-        self, conversation_history: list[dict[str, str]] | None
+        conversation_history: list[dict[str, str]] | None,
     ) -> str | None:
         """Extracts the primary clinical entity or disease discussed in previous turns."""
         if not conversation_history:
@@ -123,7 +124,8 @@ class ResearcherAgent:
         return None
 
 
-    def _is_follow_up_query(self, query: str) -> bool:
+    @staticmethod
+    def _is_follow_up_query(query: str) -> bool:
         """Determines if the current query is anaphoric or an elliptical clinical follow-up."""
         q_lower = query.lower().strip()
         words = q_lower.split()

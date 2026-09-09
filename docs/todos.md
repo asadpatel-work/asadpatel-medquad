@@ -1,7 +1,7 @@
 - remove unncessary UI elements
 - check security posture
 - check that models are being used correctly
-- some form of post-hoc conversation validation
+- [x] some form of post-hoc conversation validation (implemented in backend/pipelines/post_hoc_validation.py, scripts/validate_conversations.py, and /api/v1/evaluations)
 - automated pipeline to ingest medquad data
 - plan for scaling up
 - proper doc

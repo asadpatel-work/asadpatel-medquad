@@ -58,5 +58,11 @@ terraform/.terraform.lock.hcl
 data/medquad_raw/
 data/*.jsonl
 data/full_medquad*
+data/conversations/
+
+# Evaluation Reports
+reports/*.json
+reports/*.md
+!reports/.gitkeep
 
 
