@@ -19,11 +19,11 @@ SERVICE_NAME = "medquad-backend"
 
 def get_token():
     try:
-        return subprocess.check_output(["gcloud", "auth", "print-access-token"], text=True).strip()
+        return subprocess.check_output(["gcloud", "auth", "application-default", "print-access-token"], text=True).strip()
     except Exception:
         pass
     try:
-        return subprocess.check_output(["gcloud", "auth", "application-default", "print-access-token"], text=True).strip()
+        return subprocess.check_output(["gcloud", "auth", "print-access-token"], text=True).strip()
     except Exception:
         pass
     import google.auth
