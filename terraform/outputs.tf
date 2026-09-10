@@ -32,3 +32,8 @@ output "discovery_engine_search_engine_id" {
   description = "Vertex AI Search / Discovery Engine Search Engine ID"
   value       = google_discovery_engine_search_engine.medquad_search.engine_id
 }
+
+output "nightly_audit_scheduler_id" {
+  description = "Cloud Scheduler Job ID for automated nightly conversation validation"
+  value       = google_cloud_scheduler_job.nightly_validation_audit.id
+}

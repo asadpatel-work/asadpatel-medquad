@@ -6,12 +6,17 @@ multi-turn interactions with in-memory caching and optional PostgreSQL persisten
 
 from __future__ import annotations
 
+import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
+from google.cloud import storage
 from pydantic import BaseModel, Field
 
+from backend.core.config import Settings
 from backend.models.schemas import AgentThoughtStep, Citation
 
 logger = logging.getLogger(__name__)
@@ -37,15 +42,6 @@ class SessionState(BaseModel):
     messages: list[ChatMessage] = Field(default_factory=list)
     active_category: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-import json
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-
-from google.cloud import storage
-
-from backend.core.config import Settings
 
 
 class MemoryService:

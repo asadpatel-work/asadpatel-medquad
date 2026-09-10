@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     export_to_cloud_trace: bool = False
     bigquery_telemetry_table: str = "capstone-506616.telemetry.agent_metrics"
 
+    # Automated Nightly Clinical Conversation Auditing
+    enable_nightly_audit_scheduler: bool = True
+    nightly_audit_hour_utc: int = 0  # 00:00 UTC (midnight)
+
 
 @lru_cache
 def get_settings() -> Settings:

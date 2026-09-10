@@ -1,10 +1,12 @@
 """FastAPI application entrypoint for MedQuAD Clinical Assistant."""
 
+import asyncio
 import logging
 import time
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -29,6 +31,39 @@ logger = logging.getLogger("backend.main")
 STATIC_DIR = Path(__file__).parent / "static"
 
 
+async def _nightly_audit_scheduler_loop() -> None:
+    """Background task executing the clinical conversation validation pipeline every night at midnight UTC."""
+    logger.info(
+        "🌙 Nightly audit scheduler active: configured for %02d:00 UTC daily.",
+        settings.nightly_audit_hour_utc,
+    )
+    while True:
+        try:
+            now = datetime.now(UTC)
+            target = now.replace(
+                hour=settings.nightly_audit_hour_utc, minute=0, second=0, microsecond=0
+            )
+            if target <= now:
+                target += timedelta(days=1)
+            sleep_seconds = (target - now).total_seconds()
+            logger.info(
+                "🌙 Nightly audit scheduler: next run scheduled in %.1f hours (at %s UTC).",
+                sleep_seconds / 3600.0,
+                target.strftime("%Y-%m-%d %H:%M:%S"),
+            )
+            await asyncio.sleep(sleep_seconds)
+
+            from backend.pipelines.post_hoc_validation import run_nightly_audit_job
+
+            await run_nightly_audit_job()
+        except asyncio.CancelledError:
+            logger.info("Nightly audit scheduler background task stopped.")
+            break
+        except Exception as e:
+            logger.error("Error in nightly audit scheduler background loop: %s", e, exc_info=True)
+            await asyncio.sleep(600)  # Wait 10 minutes on unexpected error before retrying
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan context manager for startup and shutdown hooks."""
@@ -39,7 +74,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.environment,
     )
     setup_telemetry()
+
+    audit_task = None
+    if settings.enable_nightly_audit_scheduler:
+        audit_task = asyncio.create_task(_nightly_audit_scheduler_loop())
+
     yield
+
+    if audit_task:
+        audit_task.cancel()
+        try:
+            await audit_task
+        except asyncio.CancelledError:
+            pass
+
     logger.info("Shutting down %s...", settings.app_name)
 
 

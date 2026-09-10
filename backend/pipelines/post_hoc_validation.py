@@ -12,6 +12,7 @@ Produces executive validation reports (JSON & Markdown) to power the "Quality Fl
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -143,6 +144,7 @@ class PostHocValidationPipeline:
 
     def __init__(self, memory_service: MemoryService | None = None) -> None:
         self.memory = memory_service or get_memory_service()
+        self.memory_service = self.memory
         self.citation_verifier = CitationVerifier()
         self.safe_refusal_engine = SafeRefusalEngine()
 
@@ -617,7 +619,7 @@ class PostHocValidationPipeline:
         summary: ValidationBatchSummary,
         output_dir: str | Path = "reports",
     ) -> tuple[Path, Path]:
-        """Saves JSON and Markdown validation reports to disk."""
+        """Saves JSON and Markdown validation reports to disk and GCS."""
         out_path = Path(output_dir)
         out_path.mkdir(parents=True, exist_ok=True)
         timestamp_str = summary.timestamp.strftime("%Y%m%d_%H%M%S")
@@ -625,8 +627,61 @@ class PostHocValidationPipeline:
         json_file = out_path / f"validation_report_{timestamp_str}.json"
         md_file = out_path / f"validation_report_{timestamp_str}.md"
 
-        json_file.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
-        md_file.write_text(self.generate_markdown_report(summary), encoding="utf-8")
+        json_content = summary.model_dump_json(indent=2)
+        md_content = self.generate_markdown_report(summary)
+
+        json_file.write_text(json_content, encoding="utf-8")
+        md_file.write_text(md_content, encoding="utf-8")
+
+        # Upload to Google Cloud Storage for durable archiving if configured
+        if getattr(self.memory_service, "_gcs_client", None) and getattr(self.memory_service, "_bucket_name", None):
+            try:
+                bucket = self.memory_service._gcs_client.bucket(self.memory_service._bucket_name)
+                # Archive copies
+                blob_json = bucket.blob(f"evaluations/validation_report_{timestamp_str}.json")
+                blob_json.upload_from_string(json_content, content_type="application/json")
+
+                blob_md = bucket.blob(f"evaluations/validation_report_{timestamp_str}.md")
+                blob_md.upload_from_string(md_content, content_type="text/markdown")
+
+                # Latest pointers
+                blob_latest_json = bucket.blob("evaluations/latest.json")
+                blob_latest_json.upload_from_string(json_content, content_type="application/json")
+
+                blob_latest_md = bucket.blob("evaluations/latest.md")
+                blob_latest_md.upload_from_string(md_content, content_type="text/markdown")
+
+                logger.info(
+                    "Uploaded validation reports to gs://%s/evaluations/",
+                    self.memory_service._bucket_name,
+                )
+            except Exception as e:
+                logger.warning("Failed to upload validation reports to GCS: %s", e)
 
         logger.info("Saved validation reports to %s and %s", json_file, md_file)
         return json_file, md_file
+
+
+async def run_nightly_audit_job(
+    memory_service: MemoryService | None = None,
+    output_dir: str | Path = "reports",
+) -> ValidationBatchSummary:
+    """Executes the automated nightly audit across all stored conversations."""
+    logger.info("🌙 Starting automated nightly clinical conversation audit...")
+    mem = memory_service or get_memory_service()
+    pipeline = PostHocValidationPipeline(memory_service=mem)
+
+    # Run audit in threadpool so CPU-bound validation doesn't block the async event loop
+    loop = asyncio.get_running_loop()
+    summary = await loop.run_in_executor(None, pipeline.validate_stored_sessions)
+    json_path, md_path = pipeline.save_reports(summary, output_dir=output_dir)
+
+    logger.info(
+        "🌙 Automated nightly audit completed. Pass rate: %.1f%% (%d/%d turns). Reports saved to %s, %s",
+        summary.overall_turn_pass_rate * 100,
+        summary.passed_turns,
+        summary.total_turns,
+        json_path,
+        md_path,
+    )
+    return summary

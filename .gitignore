@@ -60,9 +60,10 @@ data/*.jsonl
 data/full_medquad*
 data/conversations/
 
-# Evaluation Reports
+# Evaluation Reports & Logs
 reports/*.json
 reports/*.md
 !reports/.gitkeep
+logs/
 
 

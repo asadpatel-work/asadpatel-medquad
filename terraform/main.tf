@@ -28,6 +28,7 @@ locals {
     "cloudbuild.googleapis.com",
     "artifactregistry.googleapis.com",
     "iamcredentials.googleapis.com",
+    "cloudscheduler.googleapis.com",
   ]
 }
 
@@ -64,6 +65,8 @@ resource "google_project_iam_member" "sa_roles" {
     "roles/cloudtrace.agent",
     "roles/logging.logWriter",
     "roles/secretmanager.secretAccessor",
+    "roles/storage.objectAdmin",
+    "roles/run.invoker",
   ])
   project = var.project_id
   role    = each.key
@@ -300,5 +303,40 @@ resource "google_cloud_run_v2_service_iam_member" "frontend_invoker" {
   name     = google_cloud_run_v2_service.frontend.name
   role     = "roles/run.invoker"
   member   = each.key
+}
+
+# 7. Cloud Scheduler: Automated Nightly Clinical Conversation Audit
+resource "google_cloud_scheduler_job" "nightly_validation_audit" {
+  name             = "medquad-nightly-validation-audit"
+  description      = "Executes post-hoc clinical conversation audit pipeline across stored sessions every night at midnight UTC"
+  schedule         = "0 0 * * *"
+  time_zone        = "Etc/UTC"
+  attempt_deadline = "600s"
+
+  http_target {
+    http_method = "POST"
+    uri         = "${google_cloud_run_v2_service.backend.uri}/api/v1/evaluations/validate"
+    body        = base64encode("{\"min_faithfulness\": 3.5, \"min_relevance\": 3.5}")
+    headers = {
+      "Content-Type" = "application/json"
+    }
+
+    oidc_token {
+      service_account_email = google_service_account.runtime_sa.email
+      audience              = google_cloud_run_v2_service.backend.uri
+    }
+  }
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "10s"
+    max_backoff_duration = "300s"
+  }
+
+  depends_on = [
+    google_cloud_run_v2_service.backend,
+    google_project_service.apis,
+    google_cloud_run_v2_service_iam_member.backend_invoker,
+  ]
 }
 
