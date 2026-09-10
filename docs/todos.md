@@ -1,7 +1,7 @@
 - remove unncessary UI elements
 - check security posture
 - check that models are being used correctly
-- [x] some form of post-hoc conversation validation (implemented in backend/pipelines/post_hoc_validation.py, scripts/validate_conversations.py, and /api/v1/evaluations)
+- [x] post-hoc conversation validation & automated nightly audit pipeline (implemented in `backend/pipelines/post_hoc_validation.py`, Cloud Scheduler in `terraform/main.tf`, in-process background scheduler loop in `backend/main.py`, CLI `scripts/validate_conversations.py`, and `scripts/run_nightly_audit.sh`)
 - automated pipeline to ingest medquad data
 - plan for scaling up
 - proper doc
