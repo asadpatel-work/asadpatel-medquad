@@ -1,8 +1,9 @@
 """Configuration management for MedQuAD Clinical Assistant."""
 
 from functools import lru_cache
+from typing import Any
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +23,37 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
+
+    # Security & CORS
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: [
+            "https://medquad-frontend-dhwfxdn3vq-uc.a.run.app",
+            "https://medquad-backend-dhwfxdn3vq-uc.a.run.app",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+        ],
+        validation_alias=AliasChoices("CORS_ALLOWED_ORIGINS", "ALLOWED_ORIGINS"),
+    )
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # API Keys & Auth
     gemini_api_key: str = Field(default="", validation_alias="GEMINI_API_KEY")

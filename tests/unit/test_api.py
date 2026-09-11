@@ -19,6 +19,31 @@ async def test_health_check():
 
 
 @pytest.mark.asyncio
+async def test_cors_policy():
+    """Verify that CORS headers are strictly restricted to authorized origins."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Authorized origin
+        allowed_res = await client.get(
+            "/healthz",
+            headers={"Origin": "https://medquad-frontend-dhwfxdn3vq-uc.a.run.app"},
+        )
+        assert allowed_res.status_code == 200
+        assert (
+            allowed_res.headers.get("access-control-allow-origin")
+            == "https://medquad-frontend-dhwfxdn3vq-uc.a.run.app"
+        )
+        assert allowed_res.headers.get("access-control-allow-credentials") == "true"
+
+        # Unauthorized origin
+        blocked_res = await client.get(
+            "/healthz",
+            headers={"Origin": "https://malicious-attacker.com"},
+        )
+        assert blocked_res.status_code == 200
+        assert "access-control-allow-origin" not in blocked_res.headers
+
+
+@pytest.mark.asyncio
 async def test_chat_endpoint_sync():
     """Verify synchronous chat endpoint generates response with citations and trace."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
