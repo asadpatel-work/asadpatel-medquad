@@ -1,5 +1,5 @@
 - remove unncessary UI elements
-- check security posture
+- [x] check security posture (audited defense-in-depth model, Cloud Armor L7 WAF vs Model Armor L8 AI guardrails, IAM least-privilege review, tightened CORS origins and method enforcement in `backend/main.py` and `backend/core/config.py`)
 - check that models are being used correctly
 - [x] post-hoc conversation validation & automated nightly audit pipeline (implemented in `backend/pipelines/post_hoc_validation.py`, Cloud Scheduler in `terraform/main.tf`, in-process background scheduler loop in `backend/main.py`, CLI `scripts/validate_conversations.py`, and `scripts/run_nightly_audit.sh`)
 - automated pipeline to ingest medquad data
