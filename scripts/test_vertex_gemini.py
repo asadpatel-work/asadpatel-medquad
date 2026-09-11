@@ -1,5 +1,5 @@
 import asyncio
-import os
+
 from google import genai
 
 client = genai.Client(vertexai=True, project="capstone-506616", location="us-central1")

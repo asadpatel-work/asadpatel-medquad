@@ -1,0 +1,1407 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MedQuAD Clinical Assistant",
+    "description": "Multi-Agent Clinical Assistant over NIH MedQuAD Knowledge Grounding Corpus",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Returns application health and environment metadata.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Returns application health and environment metadata.",
+        "operationId": "health_check_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Chat Endpoint",
+        "description": "Handles clinician conversational queries via synchronous JSON or SSE streaming.",
+        "operationId": "chat_endpoint_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "List Sessions",
+        "description": "Lists all consultation sessions with metadata and previews.",
+        "operationId": "list_sessions_api_v1_sessions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Sessions Api V1 Sessions Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create Session",
+        "description": "Creates a new conversational clinical session.",
+        "operationId": "create_session_api_v1_sessions_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Session Api V1 Sessions Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session",
+        "description": "Retrieves session history and context.",
+        "operationId": "get_session_api_v1_sessions__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Session Api V1 Sessions  Session Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete Session",
+        "description": "Deletes active session and clears working memory.",
+        "operationId": "delete_session_api_v1_sessions__session_id__delete",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Delete Session Api V1 Sessions  Session Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/feedback": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "Submit Feedback",
+        "description": "Records clinician feedback on assistant responses.",
+        "operationId": "submit_feedback_api_v1_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/feedback/metrics": {
+      "get": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "Get Feedback Metrics",
+        "description": "Returns aggregated satisfaction metrics.",
+        "operationId": "get_feedback_metrics_api_v1_feedback_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Feedback Metrics Api V1 Feedback Metrics Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/stats": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Get Telemetry Stats",
+        "description": "Returns aggregated query counts, latency averages, total estimated cost, and refusal rates.",
+        "operationId": "get_telemetry_stats_api_v1_telemetry_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Telemetry Stats Api V1 Telemetry Stats Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/records": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Get Telemetry Records",
+        "description": "Returns recent query execution records for real-time dashboard observability.",
+        "operationId": "get_telemetry_records_api_v1_telemetry_records_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Telemetry Records Api V1 Telemetry Records Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/validate": {
+      "post": {
+        "tags": [
+          "Evaluations"
+        ],
+        "summary": "Validate Conversations",
+        "description": "Runs the post-hoc clinical conversation validation pipeline across stored sessions.",
+        "operationId": "validate_conversations_api_v1_evaluations_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ValidateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationBatchSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/reports/latest": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "summary": "Get Latest Report",
+        "description": "Retrieves the most recent validation report summary and markdown content.",
+        "operationId": "get_latest_report_api_v1_evaluations_reports_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Latest Report Api V1 Evaluations Reports Latest Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/export": {
+      "post": {
+        "tags": [
+          "Evaluations"
+        ],
+        "summary": "Export Conversations",
+        "description": "Exports all stored conversations to an auditable JSONL file.",
+        "operationId": "export_conversations_api_v1_evaluations_export_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Export Conversations Api V1 Evaluations Export Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ingestion/run": {
+      "post": {
+        "tags": [
+          "Ingestion"
+        ],
+        "summary": "Trigger Ingestion",
+        "description": "Executes the automated MedQuAD corpus ingestion and Vertex AI grounding pipeline.",
+        "operationId": "trigger_ingestion_api_v1_ingestion_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/IngestRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ingestion/status": {
+      "get": {
+        "tags": [
+          "Ingestion"
+        ],
+        "summary": "Get Ingestion Status",
+        "description": "Returns local and cloud grounding corpus metadata.",
+        "operationId": "get_ingestion_status_api_v1_ingestion_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Ingestion Status Api V1 Ingestion Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentThoughtStep": {
+        "properties": {
+          "agent_name": {
+            "type": "string",
+            "title": "Agent Name"
+          },
+          "step_type": {
+            "type": "string",
+            "title": "Step Type",
+            "default": "reasoning"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "thought": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thought"
+          },
+          "observation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observation"
+          },
+          "tool_called": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Called"
+          },
+          "tool_input": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Input"
+          },
+          "tool_output_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Output Summary"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_name"
+        ],
+        "title": "AgentThoughtStep",
+        "description": "Intermediate reasoning step emitted by the multi-agent system."
+      },
+      "ChatRequest": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Optional persistent session identifier"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Natural language clinical research query"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query",
+            "description": "Alias for message"
+          },
+          "stream": {
+            "type": "boolean",
+            "title": "Stream",
+            "description": "Whether to stream response tokens via SSE",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "ChatRequest",
+        "description": "Incoming user chat query."
+      },
+      "ChatResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "response": {
+            "type": "string",
+            "title": "Response"
+          },
+          "safe_refusal": {
+            "type": "boolean",
+            "title": "Safe Refusal",
+            "description": "True if query triggered Safe Refusal guardrails",
+            "default": false
+          },
+          "is_refusal": {
+            "type": "boolean",
+            "title": "Is Refusal",
+            "description": "Alias for safe_refusal",
+            "default": false
+          },
+          "is_grounded": {
+            "type": "boolean",
+            "title": "Is Grounded",
+            "description": "True if answer is backed by retrieved citations",
+            "default": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/MedicalCategory",
+            "default": "General Medicine"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "thought_steps": {
+            "items": {
+              "$ref": "#/components/schemas/AgentThoughtStep"
+            },
+            "type": "array",
+            "title": "Thought Steps"
+          },
+          "reasoning_trace": {
+            "items": {
+              "$ref": "#/components/schemas/AgentThoughtStep"
+            },
+            "type": "array",
+            "title": "Reasoning Trace"
+          },
+          "latency_ms": {
+            "type": "number",
+            "title": "Latency Ms",
+            "description": "End-to-end execution latency in milliseconds",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "response"
+        ],
+        "title": "ChatResponse",
+        "description": "Standardized response from the MedQuAD Clinical Assistant."
+      },
+      "Citation": {
+        "properties": {
+          "citation_id": {
+            "type": "integer",
+            "title": "Citation Id",
+            "description": "Sequential citation index, e.g. 1 for [1]"
+          },
+          "doc_id": {
+            "type": "string",
+            "title": "Doc Id",
+            "description": "NIH MedQuAD document identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Document title or clinical question"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "description": "Authoritative NIH URL link"
+          },
+          "authoritative_org": {
+            "type": "string",
+            "title": "Authoritative Org",
+            "description": "Publishing institute (e.g. NCI, NHLBI, CDC)",
+            "default": "NIH"
+          },
+          "snippet": {
+            "type": "string",
+            "title": "Snippet",
+            "description": "Grounding text snippet referenced"
+          },
+          "relevance_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Relevance Score",
+            "description": "Confidence/similarity score",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "citation_id",
+          "doc_id",
+          "title",
+          "source_url",
+          "snippet"
+        ],
+        "title": "Citation",
+        "description": "Reference citation linking grounded text to MedQuAD source chunk."
+      },
+      "FailureReason": {
+        "type": "string",
+        "enum": [
+          "CITATION_MISSING",
+          "PHANTOM_CITATION",
+          "EMPTY_CITATION_SNIPPET",
+          "UNGROUNDED_CLAIM",
+          "SAFETY_POLICY_VIOLATION",
+          "FALSE_REFUSAL",
+          "CONTEXT_DRIFT",
+          "PRESCRIPTIVE_LANGUAGE",
+          "LOW_FAITHFULNESS",
+          "LOW_RELEVANCE"
+        ],
+        "title": "FailureReason",
+        "description": "Categorized root causes for clinical conversation failures."
+      },
+      "FeedbackRequest": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Rating",
+            "description": "+1 for helpful, -1 for unhelpful"
+          },
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "rating"
+        ],
+        "title": "FeedbackRequest",
+        "description": "Clinician feedback submission."
+      },
+      "FeedbackResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "recorded"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id"
+        ],
+        "title": "FeedbackResponse",
+        "description": "Feedback acknowledgment response."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "healthy"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "environment"
+        ],
+        "title": "HealthResponse",
+        "description": "Service health status."
+      },
+      "IngestRequest": {
+        "properties": {
+          "raw_dir": {
+            "type": "string",
+            "title": "Raw Dir",
+            "default": "data/medquad_raw"
+          },
+          "sync_vertex": {
+            "type": "boolean",
+            "title": "Sync Vertex",
+            "description": "Whether to trigger Vertex AI Search import",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "IngestRequest"
+      },
+      "IngestionSummary": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "completed"
+          },
+          "total_raw_files_scanned": {
+            "type": "integer",
+            "title": "Total Raw Files Scanned",
+            "default": 0
+          },
+          "total_qa_pairs_extracted": {
+            "type": "integer",
+            "title": "Total Qa Pairs Extracted",
+            "default": 0
+          },
+          "total_chunks_generated": {
+            "type": "integer",
+            "title": "Total Chunks Generated",
+            "default": 0
+          },
+          "gcs_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gcs Uri"
+          },
+          "datastore_id": {
+            "type": "string",
+            "title": "Datastore Id",
+            "default": ""
+          },
+          "discovery_engine_op": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovery Engine Op"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "title": "Duration Seconds",
+            "default": 0.0
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "title": "IngestionSummary",
+        "description": "Execution metrics and audit summary for the ingestion pipeline."
+      },
+      "MedicalCategory": {
+        "type": "string",
+        "enum": [
+          "General Medicine",
+          "Oncology",
+          "Cardiology",
+          "Infectious Disease",
+          "Neurology",
+          "Endocrinology",
+          "Pulmonology",
+          "Pediatrics",
+          "Unknown"
+        ],
+        "title": "MedicalCategory",
+        "description": "Supported clinical domain categories."
+      },
+      "SessionValidationResult": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ValidationStatus"
+          },
+          "turns_evaluated": {
+            "type": "integer",
+            "title": "Turns Evaluated"
+          },
+          "passed_turns": {
+            "type": "integer",
+            "title": "Passed Turns"
+          },
+          "warning_turns": {
+            "type": "integer",
+            "title": "Warning Turns"
+          },
+          "failed_turns": {
+            "type": "integer",
+            "title": "Failed Turns"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/TurnValidationResult"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "active_topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Topic"
+          },
+          "session_pass_rate": {
+            "type": "number",
+            "title": "Session Pass Rate"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "status",
+          "turns_evaluated",
+          "passed_turns",
+          "warning_turns",
+          "failed_turns",
+          "session_pass_rate"
+        ],
+        "title": "SessionValidationResult",
+        "description": "Validation outcome for a complete multi-turn consultation session."
+      },
+      "TurnValidationResult": {
+        "properties": {
+          "turn_index": {
+            "type": "integer",
+            "title": "Turn Index"
+          },
+          "user_query": {
+            "type": "string",
+            "title": "User Query"
+          },
+          "assistant_response_preview": {
+            "type": "string",
+            "title": "Assistant Response Preview"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ValidationStatus"
+          },
+          "faithfulness_score": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Faithfulness Score"
+          },
+          "relevance_score": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Relevance Score"
+          },
+          "citation_integrity_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Citation Integrity Ratio"
+          },
+          "citations_count": {
+            "type": "integer",
+            "title": "Citations Count"
+          },
+          "safe_refusal_compliant": {
+            "type": "boolean",
+            "title": "Safe Refusal Compliant"
+          },
+          "context_consistent": {
+            "type": "boolean",
+            "title": "Context Consistent"
+          },
+          "active_condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Condition"
+          },
+          "failure_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/FailureReason"
+            },
+            "type": "array",
+            "title": "Failure Reasons"
+          },
+          "failure_details": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failure Details"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "clinician_rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinician Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn_index",
+          "user_query",
+          "assistant_response_preview",
+          "status",
+          "faithfulness_score",
+          "relevance_score",
+          "citation_integrity_ratio",
+          "citations_count",
+          "safe_refusal_compliant",
+          "context_consistent"
+        ],
+        "title": "TurnValidationResult",
+        "description": "Validation outcome for a single user-assistant exchange."
+      },
+      "ValidateRequest": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "min_faithfulness": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Min Faithfulness",
+            "default": 3.5
+          },
+          "min_relevance": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Min Relevance",
+            "default": 3.5
+          }
+        },
+        "type": "object",
+        "title": "ValidateRequest"
+      },
+      "ValidationBatchSummary": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "total_sessions": {
+            "type": "integer",
+            "title": "Total Sessions"
+          },
+          "total_turns": {
+            "type": "integer",
+            "title": "Total Turns"
+          },
+          "passed_turns": {
+            "type": "integer",
+            "title": "Passed Turns"
+          },
+          "warning_turns": {
+            "type": "integer",
+            "title": "Warning Turns"
+          },
+          "failed_turns": {
+            "type": "integer",
+            "title": "Failed Turns"
+          },
+          "overall_turn_pass_rate": {
+            "type": "number",
+            "title": "Overall Turn Pass Rate"
+          },
+          "overall_session_pass_rate": {
+            "type": "number",
+            "title": "Overall Session Pass Rate"
+          },
+          "avg_faithfulness_score": {
+            "type": "number",
+            "title": "Avg Faithfulness Score"
+          },
+          "avg_relevance_score": {
+            "type": "number",
+            "title": "Avg Relevance Score"
+          },
+          "citation_integrity_rate": {
+            "type": "number",
+            "title": "Citation Integrity Rate"
+          },
+          "safe_refusal_compliance_rate": {
+            "type": "number",
+            "title": "Safe Refusal Compliance Rate"
+          },
+          "multi_turn_consistency_rate": {
+            "type": "number",
+            "title": "Multi Turn Consistency Rate"
+          },
+          "flagged_sessions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flagged Sessions"
+          },
+          "common_failure_modes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Common Failure Modes"
+          },
+          "quality_flywheel_insights": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quality Flywheel Insights"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionValidationResult"
+            },
+            "type": "array",
+            "title": "Sessions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_sessions",
+          "total_turns",
+          "passed_turns",
+          "warning_turns",
+          "failed_turns",
+          "overall_turn_pass_rate",
+          "overall_session_pass_rate",
+          "avg_faithfulness_score",
+          "avg_relevance_score",
+          "citation_integrity_rate",
+          "safe_refusal_compliance_rate",
+          "multi_turn_consistency_rate"
+        ],
+        "title": "ValidationBatchSummary",
+        "description": "Aggregated validation statistics and Quality Flywheel insights across a batch of sessions."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValidationStatus": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "WARNING",
+          "FAIL"
+        ],
+        "title": "ValidationStatus",
+        "description": "Overall compliance status for a conversation turn or session."
+      }
+    }
+  }
+}

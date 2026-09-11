@@ -13,7 +13,6 @@ import base64
 import glob
 import json
 import logging
-import os
 import re
 import shutil
 import sys
@@ -162,7 +161,7 @@ def parse_xml_file(file_path: str | Path) -> list[MedQuADRecord]:
     default_cat = FOLDER_DEFAULT_CATEGORY.get(parent_folder, "General Medicine")
 
     try:
-        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        with open(file_path, encoding="utf-8", errors="replace") as f:
             content = f.read()
         root = ET.fromstring(content)
     except Exception as e:

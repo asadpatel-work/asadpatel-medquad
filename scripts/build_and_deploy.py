@@ -2,13 +2,13 @@
 """Build container image via Cloud Build REST API, then update Cloud Run."""
 
 import io
-import json
 import os
 import subprocess
 import sys
 import tarfile
 import time
 from pathlib import Path
+
 import requests
 
 PROJECT_ID = "capstone-506616"

@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
 import requests
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -58,7 +59,7 @@ def get_access_token() -> str:
         return credentials.token
     except Exception as e:
         logger.error("Could not obtain Google Cloud access token: %s", e)
-        raise RuntimeError("Authentication failed. Please run 'gcloud auth login' or provide credentials.")
+        raise RuntimeError("Authentication failed. Please run 'gcloud auth login' or provide credentials.") from e
 
 
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob: str) -> str:

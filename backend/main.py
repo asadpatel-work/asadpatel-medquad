@@ -18,6 +18,7 @@ from backend.api.routes.chat import router as chat_router
 from backend.api.routes.evaluations import router as evaluations_router
 from backend.api.routes.feedback import router as feedback_router
 from backend.api.routes.health import router as health_router
+from backend.api.routes.ingestion import router as ingestion_router
 from backend.api.routes.sessions import router as sessions_router
 from backend.api.routes.telemetry import router as telemetry_router
 from backend.core.config import get_settings
@@ -144,6 +145,7 @@ app.include_router(sessions_router)
 app.include_router(feedback_router)
 app.include_router(telemetry_router)
 app.include_router(evaluations_router)
+app.include_router(ingestion_router)
 
 # Mount Static Files & UI Root
 STATIC_DIR.mkdir(parents=True, exist_ok=True)

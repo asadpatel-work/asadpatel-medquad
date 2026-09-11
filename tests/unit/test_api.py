@@ -103,3 +103,21 @@ async def test_feedback_submission():
         metrics = metrics_res.json()
         assert metrics["total_feedback"] >= 1
         assert metrics["positive"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_ingestion_endpoints():
+    """Verify ingestion status and runner endpoints."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Status endpoint
+        status_res = await client.get("/api/v1/ingestion/status")
+        assert status_res.status_code == 200
+        data = status_res.json()
+        assert "raw_dir_exists" in data
+
+        # Non-existent directory returns 404
+        fail_res = await client.post(
+            "/api/v1/ingestion/run",
+            json={"raw_dir": "data/non_existent_directory"},
+        )
+        assert fail_res.status_code == 404

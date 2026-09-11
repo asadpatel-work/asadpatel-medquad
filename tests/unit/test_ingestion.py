@@ -1,5 +1,7 @@
 """Unit tests for MedQuAD ingestion and chunking logic."""
 
+import json
+
 from scripts.ingest_medquad import (
     chunk_text,
     estimate_token_count,
@@ -90,3 +92,36 @@ def test_estimate_token_count():
     text = "This is a clinical query with ten words in total here."
     count = estimate_token_count(text)
     assert count >= 10
+
+
+def test_medquad_ingestion_pipeline_chunking_and_export(tmp_path):
+    """Verify that MedQuADIngestionPipeline parses XML, chunks records, and exports Discovery Engine JSONL."""
+    from backend.pipelines.data_ingestion import MedQuADIngestionPipeline
+
+    pipeline = MedQuADIngestionPipeline()
+
+    # Create temporary XML file
+    xml_file = tmp_path / "test_medquad.xml"
+    xml_file.write_text(SAMPLE_XML, encoding="utf-8")
+
+    records = pipeline.parse_xml_file(xml_file)
+    assert len(records) == 2
+    assert records[0].focus == "Hodgkin Lymphoma"
+    assert records[0].sub_specialty == "Oncology"
+    assert records[0].token_count > 0
+
+    chunks = pipeline.chunk_records(records, target_chunk_size=10, chunk_overlap=2)
+    assert len(chunks) >= 2
+    assert "Topic:" in chunks[0]["content"]
+
+    output_jsonl = tmp_path / "discovery_engine.jsonl"
+    pipeline.export_discovery_engine_jsonl(chunks, output_jsonl)
+    assert output_jsonl.exists()
+
+    lines = output_jsonl.read_text(encoding="utf-8").strip().split("\n")
+    assert len(lines) == len(chunks)
+    first_doc = json.loads(lines[0])
+    assert "id" in first_doc
+    assert "jsonData" in first_doc
+    inner_data = json.loads(first_doc["jsonData"])
+    assert inner_data["focus"] == "Hodgkin Lymphoma"

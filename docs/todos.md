@@ -1,9 +1,10 @@
-- remove unncessary UI elements
+- [x] remove unnecessary UI elements (reviewed and verified: UI is minimal, focused strictly on clinical literature queries, reasoning traces, citations, telemetry HUD, and feedback)
 - [x] check security posture (audited defense-in-depth model, Cloud Armor L7 WAF vs Model Armor L8 AI guardrails, IAM least-privilege review, tightened CORS origins and method enforcement in `backend/main.py` and `backend/core/config.py`)
-- check that models are being used correctly
+- [x] check that models are being used correctly (verified model tiering: Gemini 2.5 Flash for Orchestrator, Gemini 2.5 Pro for Clinical Researcher, Gemini 3.5 Flash for Reviewer)
 - [x] post-hoc conversation validation & automated nightly audit pipeline (implemented in `backend/pipelines/post_hoc_validation.py`, Cloud Scheduler in `terraform/main.tf`, in-process background scheduler loop in `backend/main.py`, CLI `scripts/validate_conversations.py`, and `scripts/run_nightly_audit.sh`)
-- automated pipeline to ingest medquad data
-- plan for scaling up
-- proper doc
-- slideshow
-- future work
+- [x] automated pipeline to ingest medquad data (implemented in `backend/pipelines/data_ingestion.py`, CLI `scripts/run_medquad_ingestion_pipeline.py`, and REST endpoint `/api/v1/ingestion/run`)
+- [x] plan for scaling up (documented in `docs/architecture.md`, `docs/scoping.md`, and `docs/panel_defense_master_guide.md`)
+- [x] proper doc (OpenAPI 3.1 `docs/openapi.json`, `docs/api_reference.md`, `docs/deployment_guide.md`, `docs/prr.md`, and `docs/panel_defense_master_guide.md`)
+- [x] slideshow (comprehensive 6-slide deck in `docs/presentation_deck.md` with script, speaker notes, and timing)
+- [x] future work (detailed 3-phase roadmap in `docs/scoping.md`, `docs/presentation_deck.md`, and `docs/panel_defense_master_guide.md`)
+- [x] comprehensive rubric alignment and panel defense preparation (`docs/panel_defense_master_guide.md` covering all 32 competencies across Part A and Part B with code proofs and verbal defense scripts)
