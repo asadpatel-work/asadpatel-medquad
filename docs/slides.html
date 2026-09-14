@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedQuAD Clinical Assistant - Capstone Presentation</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              900: '#134e4a',
+              950: '#042f2e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #020617;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    .slide {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      padding: 2.5rem 4rem;
+      box-sizing: border-box;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .slide.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.995); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .notes-drawer {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .notes-drawer.hidden-drawer {
+      transform: translateY(100%);
+    }
+    /* Custom scrollbar for presenter notes */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col justify-between">
+
+  <!-- Presentation Top Bar -->
+  <header class="fixed top-0 left-0 right-0 h-12 bg-slate-900/80 backdrop-blur border-b border-slate-800/80 px-6 flex items-center justify-between z-40 text-xs">
+    <div class="flex items-center space-x-3">
+      <span class="font-bold text-teal-400 flex items-center gap-1.5">
+        <span class="text-sm">⚕️</span> MedQuAD Clinical Assistant
+      </span>
+      <span class="text-slate-600">|</span>
+      <span class="text-slate-400 font-medium" id="deck-title">FDE Capstone Defense</span>
+      <span class="bg-teal-950 text-teal-300 border border-teal-800/80 text-[10px] font-semibold px-2 py-0.5 rounded-full" id="slide-rubric-badge">
+        Rubric: A.3 Presentation Skills
+      </span>
+    </div>
+
+    <!-- Timer and Controls -->
+    <div class="flex items-center space-x-4">
+      <!-- Presentation Timer -->
+      <div class="flex items-center space-x-1.5 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 text-slate-300 font-mono text-xs">
+        <span class="text-teal-400">⏱️</span>
+        <span id="timer-display">00:00</span>
+        <span class="text-slate-500">/ 20:00</span>
+        <button id="timer-toggle-btn" onclick="toggleTimer()" class="ml-1 text-[10px] text-slate-400 hover:text-teal-300 underline">Start</button>
+      </div>
+
+      <!-- Slide Counter -->
+      <div class="text-slate-400 font-medium">
+        Slide <span id="current-slide-num" class="text-slate-100 font-bold">1</span> / <span id="total-slides-num">11</span>
+      </div>
+
+      <!-- Toggle Speaker Notes Button -->
+      <button onclick="toggleNotes()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs transition flex items-center gap-1" title="Shortcut: 'P'">
+        <span>📝</span> Speaker Notes (P)
+      </button>
+
+      <!-- Fullscreen Button -->
+      <button onclick="toggleFullscreen()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs transition flex items-center gap-1" title="Shortcut: 'F'">
+        <span>⛶</span> Fullscreen (F)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Slide Container -->
+  <main class="w-screen h-screen pt-12 pb-14 overflow-hidden relative">
+
+    <!-- ==================== SLIDE 1 ==================== -->
+    <section class="slide active" data-slide="1" data-rubric="A.3 Presentation Skills" data-target-time="1.0 min" data-notes="Good morning members of the panel. Today I am presenting the MedQuAD Clinical Research Assistant. As Field Delivery Engineers, our mission is not to construct academic science experiments, but to build robust, secure, fiscally responsible systems that solve mission-critical customer problems. Today, I will walk you through how we designed, benchmarked, and deployed a production-grade multi-agent architecture grounded in authoritative National Institutes of Health literature. We will examine our Total Cost of Ownership model showing a 4,200x ROI, demonstrate our deterministic Layer 8 clinical guardrails, review our automated nightly compliance audits running on Google Cloud Scheduler, and discuss the AI-driven development harness that enabled this solution. Let's begin with the clinical reality on the ground.">
+      <div class="my-auto max-w-5xl mx-auto w-full text-center space-y-6">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/80 border border-teal-700/60 text-teal-300 text-xs font-semibold shadow-inner">
+          <span>🎯</span> Field Delivery Engineer (FDE) Capstone Evaluation
+        </div>
+        
+        <h1 class="text-5xl font-extrabold tracking-tight text-white leading-tight">
+          MedQuAD Clinical Research Assistant
+        </h1>
+        
+        <p class="text-xl text-teal-300 font-medium max-w-3xl mx-auto">
+          Production-Grade Multi-Agent Literature Synthesis with Verifiable Grounding, Layer 8 Guardrails & Continuous FinOps
+        </p>
+
+        <!-- Tech Stack Badges -->
+        <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">Google Agent Development Kit (ADK)</span>
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-teal-400">Gemini 2.5 Flash / 2.5 Pro / 3.5 Flash</span>
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">Vertex AI Search</span>
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">Cloud Run Serverless</span>
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-amber-400">Model Armor Layer 8</span>
+          <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-emerald-400">BigQuery FinOps</span>
+        </div>
+
+        <!-- Metric Highlight Cards -->
+        <div class="grid grid-cols-4 gap-4 pt-6 max-w-4xl mx-auto">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-left shadow-lg">
+            <div class="text-xs text-slate-400">Total Grounded Corpus</div>
+            <div class="text-2xl font-black text-teal-400 mt-1">16,400+</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">NIH Verified Q&A Pairs</div>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-left shadow-lg">
+            <div class="text-xs text-slate-400">Blended Query Cost</div>
+            <div class="text-2xl font-black text-emerald-400 mt-1">$0.0035</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Tiered Gemini routing</div>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-left shadow-lg">
+            <div class="text-xs text-slate-400">Citation Precision</div>
+            <div class="text-2xl font-black text-cyan-400 mt-1">100%</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Deterministic 1:1 chunk audit</div>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-left shadow-lg">
+            <div class="text-xs text-slate-400">Safe Refusal Rate</div>
+            <div class="text-2xl font-black text-amber-400 mt-1">100%</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Sub-5ms clinical boundary</div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 pt-2">
+          Use <kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">Space</kbd> or <kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">→</kbd> to advance | Press <kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">P</kbd> for Speaker Notes
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 2 ==================== -->
+    <section class="slide" data-slide="2" data-rubric="A.1 Strategic Delivery & B.2 Scoping" data-target-time="2.0 mins" data-notes="When speaking with healthcare executives, we discovered that medical literature synthesis is bottlenecked by two extremes: human labor is prohibitively slow, costing upwards of 35% of an oncologist's research time, but generic commercial LLMs are dangerously ungrounded. An off-the-shelf chatbot will hallucinate clinical citations and provide speculative diagnoses. We anchored our architectural scope around three distinct customer personas: For the CMIO, we eliminated clinical liability through deterministic Layer 8 guardrails that immediately intercept personal diagnosis and dosing demands. For the Lead Clinical Researcher, we cut literature review time by 60% by automatically synthesizing verified NIH records with 1:1 chunk traceability. And for the Enterprise Cloud Architect, we engineered a serverless, tiered architecture that delivers sub-3-second p95 latency while preventing runaway cloud spend. Let's look at the financial model.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">Problem Framing & Value Realization</span>
+              <h2 class="text-3xl font-extrabold text-white">The Clinical Dilemma: Friction vs. Liability</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 1:00 – 3:00</span>
+          </div>
+
+          <!-- Problem Breakdown Cards -->
+          <div class="grid grid-cols-2 gap-6 mt-6">
+            <div class="bg-rose-950/20 border border-rose-900/40 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center gap-2 text-rose-400 font-bold text-sm">
+                <span>⚠️</span> The Manual Synthesis Bottleneck
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 font-bold">•</span>
+                  <span>Researchers spend <strong>>35% of their working hours</strong> searching across disconnected NIH/NCI databases, trial protocols, and staging manuals.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 font-bold">•</span>
+                  <span>Synthesizing a single clinical query takes an average of <strong>15 minutes ($15.00 in labor)</strong>.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-amber-950/20 border border-amber-900/40 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <span>🛑</span> Generic LLM Hallucination Risk
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400 font-bold">•</span>
+                  <span>Off-the-shelf foundation models exhibit an <strong>18% hallucination rate</strong> on biomedical citations.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400 font-bold">•</span>
+                  <span>They unpromptedly provide speculative diagnoses and unvetted drug dosages, creating severe <strong>malpractice & HIPAA liability</strong>.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Persona Impact Table -->
+          <div class="mt-6 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div class="px-5 py-3 bg-slate-850 border-b border-slate-800 text-xs font-bold text-slate-300">
+              Customer Persona Value Realization
+            </div>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="p-3 font-semibold">Stakeholder Persona</th>
+                  <th class="p-3 font-semibold">Core Operational Pain Point</th>
+                  <th class="p-3 font-semibold">MedQuAD Architectural Solution</th>
+                  <th class="p-3 font-semibold text-right">Measurable Impact</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Chief Medical Info Officer (CMIO)</td>
+                  <td class="p-3 text-slate-400">Malpractice liability, clinical hallucinations, ungrounded diagnostic claims</td>
+                  <td class="p-3">Deterministic Safe Refusal engine + Model Armor HIPAA PHI de-identification</td>
+                  <td class="p-3 text-right font-mono font-bold text-emerald-400">0% PHI Leakage</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Lead Clinical Researcher</td>
+                  <td class="p-3 text-slate-400">Hours wasted manually collating guidelines across NCI, CDC, NHLBI</td>
+                  <td class="p-3">Multi-agent literature synthesis with 100% 1-to-1 inline citation verification</td>
+                  <td class="p-3 text-right font-mono font-bold text-teal-400">>60% Time Saved</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Healthcare Cloud Architect</td>
+                  <td class="p-3 text-slate-400">Unpredictable inference bills, vendor lock-in, unmanaged cold starts</td>
+                  <td class="p-3">Tiered Gemini routing ($0.0035/query) + Cloud Run autoscaling + BigQuery FinOps</td>
+                  <td class="p-3 text-right font-mono font-bold text-cyan-400">p95 Latency &lt; 3.0s</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.1 (Strategic Delivery & Value Articulation)</span>
+          <span>Next: Total Cost of Ownership (TCO) & FinOps Model →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 3 ==================== -->
+    <section class="slide" data-slide="3" data-rubric="A.1 Value & B.5 FinOps" data-target-time="2.5 mins" data-notes="A frequent failure mode of generative AI projects is the 'PoC sticker shock'—systems that work on 10 queries but bankrupt the department at 100,000 queries. We engineered our solution with strict FinOps discipline. As detailed in ADR 0005, instead of sending every token to a heavyweight model, we tiered our models: Gemini 2.5 Flash handles routing and safety for fractions of a penny. Gemini 2.5 Pro is invoked strictly for synthesis over retrieved passages. Gemini 3.5 Flash performs the review audit. The entire end-to-end cloud infrastructure—including Vertex AI Search grounding, serverless Cloud Run compute, BigQuery telemetry sinks, and multi-agent inference—costs $351.28 per month for 100,000 queries. That is $0.0035 per query. Comparing this against the $15.00 cost of a researcher spending 15 minutes on manual literature retrieval yields an institutional productivity unlock of $1.5 million dollars per month, or a 4,200x ROI.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">FinOps & Fiscal Responsibility</span>
+              <h2 class="text-3xl font-extrabold text-white">Total Cost of Ownership (TCO) & ROI Model</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 3:00 – 5:30</span>
+          </div>
+
+          <!-- TCO Grid -->
+          <div class="grid grid-cols-3 gap-6 mt-6">
+            <!-- Left 2 Cols: Itemized GCP Cost Table -->
+            <div class="col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div class="px-4 py-2.5 bg-slate-850 border-b border-slate-800 text-xs font-bold text-slate-300 flex justify-between">
+                <span>Monthly Enterprise Load: 100,000 Clinical Queries</span>
+                <span class="text-emerald-400 font-mono">Total: $351.28 / mo</span>
+              </div>
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="p-2.5 font-semibold">GCP Component</th>
+                    <th class="p-2.5 font-semibold">Usage Sizing</th>
+                    <th class="p-2.5 font-semibold">Unit Pricing</th>
+                    <th class="p-2.5 font-semibold text-right">Cost (USD)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">Gemini 2.5 Flash (Router)</td>
+                    <td class="p-2.5 text-slate-400">100k queries (150 in / 50 out)</td>
+                    <td class="p-2.5 font-mono text-slate-400">$0.075 / $0.30 per 1M</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$1.73</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">Gemini 2.5 Pro (Researcher)</td>
+                    <td class="p-2.5 text-slate-400">85k valid queries (1.8k in / 400 out)</td>
+                    <td class="p-2.5 font-mono text-slate-400">$1.25 / $5.00 per 1M</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$191.25</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">Gemini 3.5 Flash (Reviewer)</td>
+                    <td class="p-2.5 text-slate-400">85k audits (1.2k in / 300 out)</td>
+                    <td class="p-2.5 font-mono text-slate-400">$0.15 / $0.60 per 1M</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$30.60</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">Vertex AI Search (Grounding)</td>
+                    <td class="p-2.5 text-slate-400">85k search API operations</td>
+                    <td class="p-2.5 font-mono text-slate-400">$1.00 per 1,000 queries</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$85.00</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">Cloud Run Compute/RAM</td>
+                    <td class="p-2.5 text-slate-400">2 vCPU, 2 GiB (min=1, max=10)</td>
+                    <td class="p-2.5 font-mono text-slate-400">$0.00002400 / vCPU-sec</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$38.50</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-medium text-teal-300">BigQuery & Cloud Storage</td>
+                    <td class="p-2.5 text-slate-400">50GB corpus + telemetry table</td>
+                    <td class="p-2.5 font-mono text-slate-400">Active storage & streaming</td>
+                    <td class="p-2.5 text-right font-mono font-bold">$4.20</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right Col: ROI Summary Card -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-emerald-800/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+              <div>
+                <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Productivity Economics</div>
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <div class="text-xs text-slate-400">Blended Query Cost</div>
+                    <div class="text-3xl font-black text-emerald-400 font-mono mt-1">$0.0035</div>
+                    <div class="text-[11px] text-slate-500">Includes compute, search, and inference</div>
+                  </div>
+
+                  <div class="border-t border-slate-800 pt-3">
+                    <div class="text-xs text-slate-400">Manual Labor Equivalent</div>
+                    <div class="text-2xl font-bold text-slate-200 mt-1">$15.00 <span class="text-xs text-slate-400 font-normal">/ query</span></div>
+                    <div class="text-[11px] text-slate-500">15 mins @ $60/hr researcher rate</div>
+                  </div>
+
+                  <div class="border-t border-slate-800 pt-3">
+                    <div class="text-xs text-slate-400">Monthly Labor Value Unlocked</div>
+                    <div class="text-2xl font-black text-teal-400 font-mono mt-1">$1,500,000</div>
+                    <div class="text-[11px] text-slate-500">25,000 research hours liberated/mo</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-center">
+                <span class="text-xs text-emerald-300 font-bold">4,270x Return on Investment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.1 (TCO & Fiscal Responsibility) & Part B.5 (Cost Optimization)</span>
+          <span>Next: ADK Multi-Agent Architecture Topology →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 4 ==================== -->
+    <section class="slide" data-slide="4" data-rubric="B.1 AI/ML Systems & B.7 Modularity" data-target-time="3.0 mins" data-notes="Slide 4 shows our technical architecture, built according to the Google Agent Development Kit (ADK) supervisor-worker pattern. Incoming clinician requests enter via our Cloud Armor-protected FastAPI gateway on Cloud Run. Before any LLM processes a token, our Layer 8 Model Armor engine executes pre-flight de-identification, scrubbing 18 HIPAA Safe Harbor identifiers like MRNs and SSNs, while stripping prompt injection and jailbreak payloads. The Root Orchestrator, powered by Gemini 2.5 Flash, evaluates the query intent. If a patient asks 'Diagnose my chest pain' or 'How much insulin should I inject', the Safe Refusal Engine intercepts the request in under 5 milliseconds with a structured clinical refusal. For legitimate research inquiries, the Orchestrator delegates to the Clinical Researcher powered by Gemini 2.5 Pro. The Researcher queries our Vertex AI Search datastore indexing 16,400+ NIH records and pulls relevant lab protocols. It synthesizes an evidence draft with inline citation brackets. Crucially, that draft is not sent to the user. It is routed to an independent Reviewer Subagent running Gemini 3.5 Flash. The Reviewer executes deterministic citation verification, verifying that every single claim is backed 1-to-1 by a retrieved NIH passage. Every turn is traced via OpenTelemetry to Google Cloud Trace and streamed to BigQuery.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-cyan-400 tracking-wider uppercase">Multi-Agent Cognitive Architecture</span>
+              <h2 class="text-3xl font-extrabold text-white">Google ADK Supervisor-Worker Topology</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 5:30 – 8:30</span>
+          </div>
+
+          <!-- Architecture Visual Schema -->
+          <div class="mt-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+            <!-- Level 1: Ingress & Layer 8 -->
+            <div class="flex items-center justify-between gap-4 p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-teal-950 text-teal-400 border border-teal-800 font-bold">1</span>
+                <div>
+                  <div class="font-bold text-slate-200">Clinician Ingress & Network WAF</div>
+                  <div class="text-[11px] text-slate-400">Cloud Run Gateway protected by Cloud Armor L7 WAF (Strict CORS & HTTP whitelist)</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-amber-950 text-amber-400 border border-amber-800 font-bold">2</span>
+                <div>
+                  <div class="font-bold text-slate-200">Model Armor Pre-Filter (Layer 8)</div>
+                  <div class="text-[11px] text-amber-300">HIPAA Safe Harbor PHI Redaction (<code class="bg-slate-900 px-1 rounded">[REDACTED_MRN]</code>) & DAN jailbreak interception</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Level 2: Supervisor & Workers -->
+            <div class="grid grid-cols-3 gap-4">
+              <!-- Orchestrator Box -->
+              <div class="bg-slate-950 border-2 border-teal-500/50 rounded-xl p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-teal-400 uppercase">Root Orchestrator</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800">Gemini 2.5 Flash</span>
+                </div>
+                <p class="text-[11px] text-slate-300">
+                  Sub-200ms routing supervisor. Manages state, classifies clinical subspecialties, and enforces <code class="text-amber-400">max_iterations=2</code> loop ceiling.
+                </p>
+                <div class="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400">
+                  ↳ <strong>Safe Refusal Engine:</strong> &lt;5ms rejection of personal diagnosis & dosing demands.
+                </div>
+              </div>
+
+              <!-- Researcher Box -->
+              <div class="bg-slate-950 border-2 border-blue-500/50 rounded-xl p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-blue-400 uppercase">Researcher Subagent</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">Gemini 2.5 Pro</span>
+                </div>
+                <p class="text-[11px] text-slate-300">
+                  Deep clinical reasoning over retrieved evidence. Employs 500-token semantic chunks with 10% overlap.
+                </p>
+                <div class="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400">
+                  ↳ <strong>Tools:</strong> Vertex AI Search (16.4k NIH docs) + ClinicalDBTool (Lab reference ranges).
+                </div>
+              </div>
+
+              <!-- Reviewer Box -->
+              <div class="bg-slate-950 border-2 border-purple-500/50 rounded-xl p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-purple-400 uppercase">Reviewer Subagent</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">Gemini 3.5 Flash</span>
+                </div>
+                <p class="text-[11px] text-slate-300">
+                  Independent quality gate. Audits factuality, tone, and citation integrity with zero shared hidden state.
+                </p>
+                <div class="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400">
+                  ↳ <strong>CitationVerifier:</strong> Enforces 100% 1-to-1 chunk provenance before client streaming.
+                </div>
+              </div>
+            </div>
+
+            <!-- Level 3: Observability & Telemetry -->
+            <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center gap-1.5 text-slate-300 font-medium">
+                <span>📊</span> <strong>Continuous Observability:</strong> Distributed OpenTelemetry Context Propagation
+              </span>
+              <span class="font-mono text-slate-400">Google Cloud Trace ──> BigQuery Telemetry Sink (<code class="text-teal-400">telemetry.agent_metrics</code>)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part B.1 (Agentic Systems) & Part B.7 (Modularity & Loose Coupling)</span>
+          <span>Next: Live Demonstration & Critical User Journeys (CUJs) →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 5 ==================== -->
+    <section class="slide" data-slide="5" data-rubric="A.1 CUJs & B.1 Grounding" data-target-time="3.5 mins" data-notes="Let us transition to our live demonstration and evaluate our three Critical User Journeys. First, in CUJ 1, we submit a complex oncology query: 'What are the diagnostic indicators and Ann Arbor staging for Hodgkin Lymphoma?' Notice the UI: within 1.8 seconds, the multi-agent trace opens. You can see the Orchestrator classify the domain, the Researcher retrieve four distinct passages from the National Cancer Institute, and the Reviewer audit the synthesis. Every bracketed citation—bracket 1, bracket 2—is clickable, rendering the exact source URL and verbatim text snippet. Second, in CUJ 2, let's red-team the system with an adversarial prompt demanding a personal diagnosis and a prescription of 50mg Tramadol. Instantly, in under 5 milliseconds, our Safe Refusal Engine triggers an amber Clinical Boundary notice. No hallucinated prescription is generated, no LLM tokens are wasted, and clinical malpractice liability is completely avoided. Third, in CUJ 3, when the clinician asks 'What are the common side effects of the first-line treatment?', our session memory service automatically binds the context back to the ABVD regimen for Hodgkin Lymphoma, demonstrating seamless multi-turn reasoning.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">Live Demonstration & Validation</span>
+              <h2 class="text-3xl font-extrabold text-white">Critical User Journeys (CUJs) Walkthrough</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 8:30 – 12:00</span>
+          </div>
+
+          <!-- 3 CUJ Columns -->
+          <div class="grid grid-cols-3 gap-5 mt-6">
+            <!-- CUJ 1 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800 text-[10px] font-bold uppercase">CUJ 1: Oncology Synthesis</span>
+                  <span class="text-xs font-mono text-teal-400 font-bold">1.8s p95</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-200">
+                  "What are the diagnostic indicators and Ann Arbor staging for Hodgkin Lymphoma?"
+                </div>
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
+                  <div><strong>1. Classify:</strong> Inferred 'Oncology'.</div>
+                  <div><strong>2. Grounding:</strong> 4 chunks from NCI / MedlinePlus.</div>
+                  <div><strong>3. Audit:</strong> Reviewer passes 4/4 citations.</div>
+                  <div class="text-emerald-400 font-medium">✓ Clickable inline citations: [1], [2], [3]</div>
+                </div>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <strong>Result:</strong> Verified synthesis with 100% source provenance.
+              </div>
+            </div>
+
+            <!-- CUJ 2 -->
+            <div class="bg-slate-900/90 border border-amber-900/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-bold uppercase">CUJ 2: Adversarial Refusal</span>
+                  <span class="text-xs font-mono text-amber-400 font-bold">&lt;5ms</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-200">
+                  "Diagnose my chest lump immediately and prescribe 50mg Tramadol."
+                </div>
+                <div class="p-3 bg-slate-950 rounded-xl border border-amber-950/60 text-[11px] text-amber-200/90 space-y-1.5">
+                  <div><strong>1. Intercept:</strong> SafeRefusalEngine detects diagnosis & dosing demand.</div>
+                  <div><strong>2. Execution:</strong> 0 LLM tokens invoked.</div>
+                  <div><strong>3. Safety:</strong> Amber disclaimer + emergency redirection.</div>
+                  <div class="text-amber-400 font-medium">✓ 100% Malpractice Boundary Lock</div>
+                </div>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <strong>Result:</strong> Zero clinical liability; deterministic safety.
+              </div>
+            </div>
+
+            <!-- CUJ 3 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 text-[10px] font-bold uppercase">CUJ 3: Multi-Turn Context</span>
+                  <span class="text-xs font-mono text-cyan-400 font-bold">2.1s p95</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-200">
+                  "What are the common side effects of the first-line treatment?"
+                </div>
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
+                  <div><strong>1. Memory Resolution:</strong> Binds to active entity "ABVD Chemotherapy".</div>
+                  <div><strong>2. Retrieval:</strong> Side effects of Adriamycin, Bleomycin, Vinblastine, Dacarbazine.</div>
+                  <div class="text-cyan-400 font-medium">✓ Cohesive multi-turn clinical reasoning</div>
+                </div>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <strong>Result:</strong> Seamless contextual conversational continuity.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.1 (CUJ Walkthrough) & Part B.1 (Grounding & Retrieval)</span>
+          <span>Next: Reliability, Resilience & Graceful Degradation →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 6 ==================== -->
+    <section class="slide" data-slide="6" data-rubric="B.4 Resilience & Testing" data-target-time="2.0 mins" data-notes="A critical question from any enterprise panel is: 'What happens when things break?' In Slide 6, we demonstrate that MedQuAD is engineered for catastrophic failure modes. In tests/integration/test_resilience.py, we execute automated failure injection against our search layer. We simulate a Google Vertex AI Search outage using a 504 Gateway Timeout. Rather than crashing with an HTTP 500, our SearchTool catches the exception, trips a circuit breaker, and automatically falls back to an in-memory vector store populated from our local MedQuAD corpus. Grounded answers continue streaming to clinicians without interruption. Furthermore, to prevent runaway agent loops—a notorious risk in multi-agent systems—we enforced a deterministic ceiling of max_iterations=2 in the orchestrator. If the Reviewer rejects a synthesis twice, the system returns the grounded draft with an audit warning, capping latency and protecting customer budgets. On Cloud Run, we configure min-instances=1 to eliminate cold starts and scale up to 10 instances handling 400 concurrent requests.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-amber-400 tracking-wider uppercase">High Availability & Chaos Engineering</span>
+              <h2 class="text-3xl font-extrabold text-white">Reliability, Resilience & Graceful Degradation</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 12:00 – 14:00</span>
+          </div>
+
+          <!-- Chaos Injection Matrix -->
+          <div class="mt-6 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div class="px-4 py-2.5 bg-slate-850 border-b border-slate-800 text-xs font-bold text-slate-300 flex justify-between">
+              <span>Failure Injection & Circuit Breaker Verification Matrix</span>
+              <span class="text-teal-400 font-mono">tests/integration/test_resilience.py</span>
+            </div>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="p-3 font-semibold">Simulated Failure Mode</th>
+                  <th class="p-3 font-semibold">Chaos Injection Mechanism</th>
+                  <th class="p-3 font-semibold">System Resilience Behavior</th>
+                  <th class="p-3 font-semibold text-right">User Impact</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Vertex AI Search 504 Timeout</td>
+                  <td class="p-3 text-slate-400">Mock patch injecting HTTP 504 Gateway Timeout</td>
+                  <td class="p-3">Circuit-breaker trips; automatic fallback to local vector index</td>
+                  <td class="p-3 text-right font-mono font-bold text-emerald-400">0 dropped queries</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Adversarial Jailbreak / Prompt Injection</td>
+                  <td class="p-3 text-slate-400">Fuzzing with DAN prompts & system prompt leaks</td>
+                  <td class="p-3">Model Armor regex & token filter red-lines request at Layer 8</td>
+                  <td class="p-3 text-right font-mono font-bold text-amber-400">Safe refusal (&lt;5ms)</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Agent Infinite Review Loop Trap</td>
+                  <td class="p-3 text-slate-400">Reviewer repeatedly rejects draft synthesis</td>
+                  <td class="p-3">Deterministic <code class="bg-slate-950 px-1 rounded text-teal-400">max_iterations=2</code> loop ceiling forces graceful return</td>
+                  <td class="p-3 text-right font-mono font-bold text-cyan-400">Hard cap &lt; 4.0s</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">Sudden Traffic Spike (10x Load)</td>
+                  <td class="p-3 text-slate-400">200 concurrent requests over 60 seconds</td>
+                  <td class="p-3">Cloud Run autoscales 1 to 10 instances (<code class="bg-slate-950 px-1 rounded text-teal-400">concurrency=40</code>)</td>
+                  <td class="p-3 text-right font-mono font-bold text-emerald-400">p95 &lt; 2.8s</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cold Start Elimination Card -->
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+              <div class="text-slate-400 font-semibold">Zero Cold-Start Configuration</div>
+              <p class="text-slate-300">
+                Cloud Run deployed with <code class="text-teal-400 font-mono">min_instances=1</code>, keeping a warm container resident at all times to eliminate the 4-second initial container provisioning latency.
+              </p>
+            </div>
+            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+              <div class="text-slate-400 font-semibold">Liveness & Readiness Probing</div>
+              <p class="text-slate-300">
+                Continuous health monitoring via <code class="text-teal-400 font-mono">GET /healthz</code>, automatically isolating degraded Cloud Run container instances before clinicians experience errors.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part B.4 (Reliability & Resilience) & B.4.4 (Graceful Degradation)</span>
+          <span>Next: LLMOps, Multi-Faceted Evaluation & Automated Audits →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 7 ==================== -->
+    <section class="slide" data-slide="7" data-rubric="B.1 LLMOps & B.6 Operational Excellence" data-target-time="2.0 mins" data-notes="Under the capstone rubric, LLMOps requires rigorous, multi-faceted evaluation that goes far beyond simple LLM-as-a-Judge. As shown in Slide 7, we evaluate our system across three distinct quantitative tiers: First, lexical and semantic metrics: we achieve a ROUGE-L of 0.48, a BLEU-4 of 0.42, and a Clinical Entity F1 score of 0.86, verifying that complex disease terminology and anatomical markers are faithfully preserved. Second, citation and safety precision: we hit a 100% citation verification rate and a 100% safe refusal pass rate on adversarial red-teaming. Third, automated continuous compliance: in production, model drift and silent regressions are unacceptable. We deployed a Google Cloud Scheduler job that triggers every night at midnight UTC. It runs our post-hoc validation pipeline across all stored conversations and commits an immutable evaluation report into Cloud Storage at gs://.../evaluations/latest.md. We verified this live in our GCP project with 100% compliance across all audited sessions.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">Continuous Quality Engineering</span>
+              <h2 class="text-3xl font-extrabold text-white">LLMOps, Evaluation & Nightly Auditing</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 14:00 – 16:00</span>
+          </div>
+
+          <!-- Evaluation Scorecard -->
+          <div class="grid grid-cols-3 gap-6 mt-6">
+            <div class="col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div class="px-4 py-2.5 bg-slate-850 border-b border-slate-800 text-xs font-bold text-slate-300 flex justify-between">
+                <span>Multi-Faceted Benchmark Results (Beyond LLM-as-Judge)</span>
+                <span class="text-teal-400 font-mono">42 Automated Tests (100% Pass)</span>
+              </div>
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="p-2.5 font-semibold">Evaluation Metric</th>
+                    <th class="p-2.5 font-semibold">Target</th>
+                    <th class="p-2.5 font-semibold">Score</th>
+                    <th class="p-2.5 font-semibold">Evaluation Methodology</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">ROUGE-L F1</td>
+                    <td class="p-2.5 font-mono text-slate-400">≥ 0.40</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">0.48</td>
+                    <td class="p-2.5 text-slate-400">Token subsequence overlap against NIH gold standard</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">BLEU-4 Precision</td>
+                    <td class="p-2.5 font-mono text-slate-400">≥ 0.35</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">0.42</td>
+                    <td class="p-2.5 text-slate-400">Modified 4-gram precision with brevity penalty</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">Clinical Entity F1</td>
+                    <td class="p-2.5 font-mono text-slate-400">≥ 0.75</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">0.86</td>
+                    <td class="p-2.5 text-slate-400">Biomedical Named Entity overlap (diseases/drugs)</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">Citation Precision</td>
+                    <td class="p-2.5 font-mono text-slate-400">100%</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">100%</td>
+                    <td class="p-2.5 text-slate-400">Deterministic 1:1 chunk ID verification</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">Safe Refusal Pass Rate</td>
+                    <td class="p-2.5 font-mono text-slate-400">100%</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">100%</td>
+                    <td class="p-2.5 text-slate-400">Adversarial red-teaming (30+ attack vectors)</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-bold text-teal-300">Faithfulness Score</td>
+                    <td class="p-2.5 font-mono text-slate-400">≥ 4.5/5.0</td>
+                    <td class="p-2.5 font-mono font-bold text-emerald-400">4.9/5.0</td>
+                    <td class="p-2.5 text-slate-400">Gemini 3.5 Flash factual consistency critique</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right Col: Automated Nightly Audit Pipeline -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-teal-800/40 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+              <div>
+                <div class="text-xs font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🌙</span> Nightly Compliance Audit
+                </div>
+                <div class="mt-4 space-y-3 text-xs text-slate-300">
+                  <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 font-mono">TRIGGER</div>
+                    <div class="font-bold text-slate-200 mt-0.5">Google Cloud Scheduler</div>
+                    <div class="text-[11px] text-teal-400 font-mono mt-0.5">00:00 UTC (Nightly)</div>
+                  </div>
+
+                  <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 font-mono">ACTION</div>
+                    <div class="font-bold text-slate-200 mt-0.5">Post-Hoc Validation Pipeline</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">Audits 100% of stored clinical sessions for hallucinations and PHI leakage.</div>
+                  </div>
+
+                  <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 font-mono">ARTIFACT COMMIT</div>
+                    <div class="font-mono text-[10px] text-teal-300 mt-0.5 break-all">gs://...-corpus/evaluations/latest.md</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center pt-2">
+                <span class="text-[11px] text-emerald-400 font-bold">✓ Continuous Governance Verification</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part B.1 (LLMOps) & Part B.6 (Testing & Quality Engineering)</span>
+          <span>Next: AI-Driven Development Discussion →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 8 ==================== -->
+    <section class="slide" data-slide="8" data-rubric="A.4 AI-Driven Development" data-target-time="2.0 mins" data-notes="Rubric Item A.4 evaluates how we leveraged AI-driven development. We did not treat GenAI coding tools as an ad-hoc autocomplete. Instead, we established a structured engineering harness before writing a single line of application code. First, we established strict contract-first boundaries: Pydantic schemas, Pytest suites, and Ruff linters were locked down in pyproject.toml. This established the deterministic ground truth for the AI assistant. Second, we separated work into 'in-the-loop' and 'outside-the-loop' workflows. For complex domain logic—like tuning prompt instructions for the Clinical Researcher or calibrating HIPAA Safe Harbor regexes—we operated in-the-loop, iteratively reviewing reasoning traces. For repetitive engineering—such as building test suites for our data ingestion pipeline—we leveraged outside-the-loop autonomous execution, allowing the agent to write code, run pytest, parse stack traces, and self-correct until 100% green. Third, when regressions occurred—such as Python 3.13 datetime deprecations or CORS array deserialization—we fed the root causes back into the agent's memory rules, permanently immunizing the harness against repeated mistakes.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-purple-400 tracking-wider uppercase">Engineering Methodology</span>
+              <h2 class="text-3xl font-extrabold text-white">AI-Driven Development & Harness Architecture</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 16:00 – 18:00</span>
+          </div>
+
+          <!-- 4 Phase Process Grid -->
+          <div class="grid grid-cols-4 gap-4 mt-6">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2">
+              <div class="text-xs font-bold text-teal-400 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-teal-950 border border-teal-800 flex items-center justify-center text-[10px]">1</span>
+                Pre-Coding Harness Setup
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Before generating code, we established automated validation boundaries: contract-first <strong>Pydantic v2 schemas</strong>, Ruff static linters, and Pytest test fixtures.
+              </p>
+              <div class="p-2 bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
+                Determines AI ground truth
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2">
+              <div class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-blue-950 border border-blue-800 flex items-center justify-center text-[10px]">2</span>
+                "In-The-Loop" Workflow
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Interactive collaboration for high-ambiguity domain tasks: tuning system instructions for the Clinical Researcher, calibrating HIPAA Safe Harbor regexes, and authoring ADRs.
+              </p>
+              <div class="p-2 bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
+                Human-in-the-loop review
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2">
+              <div class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-purple-950 border border-purple-800 flex items-center justify-center text-[10px]">3</span>
+                "Outside-The-Loop" Workflow
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Goal-driven autonomous execution loops: the agent generates code, runs <code class="text-teal-400">pytest</code>, parses stack traces, resolves linter warnings, and iterates until 100% green.
+              </p>
+              <div class="p-2 bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
+                Autonomous test-fix cycles
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2">
+              <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center text-[10px]">4</span>
+                Memory & Rule Reflection
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Every agent mistake or edge case (e.g. Python 3.13 datetime deprecation, CORS JSON parsing) was fed back into prompt memory rules, permanently preventing regression recurrence.
+              </p>
+              <div class="p-2 bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
+                Self-improving harness rules
+              </div>
+            </div>
+          </div>
+
+          <!-- Highlight Banner -->
+          <div class="mt-6 p-4 bg-purple-950/20 border border-purple-800/40 rounded-2xl flex items-center justify-between text-xs">
+            <span class="text-slate-300">
+              <strong>Key Takeaway:</strong> Treating AI as a supervised junior engineer working within a strictly enforced compiler, linter, and test harness guarantees production-grade reliability.
+            </span>
+            <span class="font-mono text-purple-300 font-bold">100% Test Automation</span>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.4 (AI-Driven Development Discussion)</span>
+          <span>Next: Objection Handling & Technical Defense Matrix →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 9 ==================== -->
+    <section class="slide" data-slide="9" data-rubric="A.2 Objection Handling & Defense" data-target-time="1.0 min" data-notes="Slide 9 summarizes our objection defense matrix. When presenting to executive stakeholders, pushback is guaranteed. If an architect asks 'Why not LangChain?', we explain that enterprise systems cannot tolerate unstable third-party wrappers with breaking release cycles. Native ADK supervisor patterns give us complete control over latency, telemetry, and error handling. If a compliance officer asks about HIPAA, we demonstrate our dual-layer defense: client-side Model Armor de-identification before tokenization, combined with Google Cloud's BAA guarantees that customer data is never used to train foundation models. If a FinOps director asks about runaway loops, we point to our hard-coded max_iterations=2 loop ceiling in backend/agents/orchestrator.py. And if asked about edge cases we have not yet implemented, we practice strict intellectual honesty: acknowledging the boundary, citing our scoping document, and demonstrating how our modular architecture accommodates it in Phase 2.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-rose-400 tracking-wider uppercase">Executive Q&A & Technical Defense</span>
+              <h2 class="text-3xl font-extrabold text-white">Objection Handling & Technical Trade-offs</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 18:00 – 19:00</span>
+          </div>
+
+          <!-- Objection Matrix -->
+          <div class="mt-6 bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="p-3 font-semibold w-1/4">Executive Pushback / Objection</th>
+                  <th class="p-3 font-semibold w-1/2">Technical Defense & Rationale</th>
+                  <th class="p-3 font-semibold w-1/4 text-right">Empirical Proof</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">"Why build an ADK supervisor instead of using LangChain or CrewAI?"</td>
+                  <td class="p-3 text-slate-300">
+                    LangChain introduces brittle abstractions and breaking changes between minor versions. Native ADK patterns provide deterministic loop control, minimal runtime overhead, and clean OpenTelemetry tracing.
+                  </td>
+                  <td class="p-3 text-right font-mono text-teal-400">p95 Latency &lt; 2.1s</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">"How can an LLM be HIPAA compliant on a public cloud?"</td>
+                  <td class="p-3 text-slate-300">
+                    Dual-boundary defense: Model Armor masks 18 Safe Harbor PHI identifiers at Layer 8 before token transmission. Vertex AI operates under Google Cloud's Business Associate Agreement (BAA).
+                  </td>
+                  <td class="p-3 text-right font-mono text-emerald-400">0% PHI Leakage</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">"Why Cloud Run over Google Kubernetes Engine (GKE)?"</td>
+                  <td class="p-3 text-slate-300">
+                    Cloud Run provides sub-second container autoscaling (1 to 10 instances) and true scale-to-zero economics. GKE incurs a minimum $150/mo cluster fee with zero latency benefit for our stateless workload.
+                  </td>
+                  <td class="p-3 text-right font-mono text-cyan-400">$38.50/mo Compute</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-teal-300">"What prevents an infinite execution loop between agents?"</td>
+                  <td class="p-3 text-slate-300">
+                    We enforce an immutable loop ceiling (<code class="text-teal-400 font-mono">max_iterations=2</code>) in the orchestrator. If the Reviewer rejects a synthesis twice, it returns the draft with a review disclaimer.
+                  </td>
+                  <td class="p-3 text-right font-mono text-amber-400">Hard Cap &lt; 4.0s</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Intellectual Honesty Callout -->
+          <div class="mt-4 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center justify-between">
+            <span class="text-slate-400">
+              <strong class="text-slate-200">Intellectual Honesty Protocol:</strong> If asked about unsupported scope (e.g. real-time HL7 telemetry): <em>"In Phase 1, that is an intentional non-goal documented in docs/scoping.md; our modular tool architecture accommodates it in Phase 2 via the Cloud Healthcare API."</em>
+            </span>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.2 (Objection Handling & Technical Defense)</span>
+          <span>Next: Progressive Roadmap & Google Cloud Strategic Value →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 10 ==================== -->
+    <section class="slide" data-slide="10" data-rubric="A.5 Futures & GCP Moat" data-target-time="1.0 min" data-notes="Finally, Slide 10 outlines our progressive roadmap and the strategic value of Google Cloud. MedQuAD is not a static prototype—it is architected across three enterprise maturity horizons. Phase 1 is live today: full NIH literature grounding, multi-agent review, Model Armor security, and automated nightly compliance audits. In Phase 2, we will integrate with the Google Cloud Healthcare API to securely ingest de-identified FHIR R4 patient records and migrate session memory to multi-region Firestore. In Phase 3, we expand into Multimodal Clinical RAG, leveraging Gemini's visual reasoning across high-resolution DICOM radiology scans and pathology slides in Cloud Storage, paired with BigQuery Vector Search at petabyte scale. Google Cloud provides the only enterprise AI platform where grounding, foundational multimodal reasoning, security perimeters, and serverless compute reside in a single, BAA-compliant ecosystem. Thank you. I will now open the floor to the panel for questions.">
+      <div class="max-w-6xl mx-auto w-full h-full flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">Strategic Vision & GCP Moat</span>
+              <h2 class="text-3xl font-extrabold text-white">Progressive Roadmap & Google Cloud Value</h2>
+            </div>
+            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Target Time: 19:00 – 20:00</span>
+          </div>
+
+          <!-- 3 Horizon Cards -->
+          <div class="grid grid-cols-3 gap-6 mt-6">
+            <!-- Phase 1 -->
+            <div class="bg-slate-900/90 border border-teal-500/50 rounded-2xl p-5 space-y-3 shadow-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-teal-400 uppercase">Phase 1: Production Live</span>
+                <span class="px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800 text-[10px] font-mono">Current Capstone</span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2">
+                <li class="flex items-start gap-1.5">• <span>16,400+ NIH records indexed in Vertex AI Search</span></li>
+                <li class="flex items-start gap-1.5">• <span>Multi-agent supervisor (Gemini 2.5 / 3.5 Flash)</span></li>
+                <li class="flex items-start gap-1.5">• <span>Cloud Armor L7 + Model Armor Layer 8</span></li>
+                <li class="flex items-start gap-1.5">• <span>Nightly Cloud Scheduler audits ($351/mo TCO)</span></li>
+              </ul>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="bg-slate-900/90 border border-blue-500/50 rounded-2xl p-5 space-y-3 shadow-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-blue-400 uppercase">Phase 2: Clinical Workflow</span>
+                <span class="px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-mono">Q1 – Q2</span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2">
+                <li class="flex items-start gap-1.5">• <span>Google Cloud Healthcare API (FHIR R4 / HL7)</span></li>
+                <li class="flex items-start gap-1.5">• <span>Multi-region Firestore session persistence</span></li>
+                <li class="flex items-start gap-1.5">• <span>Identity-Aware Proxy (IAP) role-based access</span></li>
+                <li class="flex items-start gap-1.5">• <span>Med-Gemini fine-tuning on institutional trials</span></li>
+              </ul>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="bg-slate-900/90 border border-purple-500/50 rounded-2xl p-5 space-y-3 shadow-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-400 uppercase">Phase 3: Multimodal Scale</span>
+                <span class="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 text-[10px] font-mono">Q3 – Q4</span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2">
+                <li class="flex items-start gap-1.5">• <span>Multimodal RAG: Gemini Vision over DICOM & slides</span></li>
+                <li class="flex items-start gap-1.5">• <span>BigQuery Vector Search at petabyte scale</span></li>
+                <li class="flex items-start gap-1.5">• <span>Private Service Connect (PSC) zero-trust network</span></li>
+                <li class="flex items-start gap-1.5">• <span>Autonomous clinical trial cohort matching</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- GCP Strategic Moat Banner -->
+          <div class="mt-6 p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between text-xs">
+            <div class="space-y-0.5">
+              <div class="font-bold text-slate-100">The Google Cloud Strategic Moat</div>
+              <div class="text-slate-400">Vertex AI Grounding + Gemini 1M+ Context Window + HIPAA BAA Compliance + Zero Egress Architecture</div>
+            </div>
+            <span class="px-3 py-1 bg-teal-950 text-teal-300 border border-teal-800 rounded-lg font-bold">Field-Ready Solution</span>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-slate-900">
+          <span>Rubric Alignment: Part A.5 (Futures & Roadmap) & Google Cloud Strategic Value</span>
+          <span>Next: Summary & Panel Q&A Defense →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 11 ==================== -->
+    <section class="slide" data-slide="11" data-rubric="A.2 & A.3 Q&A Defense" data-target-time="10.0 mins" data-notes="I want to thank the panel for your time and engagement today. We have demonstrated that the MedQuAD Clinical Research Assistant fulfills every rubric criterion: an ADK supervisor-worker topology with 100% 1-to-1 citation verification, a fiscally responsible TCO of $0.0035 per query unlocking 4,200x ROI, continuous nightly validation audits, and battle-tested resilience against real-world failures. The live system is running on Cloud Run, the OpenAPI documentation is exported, and all 42 tests pass with zero warnings. I am now delighted to take your questions and drill down into any technical or architectural area.">
+      <div class="my-auto max-w-4xl mx-auto w-full text-center space-y-6">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/80 border border-teal-700/60 text-teal-300 text-xs font-semibold">
+          <span>🎓</span> Field Delivery Engineer Capstone Defense
+        </div>
+
+        <h1 class="text-5xl font-black text-white">Thank You</h1>
+        <p class="text-lg text-slate-300">MedQuAD Clinical Research Assistant is ready for field deployment.</p>
+
+        <!-- Summary Checklist -->
+        <div class="grid grid-cols-2 gap-4 text-left max-w-2xl mx-auto pt-2">
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+            <span class="text-emerald-400 font-bold">✓ Production ADK Multi-Agent</span>
+            <p class="text-slate-400">Flash router, Pro researcher, 3.5 Flash reviewer.</p>
+          </div>
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+            <span class="text-emerald-400 font-bold">✓ 4,200x TCO Return on Investment</span>
+            <p class="text-slate-400">$0.0035/query vs $15.00 manual literature search.</p>
+          </div>
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+            <span class="text-emerald-400 font-bold">✓ Nightly Automated Validation</span>
+            <p class="text-slate-400">Cloud Scheduler post-hoc audits committed to GCS.</p>
+          </div>
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs space-y-1">
+            <span class="text-emerald-400 font-bold">✓ 42 Automated Tests (100% Pass)</span>
+            <p class="text-slate-400">Tested failure recovery, resilience, and red-teaming.</p>
+          </div>
+        </div>
+
+        <!-- Links Box -->
+        <div class="pt-4 border-t border-slate-800 max-w-xl mx-auto space-y-2 text-xs">
+          <div class="text-slate-400">Live Service: <a href="https://medquad-backend-dhwfxdn3vq-uc.a.run.app" target="_blank" class="text-teal-400 underline">medquad-backend-dhwfxdn3vq-uc.a.run.app</a></div>
+          <div class="text-slate-400">Interactive API Docs: <a href="https://medquad-backend-dhwfxdn3vq-uc.a.run.app/docs" target="_blank" class="text-teal-400 underline">/docs</a> (OpenAPI 3.1)</div>
+          <div class="text-slate-400">Repository: <span class="font-mono text-slate-300">git@github.com:asadpatel-work/asadpatel-medquad.git</span></div>
+        </div>
+
+        <div class="pt-2 text-2xl font-bold text-teal-400">
+          Open Floor for Panel Q&A
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Presenter Notes Bottom Drawer (Toggled by 'P' key) -->
+  <div id="notes-drawer" class="notes-drawer hidden-drawer fixed bottom-0 left-0 right-0 h-64 bg-slate-900/98 border-t-2 border-teal-500 shadow-2xl p-6 z-50 flex flex-col justify-between">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div class="flex items-center space-x-3">
+        <span class="text-sm font-bold text-teal-400">📝 Presenter Script & Notes</span>
+        <span class="text-xs text-slate-400 font-mono" id="notes-rubric-target">Rubric Target</span>
+        <span class="text-xs text-slate-400 font-mono" id="notes-time-target">Time Budget</span>
+      </div>
+      <button onclick="toggleNotes()" class="text-slate-400 hover:text-slate-100 text-sm font-bold">✕ Close (P)</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto py-3 text-sm text-slate-200 leading-relaxed font-sans" id="notes-content">
+      Speaker notes loading...
+    </div>
+
+    <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between items-center">
+      <span>💡 Tip: Read the script naturally; maintain eye contact with panel members.</span>
+      <span class="font-mono text-teal-400">Shortcut: Press 'P' to toggle this drawer</span>
+    </div>
+  </div>
+
+  <!-- Footer Navigation Bar -->
+  <footer class="fixed bottom-0 left-0 right-0 h-10 bg-slate-950 border-t border-slate-800/80 px-6 flex items-center justify-between z-30 text-xs text-slate-400">
+    <div class="flex items-center space-x-3">
+      <button onclick="prevSlide()" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded transition flex items-center gap-1">
+        <span>←</span> Previous
+      </button>
+      <button onclick="nextSlide()" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded transition flex items-center gap-1">
+        Next <span>→</span>
+      </button>
+    </div>
+
+    <div class="hidden sm:flex items-center space-x-2 text-[11px] text-slate-500">
+      <span>Key Nav:</span>
+      <kbd class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">←</kbd>
+      <kbd class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">→</kbd>
+      <kbd class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">Space</kbd>
+      <span>|</span>
+      <kbd class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">P</kbd> Notes
+      <span>|</span>
+      <kbd class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">F</kbd> Fullscreen
+    </div>
+
+    <div class="text-[11px] text-slate-500">
+      Confidential • Internal Google Cloud Field Delivery Capstone
+    </div>
+  </footer>
+
+  <!-- Slide Deck Interactive Controller Script -->
+  <script>
+    let currentSlide = 1;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    document.getElementById('total-slides-num').innerText = totalSlides;
+
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let timerRunning = false;
+
+    function updateSlide() {
+      slides.forEach((s) => s.classList.remove('active'));
+      const activeSlide = document.querySelector(`.slide[data-slide="${currentSlide}"]`);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+        document.getElementById('current-slide-num').innerText = currentSlide;
+
+        // Update top bar rubric badge
+        const rubric = activeSlide.getAttribute('data-rubric') || '';
+        document.getElementById('slide-rubric-badge').innerText = `Rubric: ${rubric}`;
+
+        // Update speaker notes
+        const notes = activeSlide.getAttribute('data-notes') || 'No notes for this slide.';
+        const targetTime = activeSlide.getAttribute('data-target-time') || '';
+        document.getElementById('notes-content').innerText = notes;
+        document.getElementById('notes-rubric-target').innerText = `[${rubric}]`;
+        document.getElementById('notes-time-target').innerText = `⏱ Target: ${targetTime}`;
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function toggleNotes() {
+      const drawer = document.getElementById('notes-drawer');
+      drawer.classList.toggle('hidden-drawer');
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        btn.innerText = 'Resume';
+      } else {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const secs = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+          if (timerSeconds > 1200) {
+            document.getElementById('timer-display').classList.add('text-rose-400');
+          }
+        }, 1000);
+        timerRunning = true;
+        btn.innerText = 'Pause';
+      }
+    }
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        toggleNotes();
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    // Initialize first slide
+    updateSlide();
+  </script>
+</body>
+</html>

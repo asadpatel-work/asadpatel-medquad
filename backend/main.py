@@ -159,5 +159,13 @@ async def serve_index():
     return JSONResponse({"message": "MedQuAD Backend Online. Web UI loading..."})
 
 
+@app.get("/slides", include_in_schema=False)
+async def serve_slides():
+    slides_file = STATIC_DIR / "slides.html"
+    if slides_file.exists():
+        return FileResponse(slides_file)
+    return JSONResponse({"message": "Slides deck not found."})
+
+
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
