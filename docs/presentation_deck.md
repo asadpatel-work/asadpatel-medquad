@@ -1,153 +1,181 @@
 # MedQuAD Clinical Research Assistant: Presentation Deck
 
-**Project:** MedQuAD Clinical Research Assistant (Multi-Agent Grounded RAG)  
+**Project:** MedQuAD Clinical Research Assistant (Multi-Agent Grounded Literature Synthesis)  
 **File Artifact:** [`docs/medquad_capstone_presentation.pptx`](medquad_capstone_presentation.pptx)  
-**Format:** Google Slides / PowerPoint (16:9 Widescreen, Clean White Enterprise Theme)  
-**Pacing:** ~15–20 minutes presentation + Q&A
+**Format:** 16:9 Widescreen Presentation (Google Slides / PowerPoint compatible)  
+**Design Standard:** Generated via `generate-slides` skill (Declarative Action Titles, Category Trackers, Clean Tech Palette, Native Presenter Notes)
 
 ---
 
-## Slide 1: Problem: Clinical Literature Retrieval & Hallucination Risks
+## Slide 1: Title Slide
 
-### Slide Content
-
-#### 1. Manual Literature Synthesis Overhead
-* Clinicians and researchers spend over 35% of their research time searching disparate medical databases (NIH, NCI, CDC, PubMed).
-* Manual collation of staging criteria, treatment protocols, and adverse reactions is slow and error-prone.
-* Synthesizing an authoritative answer to a complex clinical question takes an average of 15 minutes of specialized clinician time.
-* Information is fragmented across thousands of static XML and PDF files without unified semantic indexing.
-
-#### 2. LLM Hallucinations & Clinical Liability
-* Standard off-the-shelf foundation models exhibit an ~18% citation hallucination rate on biomedical literature queries.
-* Commercial chatbots generate plausible-sounding but fictitious medical claims, fabricated journal links, and obsolete dosing advice.
-* Unguarded models attempt to diagnose conditions or recommend drug doses from user prompts, creating severe medical liability.
-* Off-the-shelf models lack a verifiable 1-to-1 provenance mechanism connecting each statement back to an authoritative medical chunk.
+### Visual Layout
+* **Tag:** `FIELD DELIVERY ENGINEER (FDE) CAPSTONE PRESENTATION`
+* **Title:** **MedQuAD Clinical Research Assistant**
+* **Subtitle:** Multi-Agent Grounded Literature Synthesis & Clinical Guardrails
+* **Metadata:** 
+  * Candidate: Asad Patel | Target Role: Field Delivery Engineer (FDE)
+  * Platform: Google Cloud (Vertex AI Search, Cloud Run, ADK, Gemini 2.5/3.5)
 
 ### Speaker Notes
-> *"Slide 1 outlines the core problem we set out to solve.*  
+> *"Good morning. Today I am presenting the MedQuAD Clinical Research Assistant for my Field Delivery Engineer capstone evaluation.*  
 > 
-> *In healthcare, researchers and clinicians face two distinct failure modes when answering clinical questions:*  
+> *This system addresses the challenge of clinical literature discovery by combining Google Cloud's Agent Development Kit with Vertex AI Search and deterministic guardrails.*  
 > 
-> *First, manual retrieval is inefficient. Researchers spend more than a third of their time combing through disparate NIH databases, guidelines, and trial registries. A single literature review can easily take 15 minutes of manual labor.*  
-> 
-> *Second, simply handing the problem to a generic LLM introduces severe clinical risk. Foundation models hallucinate citations roughly 18% of the time, and unprompted, they will attempt to diagnose or recommend prescriptions, exposing the institution to malpractice liability.*  
-> 
-> *The goal of this project is to bridge this gap: automate literature synthesis while guaranteeing 100% citation grounding and enforcing strict clinical guardrails."*
+> *This presentation covers: the clinical problem, our product capabilities, the end-to-end multi-agent architecture, and our future engineering roadmap."*
 
 ---
 
-## Slide 2: Product Overview: MedQuAD Clinical Research Assistant
+## Slide 2: Problem Definition
 
-### Slide Content
+### Header
+* **Category Tracker:** `PROBLEM DEFINITION`
+* **Action Title:** **Clinical Search Suffers from High Manual Overhead and Unsafe Model Hallucinations**
 
-#### Authoritative NIH Corpus Grounding
-* Indexes 16,400+ verified medical Q&A pairs from NIH, NCI, CDC, and MedlinePlus.
-* Preprocessed with 500-token semantic chunking and 10% overlap to preserve clinical context.
-* Backed by Google Vertex AI Search with automated fallback to an in-memory vector store.
+### Content Cards
+#### Card 1: 1. Manual Literature Synthesis Friction
+* Clinicians and researchers spend over 35% of working hours manually combing through fragmented medical databases (NIH, NCI, CDC, PubMed).
+* Synthesizing an authoritative answer for staging criteria, treatment protocols, or adverse reactions takes ~15 minutes of specialized labor.
+* High research friction directly delays clinical trial design, literature review updates, and research grant submissions.
+* Knowledge remains locked in static, disconnected XML repositories without centralized semantic search capability.
 
-#### Deterministic Citation Verification
-* Every generated statement must map 1:1 to a specific retrieved NIH passage chunk.
-* A dedicated Reviewer agent audits citations before output is streamed to the user.
-* Enforces 100% citation precision—unverified statements are flagged or excised.
-
-#### Layer 8 Safety & Safe Refusal
-* Immediate interception (<5ms) of personal diagnostic and drug dosing demands.
-* Pre-flight de-identification of 18 HIPAA Safe Harbor identifiers (MRN, SSN, names).
-* Returns structured clinical disclaimers and emergency redirection without wasting LLM tokens.
-
-#### Efficient Model Tiering & Cloud Run
-* Tiered Gemini models: Flash 2.5 for routing/safety, Pro 2.5 for synthesis, Flash 3.5 for review.
-* Blended inference cost of ~$0.0035 per query ($351/mo for 100,000 queries).
-* Deployed serverless on Google Cloud Run with sub-3s p95 latency and zero cold starts.
+#### Card 2: 2. Foundation Model Hallucinations & Liability
+* Standard off-the-shelf LLMs exhibit an ~18% citation error and hallucination rate on medical literature queries.
+* Generic models fabricate plausible clinical claims, non-existent PMIDs, and outdated pharmaceutical dosing guidelines.
+* Unguarded models attempt to answer personal diagnosis and prescription questions, creating severe malpractice liability.
+* Commercial consumer chatbots lack deterministic 1:1 chunk verification to prove evidence provenance.
 
 ### Speaker Notes
-> *"Slide 2 describes the product and what it actually does.*  
+> *"Slide 2 establishes the core problem.*  
 > 
-> *The MedQuAD Clinical Assistant is a specialized research tool built on top of 16,400+ authoritative NIH medical records.*  
+> *Clinical researchers face two competing challenges:*  
+> *First, manual research takes too long. Combing through NIH databases, clinical trials, and FDA inserts consumes over 35% of a researcher's time, averaging 15 minutes per query.*  
 > 
-> *Here are its four defining technical characteristics:*  
-> *1. Authoritative Grounding: We chunked and indexed NIH, NCI, and MedlinePlus data using 500-token semantic chunks in Vertex AI Search.*  
-> *2. Deterministic Verification: Rather than trusting the model to cite accurately, a dedicated Reviewer subagent cross-examines the draft against retrieved chunk IDs. We enforce 100% citation provenance.*  
-> *3. Layer 8 Guardrails: If a user asks for a personal diagnosis or a prescription dose, our Safe Refusal Engine catches it in under 5 milliseconds and responds with a clinical disclaimer, invoking zero LLM tokens.*  
-> *4. Practical FinOps: We tiered Gemini models so that routing and review run on lightweight Flash models, reserving Gemini Pro strictly for multi-document synthesis. This brings the total blended cost down to $0.0035 per query."*
+> *Second, relying on standard LLMs is dangerous in clinical contexts. Studies show foundation models hallucinate citations roughly 18% of the time, and unguarded models attempt to offer personal medical advice, creating unacceptable legal risk.*  
+> 
+> *The MedQuAD Assistant bridges this divide by delivering automated literature synthesis with strict 1:1 citation proof and deterministic safety boundaries."*
 
 ---
 
-## Slide 3: System Architecture: ADK Multi-Agent Pipeline
+## Slide 3: Product Overview
 
-### Slide Content
+### Header
+* **Category Tracker:** `PRODUCT OVERVIEW`
+* **Action Title:** **MedQuAD Delivers Grounded Literature Synthesis with Deterministic Verification**
 
+### Quadrant Cards
+#### Top-Left: Authoritative NIH Corpus Grounding
+* Indexes 16,400+ verified medical Q&A pairs from NIH, NCI, CDC, and MedlinePlus across 12 clinical domains.
+* Structured with 500-token semantic chunks and 10% overlap to preserve clinical context.
+* Powered by Google Vertex AI Search with automated circuit-breaker fallback to an in-memory vector store.
+
+#### Top-Right: Deterministic Citation Verification
+* Independent Reviewer subagent cross-examines draft responses against retrieved source passages.
+* CitationVerifier ensures 100% of bracketed claims map to valid retrieved chunk IDs.
+* Ungrounded statements are automatically flagged and removed before streaming to the user.
+
+#### Bottom-Left: Layer 8 Safety & Safe Refusal Engine
+* Pre-flight de-identification of 18 HIPAA Safe Harbor identifiers (MRN, SSN, patient names).
+* Immediate rejection (<5ms) of personal diagnosis and drug dosing prompts without invoking model tokens.
+* Structured response redirects users to certified healthcare providers and emergency services.
+
+#### Bottom-Right: Cost-Effective Model Tiering
+* Tiered Gemini deployment: Flash 2.5 for intent/routing, Pro 2.5 for synthesis, Flash 3.5 for audit.
+* Blended query cost of ~$0.0035 ($351/month for 100,000 queries) vs. $15.00 manual labor.
+* Deployed on Cloud Run with p95 response latency under 3 seconds and zero idle server costs.
+
+### Speaker Notes
+> *"Slide 3 outlines what the product actually does and how it operates.*  
+> 
+> *1. Authoritative Grounding: We indexed 16,400+ verified NIH pairs into Vertex AI Search with 500-token semantic chunks.*  
+> 
+> *2. Deterministic Verification: Rather than hoping the model doesn't hallucinate, an independent Reviewer agent verifies every bracketed citation against the retrieved chunks, achieving 100% citation precision.*  
+> 
+> *3. Safe Refusal Engine: If a user enters diagnostic or dosing questions, our boundary engine catches it in under 5ms, returning a clinical disclaimer with zero token waste.*  
+> 
+> *4. Cost Efficiency: By tiering Gemini models, we keep inference costs to just $0.0035 per query, running serverless on Cloud Run."*
+
+---
+
+## Slide 4: System Architecture
+
+### Header
+* **Category Tracker:** `SYSTEM ARCHITECTURE`
+* **Action Title:** **Multi-Agent ADK Architecture Decouples Retrieval, Synthesis, and Verification**
+
+### Architecture Topology
 #### 1. Ingress & Perimeter Defense
-`Client Request (HTTPS / SSE) ──> Cloud Armor L7 WAF ──> Cloud Run (FastAPI Gateway) ──> Model Armor (HIPAA PHI Redaction & Injection Filter)`
+`Client (HTTPS / SSE) ──> Cloud Armor L7 WAF ──> Cloud Run (FastAPI) ──> Model Armor (HIPAA PHI Redaction & Prompt Guard)`
 
-#### 2. Multi-Agent Core (Supervisor-Worker Pattern)
+#### 2. Multi-Agent Core (Decoupled Agents)
 * **Root Orchestrator (Supervisor - Gemini 2.5 Flash):**
-  * Evaluates user intent & domain.
-  * SafeRefusalEngine intercepts diagnosis & prescription requests in <5ms.
-  * Enforces immutable `max_iterations=2` loop ceiling to prevent runaway costs.
+  * Classifies clinical intent & domain.
+  * SafeRefusalEngine rejects diagnosis/dosing in <5ms.
+  * Enforces strict `max_iterations=2` loop ceiling.
 * **Clinical Researcher (Worker - Gemini 2.5 Pro):**
-  * Executes semantic search across 16.4k NIH MedQuAD passages.
-  * Queries lab reference ranges via ClinicalDBTool.
-  * Synthesizes grounded evidence draft with explicit inline `[1]`, `[2]` citations.
+  * Queries Vertex AI Search (16.4k NIH pairs).
+  * Fetches lab test ranges via ClinicalDBTool.
+  * Drafts evidence synthesis with inline `[1]`, `[2]` citations.
 * **Reviewer & QC (Quality Gate - Gemini 3.5 Flash):**
-  * Operates with zero shared hidden state to avoid confirmation bias.
-  * CitationVerifier: checks that every bracketed citation maps to a valid retrieved chunk ID.
-  * Blocks ungrounded claims before streaming.
+  * Operates with zero shared hidden state to prevent confirmation bias.
+  * CitationVerifier checks every citation against retrieved chunk IDs.
+  * Strips ungrounded claims before streaming.
 
 #### 3. Grounding & Data Layer
-`Vertex AI Search (16,400+ NIH Records) | Local In-Memory Vector Fallback (Circuit Breaker) | GCS Corpus Bucket`
+`Vertex AI Search Datastore (16.4k NIH pairs) | In-Memory Vector Fallback (Circuit Breaker) | GCS Raw XML Staging`
 
 #### 4. Observability & Continuous Evaluation
-`OpenTelemetry Distributed Context ──> Cloud Trace ──> BigQuery Telemetry Sink ──> Cloud Scheduler Nightly Audit Pipeline`
+`OpenTelemetry Distributed Tracing ──> Google Cloud Trace ──> BigQuery Telemetry Sink ──> Automated Nightly Quality Audit`
 
 ### Speaker Notes
-> *"Slide 3 walks through our multi-agent architecture and request lifecycle.*  
+> *"Slide 4 walks through the technical architecture and request lifecycle:*  
 > 
-> *1. Ingress & Security: Requests enter via Cloud Armor and FastAPI on Cloud Run. Before touching any LLM, our Model Armor engine strips 18 HIPAA Safe Harbor identifiers and filters jailbreak patterns.*  
+> *1. Ingress & Security: Requests enter via Cloud Armor and FastAPI on Cloud Run. Before touching any model, Model Armor redacts 18 HIPAA Safe Harbor identifiers and filters jailbreak patterns.*  
 > 
-> *2. Orchestration: The Root Orchestrator (Gemini 2.5 Flash) assesses the request. If the user asks for diagnosis or prescriptions, the Safe Refusal Engine catches it in under 5ms. If it's a valid clinical inquiry, it delegates to the Researcher.*  
+> *2. Orchestration: The Root Orchestrator (Gemini 2.5 Flash) assesses the query. If it asks for diagnosis or prescriptions, the Safe Refusal Engine catches it in under 5ms. If valid, it delegates to the Researcher.*  
 > 
-> *3. Research: The Clinical Researcher (Gemini 2.5 Pro) retrieves passages from Vertex AI Search and drafts a synthesis with inline citation brackets.*  
+> *3. Research: The Clinical Researcher (Gemini 2.5 Pro) retrieves passages from Vertex AI Search and synthesizes a draft with explicit citations.*  
 > 
-> *4. Review: Crucially, that draft is sent to an independent Reviewer subagent (Gemini 3.5 Flash) with zero shared state. The CitationVerifier validates each citation against the retrieved chunks. If valid, it is streamed to the user.*  
+> *4. Review: The draft is reviewed by an independent Reviewer subagent (Gemini 3.5 Flash) with zero shared state. The CitationVerifier validates every citation against retrieved chunk IDs before release.*  
 > 
-> *5. Telemetry: Every span is traced to Google Cloud Trace, and telemetry metrics (latency, token usage, cost) are streamed into BigQuery."*
+> *5. Telemetry: Traces are pushed to Cloud Trace, and telemetry data (latency, cost, tokens) is streamed to BigQuery."*
 
 ---
 
-## Slide 4: Future Work: Roadmap & Clinical System Integration
+## Slide 5: Future Roadmap
 
-### Slide Content
+### Header
+* **Category Tracker:** `FUTURE ROADMAP`
+* **Action Title:** **Roadmap Focuses on Clinical Standards, State Persistence, and Multimodal RAG**
 
-#### 1. EHR & Standards Integration (Cloud Healthcare API)
-* Connect to Google Cloud Healthcare API to query de-identified patient data.
-* Ingest and parse FHIR R4 resources (Patient, Condition, Observation, MedicationStatement).
-* Enable clinical researchers to compare literature findings against patient cohort criteria.
+### Milestone Cards
+#### 1. EHR Standards (Google Cloud Healthcare API)
+* Integrate Google Cloud Healthcare API to query de-identified clinical records.
+* Parse and ingest FHIR R4 resources (Patient, Condition, Observation, MedicationStatement).
+* Enable researchers to cross-reference literature evidence against clinical cohort criteria.
 
 #### 2. Distributed Session Persistence & State Store
-* Migrate from ephemeral in-memory session history to distributed Cloud Firestore.
-* Support cross-session multi-turn research conversations with TTL-managed retention.
-* Implement multi-region active-active redundancy for continuous availability.
+* Migrate from ephemeral in-memory conversation state to distributed Cloud Firestore.
+* Support multi-turn research threads across container instances with TTL retention.
+* Implement multi-region active-active replication for enterprise high availability.
 
 #### 3. Multimodal Clinical RAG (Gemini Vision)
-* Expand retrieval from text-only NIH XML documents to medical imagery and scans.
-* Ingest DICOM radiology files and histology slides stored in Cloud Storage buckets.
-* Use Gemini multimodal reasoning to correlate diagnostic imaging with clinical guidelines.
+* Expand ingestion pipeline from text-only XML records to diagnostic imaging.
+* Ingest DICOM radiology files and pathology slide scans stored in GCS buckets.
+* Use Gemini multimodal reasoning to correlate medical imaging with clinical guidelines.
 
 #### 4. Enterprise Access Control & Zero-Trust Perimeter
 * Integrate Google Identity-Aware Proxy (IAP) for institutional Single Sign-On (SSO).
-* Enforce role-based access control (RBAC) distinguishing researchers, oncologists, and auditors.
+* Enforce role-based access control (RBAC) separating researchers, oncologists, and auditors.
 * Deploy Private Service Connect (PSC) to isolate backend services inside customer VPCs.
 
 ### Speaker Notes
-> *"Slide 4 covers our planned technical roadmap and next engineering steps.*  
+> *"Slide 5 outlines our concrete next engineering milestones:*  
 > 
-> *Now that the core grounded literature engine and multi-agent verification are verified, we have four logical milestones:*  
+> *1. EHR Integration: Using the Google Cloud Healthcare API to ingest de-identified FHIR R4 records, allowing researchers to contextualize literature findings against patient cohort criteria.*  
 > 
-> *1. EHR Integration: Utilizing the Google Cloud Healthcare API to ingest de-identified FHIR R4 records, allowing researchers to evaluate literature directly in the context of patient cohorts.*  
+> *2. State Persistence: Migrating from local in-memory session cache to distributed Firestore, ensuring research threads survive container restarts across regions.*  
 > 
-> *2. Persistent Storage: Migrating from local in-memory session cache to multi-region Firestore, ensuring research threads survive container restarts.*  
-> 
-> *3. Multimodal RAG: Leveraging Gemini's native multimodal capabilities to analyze DICOM radiology scans alongside literature guidelines.*  
+> *3. Multimodal RAG: Leveraging Gemini's multimodal capabilities to analyze DICOM radiology scans alongside literature guidelines.*  
 > 
 > *4. Enterprise Security: Adding Identity-Aware Proxy for hospital SSO and Private Service Connect to satisfy enterprise zero-trust networking requirements."*
