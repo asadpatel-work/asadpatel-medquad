@@ -103,29 +103,42 @@
 * **Category Tracker:** `SYSTEM ARCHITECTURE`
 * **Action Title:** **Multi-Agent ADK Architecture Decouples Retrieval, Synthesis, and Verification**
 
-### Architecture Topology
-#### 1. Ingress & Perimeter Defense
-`Client (HTTPS / SSE) ──> Cloud Armor L7 WAF ──> Cloud Run (FastAPI) ──> Model Armor (HIPAA PHI Redaction & Prompt Guard)`
+### Visual Diagram Architecture Layout
 
-#### 2. Multi-Agent Core (Decoupled Agents)
-* **Root Orchestrator (Supervisor - Gemini 2.5 Flash):**
-  * Classifies clinical intent & domain.
-  * SafeRefusalEngine rejects diagnosis/dosing in <5ms.
-  * Enforces strict `max_iterations=2` loop ceiling.
-* **Clinical Researcher (Worker - Gemini 2.5 Pro):**
-  * Queries Vertex AI Search (16.4k NIH pairs).
-  * Fetches lab test ranges via ClinicalDBTool.
-  * Drafts evidence synthesis with inline `[1]`, `[2]` citations.
-* **Reviewer & QC (Quality Gate - Gemini 3.5 Flash):**
-  * Operates with zero shared hidden state to prevent confirmation bias.
-  * CitationVerifier checks every citation against retrieved chunk IDs.
-  * Strips ungrounded claims before streaming.
+```
+[1. Ingress & Perimeter Security Gateway]
+  Clinician / UI ──(1. Query)──> Cloud Armor WAF ──(2. Clean)──> Cloud Run Gateway ──(3. Ingest)──> Model Armor
+                                                                                                    ├──(Refusal <5ms)──> [Safe Refusal Exit]
+                                                                                                    └──(4. Valid Inquiry)──┐
+                                                                                                                           │
+[2. Google ADK Multi-Agent Core]                                                                                           ▼
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ▼
+  Root Orchestrator (Gemini 2.5 Flash) ──(5. Route)──> Clinical Researcher (Gemini 2.5 Pro) ──(8. Draft)──> Reviewer & QC Gate (Gemini 3.5 Flash)
+                                                               │                ▲                                     │
+                                                     (6. Query)│                │(7. Chunks)                          │(Telemetry)
+                                                               ▼                │                                     ▼
+[3. Grounding Data Stores & Observability]             Vertex AI Search (16.4k NIH pairs)                     Cloud Trace & BigQuery
+                                                       ClinicalDBTool (Lab Ranges)
+                                                       Vector DB Fallback (Circuit Breaker)
+```
 
-#### 3. Grounding & Data Layer
-`Vertex AI Search Datastore (16.4k NIH pairs) | In-Memory Vector Fallback (Circuit Breaker) | GCS Raw XML Staging`
-
-#### 4. Observability & Continuous Evaluation
-`OpenTelemetry Distributed Tracing ──> Google Cloud Trace ──> BigQuery Telemetry Sink ──> Automated Nightly Quality Audit`
+#### Diagram Component Details:
+1. **Tier 1 — Perimeter & Ingress:**
+   * **Clinician / UI:** Web App / REST API with streaming SSE and inline citation viewer.
+   * **Cloud Armor WAF:** L7 DDoS filtering, IP throttling, bot defense.
+   * **Cloud Run Gateway:** Serverless FastAPI container handling authentication and session state.
+   * **Model Armor Guardrail:** De-identifies 18 HIPAA Safe Harbor identifiers and filters prompt jailbreaks.
+   * **Safe Refusal Engine Exit:** Instant deterministic block (<5ms) on personal medical advice/dosing, returning emergency disclaimers with 0 tokens spent.
+2. **Tier 2 — Google ADK Multi-Agent Core:**
+   * **Root Orchestrator (Supervisor - Gemini 2.5 Flash):** Classifies query intent, handles safe refusal policies, and enforces immutable `max_iterations=2` loop ceiling.
+   * **Clinical Researcher (Worker - Gemini 2.5 Pro):** Performs deep biomedical reasoning, queries grounding tools, and drafts response with inline `[1]`, `[2]` citation tags.
+   * **Reviewer & QC Gate (Auditor - Gemini 3.5 Flash):** Operates with zero shared hidden state; runs `CitationVerifier` to validate 100% 1-to-1 chunk ID provenance before streaming release.
+3. **Tier 3 — Grounding & Observability:**
+   * **Vertex AI Search:** 16,400+ NIH Q&A pairs indexed in 500-token semantic chunks.
+   * **ClinicalDBTool:** Structured clinical reference ranges and diagnostic biomarker values.
+   * **Vector DB Fallback:** Local in-memory FAISS store for sub-50ms circuit-breaker resilience on 504 timeouts.
+   * **Cloud Trace & BigQuery:** OpenTelemetry distributed tracing spans and nightly automated quality evaluation sink.
 
 ### Speaker Notes
 > *"Slide 4 walks through the technical architecture and request lifecycle:*  

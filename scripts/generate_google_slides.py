@@ -7,6 +7,7 @@ Adheres strictly to the skill standards:
 - Clean off-white background with white card containers and subtle borders
 - Cohesive Google tech palette (Google Blue, Dark Charcoal, Slate Muted)
 - No marketing fluff: strictly engineering facts, metrics, and architecture
+- Slide 4 features an ACTUAL visual architecture diagram with boxes, containers, and directional arrows
 - Embedded speaker notes for Presenter View on every slide
 """
 
@@ -14,7 +15,8 @@ from pathlib import Path
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.oxml import parse_xml
 from pptx.util import Inches, Pt
 
 # Skill Palette & Typography
@@ -24,6 +26,10 @@ COLOR_BORDER = RGBColor(218, 220, 224)     # Border outline (#DADCE0)
 COLOR_TEXT_DARK = RGBColor(32, 33, 36)     # Primary text (#202124)
 COLOR_TEXT_MUTED = RGBColor(95, 99, 104)   # Secondary / subtitles (#5F6368)
 COLOR_PRIMARY = RGBColor(26, 115, 232)     # Google Blue (#1A73E8)
+COLOR_GREEN = RGBColor(52, 168, 83)        # Google Green (#34A853)
+COLOR_RED = RGBColor(234, 67, 53)          # Google Red (#EA4335)
+COLOR_RED_BG = RGBColor(254, 242, 242)     # Soft red background (#FEF2F2)
+COLOR_BLUE_BG = RGBColor(232, 240, 254)    # Soft blue background (#E8F0FE)
 
 FONT_HEADING = "Arial"
 FONT_BODY = "Arial"
@@ -31,19 +37,16 @@ FONT_BODY = "Arial"
 
 def apply_slide_header(slide, category: str, action_title: str):
     """Applies the skill's standard Category Tracker + Declarative Action Title."""
-    # Background fill
     bg = slide.background
     fill = bg.fill
     fill.solid()
     fill.fore_color.rgb = COLOR_BG
 
-    # Header text box
     tb = slide.shapes.add_textbox(Inches(0.8), Inches(0.55), Inches(11.733), Inches(1.1))
     tf = tb.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
 
-    # 1. Category Tracker (12pt, uppercase, muted)
     p_cat = tf.paragraphs[0]
     p_cat.text = category.upper()
     p_cat.font.name = FONT_HEADING
@@ -51,7 +54,6 @@ def apply_slide_header(slide, category: str, action_title: str):
     p_cat.font.bold = True
     p_cat.font.color.rgb = COLOR_PRIMARY
 
-    # 2. Action Title (24pt bold, dark, declarative sentence)
     p_title = tf.add_paragraph()
     p_title.text = action_title
     p_title.font.name = FONT_HEADING
@@ -60,8 +62,7 @@ def apply_slide_header(slide, category: str, action_title: str):
     p_title.font.color.rgb = COLOR_TEXT_DARK
     p_title.space_before = Pt(4)
 
-    # Subtle horizontal divider rule
-    divider = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.7), Inches(11.733), Inches(0.015))
+    divider = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.65), Inches(11.733), Inches(0.015))
     divider.fill.solid()
     divider.fill.fore_color.rgb = COLOR_BORDER
     divider.line.color.rgb = COLOR_BORDER
@@ -98,6 +99,145 @@ def add_card(slide, left, top, width, height, title: str, items: list[str]):
         p.space_before = Pt(6)
 
 
+def add_diag_box(
+    slide,
+    left,
+    top,
+    width,
+    height,
+    title: str,
+    subtitle: str = "",
+    bullets: list[str] | None = None,
+    border_color=COLOR_BORDER,
+    fill_color=COLOR_CARD_BG,
+    title_color=COLOR_PRIMARY,
+    is_rounded=True,
+):
+    """Draws a component box for architecture diagrams."""
+    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if is_rounded else MSO_SHAPE.RECTANGLE
+    box = slide.shapes.add_shape(shape_type, left, top, width, height)
+    box.fill.solid()
+    box.fill.fore_color.rgb = fill_color
+    box.line.color.rgb = border_color
+    box.line.width = Pt(1.2)
+
+    tf = box.text_frame
+    tf.word_wrap = True
+    tf.margin_left = Inches(0.12)
+    tf.margin_right = Inches(0.12)
+    tf.margin_top = Inches(0.08)
+    tf.margin_bottom = Inches(0.08)
+
+    p_t = tf.paragraphs[0]
+    p_t.text = title
+    p_t.font.name = FONT_HEADING
+    p_t.font.size = Pt(10)
+    p_t.font.bold = True
+    p_t.font.color.rgb = title_color
+
+    if subtitle:
+        p_sub = tf.add_paragraph()
+        p_sub.text = subtitle
+        p_sub.font.name = FONT_HEADING
+        p_sub.font.size = Pt(8)
+        p_sub.font.bold = True
+        p_sub.font.color.rgb = COLOR_TEXT_MUTED
+
+    if bullets:
+        for b in bullets:
+            p_b = tf.add_paragraph()
+            p_b.text = f"• {b}"
+            p_b.font.name = FONT_BODY
+            p_b.font.size = Pt(8)
+            p_b.font.color.rgb = COLOR_TEXT_DARK
+            p_b.space_before = Pt(1.5)
+    return box
+
+
+def add_arrow_connector(
+    slide,
+    x1,
+    y1,
+    x2,
+    y2,
+    color=COLOR_PRIMARY,
+    width=1.5,
+    label="",
+    label_dx=0.0,
+    label_dy=-0.16,
+    is_dashed=False,
+):
+    """Draws a clean directional line connector with an arrowhead and optional text label."""
+    conn = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x2, y2)
+    conn.line.color.rgb = color
+    conn.line.width = Pt(width)
+    line_xml = conn._element.spPr.ln
+    head_end = parse_xml(
+        '<a:headEnd xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" type="triangle" w="med" len="med"/>'
+    )
+    line_xml.append(head_end)
+    if is_dashed:
+        cust_dash = parse_xml(
+            '<a:prstDash xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="dash"/>'
+        )
+        line_xml.append(cust_dash)
+
+    if label:
+        mid_x = (x1 + x2) / 2 + Inches(label_dx)
+        mid_y = (y1 + y2) / 2 + Inches(label_dy)
+        tb = slide.shapes.add_textbox(mid_x - Inches(0.85), mid_y, Inches(1.7), Inches(0.24))
+        tf = tb.text_frame
+        tf.word_wrap = True
+        tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+        p = tf.paragraphs[0]
+        p.text = label
+        p.font.name = FONT_HEADING
+        p.font.size = Pt(7.5)
+        p.font.bold = True
+        p.font.color.rgb = color
+
+
+def add_orthogonal_arrow(
+    slide,
+    x1,
+    y1,
+    x2,
+    y2,
+    color=COLOR_PRIMARY,
+    width=1.5,
+    label="",
+    label_x_offset=0.0,
+):
+    """Draws an orthogonal (stepped) connector with an arrowhead."""
+    mid_y = (y1 + y2) / 2
+    c1 = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x1, mid_y)
+    c1.line.color.rgb = color
+    c1.line.width = Pt(width)
+
+    c2 = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, mid_y, x2, mid_y)
+    c2.line.color.rgb = color
+    c2.line.width = Pt(width)
+
+    c3 = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x2, mid_y, x2, y2)
+    c3.line.color.rgb = color
+    c3.line.width = Pt(width)
+    line_xml = c3._element.spPr.ln
+    head_end = parse_xml(
+        '<a:headEnd xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" type="triangle" w="med" len="med"/>'
+    )
+    line_xml.append(head_end)
+
+    if label:
+        tb = slide.shapes.add_textbox((x1 + x2) / 2 - Inches(0.85) + Inches(label_x_offset), mid_y - Inches(0.22), Inches(1.7), Inches(0.2))
+        tf = tb.text_frame
+        p = tf.paragraphs[0]
+        p.text = label
+        p.font.name = FONT_HEADING
+        p.font.size = Pt(7.5)
+        p.font.bold = True
+        p.font.color.rgb = color
+
+
 def add_notes(slide, notes: str):
     """Embeds native presenter notes."""
     slide.notes_slide.notes_text_frame.text = notes.strip()
@@ -116,7 +256,6 @@ def build_deck() -> Presentation:
     s1.background.fill.solid()
     s1.background.fill.fore_color.rgb = COLOR_BG
 
-    # Centered Title Box
     t_box = s1.shapes.add_textbox(Inches(1.2), Inches(2.1), Inches(10.9), Inches(3.2))
     tf1 = t_box.text_frame
     tf1.word_wrap = True
@@ -144,13 +283,11 @@ def build_deck() -> Presentation:
     p_sub.font.color.rgb = COLOR_TEXT_MUTED
     p_sub.space_before = Pt(8)
 
-    # Accent divider rule
     rule = s1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1.2), Inches(4.5), Inches(3.2), Inches(0.03))
     rule.fill.solid()
     rule.fill.fore_color.rgb = COLOR_PRIMARY
     rule.line.color.rgb = COLOR_PRIMARY
 
-    # Metadata details
     meta_box = s1.shapes.add_textbox(Inches(1.2), Inches(4.75), Inches(10.9), Inches(1.0))
     tf_meta = meta_box.text_frame
     tf_meta.word_wrap = True
@@ -179,7 +316,6 @@ def build_deck() -> Presentation:
         action_title="Clinical Search Suffers from High Manual Overhead and Unsafe Model Hallucinations"
     )
 
-    # Card 1: Manual Search Bottleneck
     add_card(
         s2,
         left=Inches(0.8),
@@ -195,7 +331,6 @@ def build_deck() -> Presentation:
         ]
     )
 
-    # Card 2: Foundation Model Hallucinations & Liability
     add_card(
         s2,
         left=Inches(6.8),
@@ -233,7 +368,6 @@ def build_deck() -> Presentation:
     q_w = Inches(5.7)
     q_h = Inches(2.3)
 
-    # Quadrant 1: Grounded Corpus
     add_card(
         s3,
         left=Inches(0.8),
@@ -248,7 +382,6 @@ def build_deck() -> Presentation:
         ]
     )
 
-    # Quadrant 2: 1:1 Citation Audit
     add_card(
         s3,
         left=Inches(6.8),
@@ -263,7 +396,6 @@ def build_deck() -> Presentation:
         ]
     )
 
-    # Quadrant 3: Guardrails & Safe Refusal
     add_card(
         s3,
         left=Inches(0.8),
@@ -278,7 +410,6 @@ def build_deck() -> Presentation:
         ]
     )
 
-    # Quadrant 4: Practical FinOps
     add_card(
         s3,
         left=Inches(6.8),
@@ -303,7 +434,7 @@ def build_deck() -> Presentation:
     )
 
     # =========================================================================
-    # SLIDE 4: System Architecture (Action Title)
+    # SLIDE 4: System Architecture (ACTUAL DIAGRAM WITH BOXES & ARROWS)
     # =========================================================================
     s4 = prs.slides.add_slide(blank_layout)
     apply_slide_header(
@@ -312,150 +443,317 @@ def build_deck() -> Presentation:
         action_title="Multi-Agent ADK Architecture Decouples Retrieval, Synthesis, and Verification"
     )
 
-    # Tier 1: Ingress
-    b1 = s4.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.85), Inches(11.733), Inches(0.7))
-    b1.fill.solid()
-    b1.fill.fore_color.rgb = COLOR_CARD_BG
-    b1.line.color.rgb = COLOR_BORDER
-    tf_b1 = b1.text_frame
-    tf_b1.margin_left = tf_b1.margin_right = Inches(0.2)
-    tf_b1.margin_top = Inches(0.1)
-    p_b1_t = tf_b1.paragraphs[0]
-    p_b1_t.text = "1. INGRESS & PERIMETER DEFENSE"
-    p_b1_t.font.name = FONT_HEADING
-    p_b1_t.font.size = Pt(10.5)
-    p_b1_t.font.bold = True
-    p_b1_t.font.color.rgb = COLOR_PRIMARY
-    p_b1_s = tf_b1.add_paragraph()
-    p_b1_s.text = "Client (HTTPS / SSE)  ──>  Cloud Armor L7 WAF  ──>  Cloud Run (FastAPI)  ──>  Model Armor (HIPAA PHI Redaction & Prompt Guard)"
-    p_b1_s.font.name = FONT_BODY
-    p_b1_s.font.size = Pt(9.5)
-    p_b1_s.font.color.rgb = COLOR_TEXT_DARK
+    # -------------------------------------------------------------------------
+    # ROW 1: INGRESS & SECURITY BOUNDARY (Container)
+    # -------------------------------------------------------------------------
+    cont1 = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.6), Inches(1.75), Inches(12.133), Inches(1.3))
+    cont1.fill.solid()
+    cont1.fill.fore_color.rgb = COLOR_CARD_BG
+    cont1.line.color.rgb = COLOR_BORDER
+    cont1.line.width = Pt(1)
+    tf_c1 = cont1.text_frame
+    tf_c1.margin_left = Inches(0.15)
+    tf_c1.margin_top = Inches(0.06)
+    p_c1 = tf_c1.paragraphs[0]
+    p_c1.text = "1. INGRESS & PERIMETER SECURITY GATEWAY"
+    p_c1.font.name = FONT_HEADING
+    p_c1.font.size = Pt(9)
+    p_c1.font.bold = True
+    p_c1.font.color.rgb = COLOR_TEXT_MUTED
 
-    # Tier 2: Agent Boxes (3 Columns)
-    col_w = Inches(3.75)
-    col_h = Inches(2.7)
+    # Box 1: Clinician UI
+    add_diag_box(
+        s4,
+        left=Inches(0.8),
+        top=Inches(2.02),
+        width=Inches(1.5),
+        height=Inches(0.9),
+        title="Clinician / UI",
+        subtitle="Web App & REST",
+        bullets=["HTTPS / SSE", "Inline Citations"],
+        border_color=COLOR_PRIMARY,
+        fill_color=COLOR_BLUE_BG,
+    )
 
-    # Orchestrator
-    box_o = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(2.7), col_w, col_h)
-    box_o.fill.solid()
-    box_o.fill.fore_color.rgb = COLOR_CARD_BG
-    box_o.line.color.rgb = COLOR_PRIMARY
-    box_o.line.width = Pt(1.5)
-    tfo = box_o.text_frame
-    tfo.margin_left = tfo.margin_right = Inches(0.2)
-    tfo.margin_top = Inches(0.15)
-    po1 = tfo.paragraphs[0]
-    po1.text = "Root Orchestrator (Supervisor)"
-    po1.font.bold = True
-    po1.font.size = Pt(11.5)
-    po1.font.color.rgb = COLOR_PRIMARY
-    po2 = tfo.add_paragraph()
-    po2.text = "Model: Gemini 2.5 Flash\n"
-    po2.font.bold = True
-    po2.font.size = Pt(9.5)
-    po2.font.color.rgb = COLOR_TEXT_MUTED
-    po3 = tfo.add_paragraph()
-    po3.text = "• Classifies clinical intent & domain.\n• SafeRefusalEngine rejects diagnosis/dosing in <5ms.\n• Enforces strict max_iterations=2 loop ceiling."
-    po3.font.size = Pt(9.5)
-    po3.font.color.rgb = COLOR_TEXT_DARK
+    # Arrow 1: Client -> Cloud Armor
+    add_arrow_connector(s4, Inches(2.3), Inches(2.47), Inches(2.65), Inches(2.47), label="1. Query")
 
-    # Researcher
-    box_r = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(4.78), Inches(2.7), col_w, col_h)
-    box_r.fill.solid()
-    box_r.fill.fore_color.rgb = COLOR_CARD_BG
-    box_r.line.color.rgb = COLOR_PRIMARY
-    box_r.line.width = Pt(1.5)
-    tfr = box_r.text_frame
-    tfr.margin_left = tfr.margin_right = Inches(0.2)
-    tfr.margin_top = Inches(0.15)
-    pr1 = tfr.paragraphs[0]
-    pr1.text = "Clinical Researcher (Worker)"
-    pr1.font.bold = True
-    pr1.font.size = Pt(11.5)
-    pr1.font.color.rgb = COLOR_PRIMARY
-    pr2 = tfr.add_paragraph()
-    pr2.text = "Model: Gemini 2.5 Pro\n"
-    pr2.font.bold = True
-    pr2.font.size = Pt(9.5)
-    pr2.font.color.rgb = COLOR_TEXT_MUTED
-    pr3 = tfr.add_paragraph()
-    pr3.text = "• Queries Vertex AI Search (16.4k NIH pairs).\n• Fetches lab test ranges via ClinicalDBTool.\n• Drafts evidence synthesis with inline [1], [2] citations."
-    pr3.font.size = Pt(9.5)
-    pr3.font.color.rgb = COLOR_TEXT_DARK
+    # Box 2: Cloud Armor
+    add_diag_box(
+        s4,
+        left=Inches(2.65),
+        top=Inches(2.02),
+        width=Inches(1.5),
+        height=Inches(0.9),
+        title="Cloud Armor",
+        subtitle="L7 WAF & DDoS",
+        bullets=["IP Throttling", "Bot Defense"],
+    )
 
-    # Reviewer
-    box_v = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8.75), Inches(2.7), col_w, col_h)
-    box_v.fill.solid()
-    box_v.fill.fore_color.rgb = COLOR_CARD_BG
-    box_v.line.color.rgb = COLOR_PRIMARY
-    box_v.line.width = Pt(1.5)
-    tfv = box_v.text_frame
-    tfv.margin_left = tfv.margin_right = Inches(0.2)
-    tfv.margin_top = Inches(0.15)
-    pv1 = tfv.paragraphs[0]
-    pv1.text = "Reviewer & QC (Quality Gate)"
-    pv1.font.bold = True
-    pv1.font.size = Pt(11.5)
-    pv1.font.color.rgb = COLOR_PRIMARY
-    pv2 = tfv.add_paragraph()
-    pv2.text = "Model: Gemini 3.5 Flash\n"
-    pv2.font.bold = True
-    pv2.font.size = Pt(9.5)
-    pv2.font.color.rgb = COLOR_TEXT_MUTED
-    pv3 = tfv.add_paragraph()
-    pv3.text = "• Operates with zero shared hidden state.\n• CitationVerifier checks every citation against chunk IDs.\n• Strips ungrounded claims before streaming."
-    pv3.font.size = Pt(9.5)
-    pv3.font.color.rgb = COLOR_TEXT_DARK
+    # Arrow 2: Cloud Armor -> Cloud Run
+    add_arrow_connector(s4, Inches(4.15), Inches(2.47), Inches(4.5), Inches(2.47), label="2. Clean")
 
-    # Tier 3: Grounding
-    b3 = s4.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(5.55), Inches(11.733), Inches(0.65))
-    b3.fill.solid()
-    b3.fill.fore_color.rgb = COLOR_CARD_BG
-    b3.line.color.rgb = COLOR_BORDER
-    tf_b3 = b3.text_frame
-    tf_b3.margin_left = tf_b3.margin_right = Inches(0.2)
-    tf_b3.margin_top = Inches(0.1)
-    p_b3_t = tf_b3.paragraphs[0]
-    p_b3_t.text = "3. GROUNDING & DATA LAYER"
-    p_b3_t.font.name = FONT_HEADING
-    p_b3_t.font.size = Pt(10.5)
-    p_b3_t.font.bold = True
-    p_b3_t.font.color.rgb = COLOR_PRIMARY
-    p_b3_s = tf_b3.add_paragraph()
-    p_b3_s.text = "Vertex AI Search Datastore (16.4k NIH pairs)  |  In-Memory Vector Fallback (Circuit Breaker)  |  GCS Raw XML Staging"
-    p_b3_s.font.name = FONT_BODY
-    p_b3_s.font.size = Pt(9.5)
-    p_b3_s.font.color.rgb = COLOR_TEXT_DARK
+    # Box 3: Cloud Run
+    add_diag_box(
+        s4,
+        left=Inches(4.5),
+        top=Inches(2.02),
+        width=Inches(1.7),
+        height=Inches(0.9),
+        title="Cloud Run Gateway",
+        subtitle="FastAPI Container",
+        bullets=["Auth Token Check", "Streaming Engine"],
+    )
 
-    # Tier 4: Observability
-    b4 = s4.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(6.35), Inches(11.733), Inches(0.65))
-    b4.fill.solid()
-    b4.fill.fore_color.rgb = COLOR_CARD_BG
-    b4.line.color.rgb = COLOR_BORDER
-    tf_b4 = b4.text_frame
-    tf_b4.margin_left = tf_b4.margin_right = Inches(0.2)
-    tf_b4.margin_top = Inches(0.1)
-    p_b4_t = tf_b4.paragraphs[0]
-    p_b4_t.text = "4. OBSERVABILITY & CONTINUOUS EVALUATION"
-    p_b4_t.font.name = FONT_HEADING
-    p_b4_t.font.size = Pt(10.5)
-    p_b4_t.font.bold = True
-    p_b4_t.font.color.rgb = COLOR_PRIMARY
-    p_b4_s = tf_b4.add_paragraph()
-    p_b4_s.text = "OpenTelemetry Distributed Tracing  ──>  Google Cloud Trace  ──>  BigQuery Telemetry Sink  ──>  Automated Nightly Quality Audit"
-    p_b4_s.font.name = FONT_BODY
-    p_b4_s.font.size = Pt(9.5)
-    p_b4_s.font.color.rgb = COLOR_TEXT_DARK
+    # Arrow 3: Cloud Run -> Model Armor
+    add_arrow_connector(s4, Inches(6.2), Inches(2.47), Inches(6.55), Inches(2.47), label="3. Ingest")
+
+    # Box 4: Model Armor Guardrail
+    add_diag_box(
+        s4,
+        left=Inches(6.55),
+        top=Inches(2.02),
+        width=Inches(2.1),
+        height=Inches(0.9),
+        title="Model Armor",
+        subtitle="Layer 8 Guardrail",
+        bullets=["18 HIPAA PHI De-id", "Injection Filter"],
+        border_color=COLOR_PRIMARY,
+    )
+
+    # Arrow 4a: Model Armor -> Safe Refusal Exit
+    add_arrow_connector(
+        s4,
+        Inches(8.65),
+        Inches(2.47),
+        Inches(9.1),
+        Inches(2.47),
+        color=COLOR_RED,
+        label="Refusal (<5ms)",
+    )
+
+    # Box 5: Safe Refusal Exit
+    add_diag_box(
+        s4,
+        left=Inches(9.1),
+        top=Inches(2.02),
+        width=Inches(3.4),
+        height=Inches(0.9),
+        title="Safe Refusal Engine Exit",
+        subtitle="Boundary Lock: Diagnosis & Rx Dosing",
+        bullets=["Returns emergency disclaimer", "Zero LLM tokens spent"],
+        border_color=COLOR_RED,
+        fill_color=COLOR_RED_BG,
+        title_color=COLOR_RED,
+    )
+
+    # Orthogonal Arrow 4b: Model Armor down to Root Orchestrator
+    add_orthogonal_arrow(
+        s4,
+        x1=Inches(7.6),
+        y1=Inches(2.92),
+        x2=Inches(2.35),
+        y2=Inches(3.45),
+        color=COLOR_GREEN,
+        width=1.5,
+        label="4. Valid Inquiry (Sanitized Query)",
+        label_x_offset=0.2,
+    )
+
+    # -------------------------------------------------------------------------
+    # ROW 2: GOOGLE ADK MULTI-AGENT CORE (Container)
+    # -------------------------------------------------------------------------
+    cont2 = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.6), Inches(3.18), Inches(12.133), Inches(2.32))
+    cont2.fill.solid()
+    cont2.fill.fore_color.rgb = COLOR_CARD_BG
+    cont2.line.color.rgb = COLOR_PRIMARY
+    cont2.line.width = Pt(1.5)
+    tf_c2 = cont2.text_frame
+    tf_c2.margin_left = Inches(0.15)
+    tf_c2.margin_top = Inches(0.06)
+    p_c2 = tf_c2.paragraphs[0]
+    p_c2.text = "2. GOOGLE ADK MULTI-AGENT CORE (SUPERVISOR-WORKER DECOUPLED TOPOLOGY)"
+    p_c2.font.name = FONT_HEADING
+    p_c2.font.size = Pt(9)
+    p_c2.font.bold = True
+    p_c2.font.color.rgb = COLOR_PRIMARY
+
+    # Agent 1: Root Orchestrator
+    add_diag_box(
+        s4,
+        left=Inches(0.8),
+        top=Inches(3.45),
+        width=Inches(3.1),
+        height=Inches(1.85),
+        title="Root Orchestrator",
+        subtitle="Supervisor  |  Gemini 2.5 Flash",
+        bullets=[
+            "Classifies clinical intent & domain",
+            "SafeRefusalEngine policy routing",
+            "Enforces max_iterations=2 loop ceiling",
+            "Maintains top-level conversation state",
+        ],
+        border_color=COLOR_PRIMARY,
+    )
+
+    # Arrow 5: Root Orchestrator -> Clinical Researcher
+    add_arrow_connector(s4, Inches(3.9), Inches(4.37), Inches(4.7), Inches(4.37), label="5. Route")
+
+    # Agent 2: Clinical Researcher
+    add_diag_box(
+        s4,
+        left=Inches(4.7),
+        top=Inches(3.45),
+        width=Inches(3.5),
+        height=Inches(1.85),
+        title="Clinical Researcher",
+        subtitle="Worker  |  Gemini 2.5 Pro",
+        bullets=[
+            "Deep biomedical literature reasoning",
+            "Executes semantic search over NIH data",
+            "Queries lab test reference ranges",
+            "Drafts synthesis with inline [1],[2] tags",
+        ],
+        border_color=COLOR_PRIMARY,
+    )
+
+    # Arrow 8: Clinical Researcher -> Reviewer
+    add_arrow_connector(s4, Inches(8.2), Inches(4.37), Inches(8.9), Inches(4.37), label="8. Draft")
+
+    # Agent 3: Reviewer & QC
+    add_diag_box(
+        s4,
+        left=Inches(8.9),
+        top=Inches(3.45),
+        width=Inches(3.6),
+        height=Inches(1.85),
+        title="Reviewer & QC Gate",
+        subtitle="Auditor  |  Gemini 3.5 Flash",
+        bullets=[
+            "Zero shared hidden state (no bias)",
+            "CitationVerifier: 100% chunk ID match",
+            "Strips ungrounded/hallucinated statements",
+            "Approves streaming release to client",
+        ],
+        border_color=COLOR_GREEN,
+        title_color=COLOR_GREEN,
+    )
+
+    # -------------------------------------------------------------------------
+    # ROW 3: GROUNDING & DATA STORES (Container)
+    # -------------------------------------------------------------------------
+    cont3 = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.6), Inches(5.62), Inches(12.133), Inches(1.48))
+    cont3.fill.solid()
+    cont3.fill.fore_color.rgb = COLOR_CARD_BG
+    cont3.line.color.rgb = COLOR_BORDER
+    cont3.line.width = Pt(1)
+    tf_c3 = cont3.text_frame
+    tf_c3.margin_left = Inches(0.15)
+    tf_c3.margin_top = Inches(0.06)
+    p_c3 = tf_c3.paragraphs[0]
+    p_c3.text = "3. GROUNDING DATA STORES & OBSERVABILITY SINK"
+    p_c3.font.name = FONT_HEADING
+    p_c3.font.size = Pt(9)
+    p_c3.font.bold = True
+    p_c3.font.color.rgb = COLOR_TEXT_MUTED
+
+    # Store 1: Vertex AI Search
+    add_diag_box(
+        s4,
+        left=Inches(0.8),
+        top=Inches(5.92),
+        width=Inches(2.8),
+        height=Inches(1.05),
+        title="Vertex AI Search",
+        subtitle="Authoritative Literature Datastore",
+        bullets=["16,400+ NIH Q&A pairs indexed", "500-token semantic chunks (10% ovlp)"],
+    )
+
+    # Store 2: ClinicalDBTool
+    add_diag_box(
+        s4,
+        left=Inches(3.8),
+        top=Inches(5.92),
+        width=Inches(2.7),
+        height=Inches(1.05),
+        title="ClinicalDBTool",
+        subtitle="Structured Reference Database",
+        bullets=["Lab test reference ranges", "Diagnostic biomarker thresholds"],
+    )
+
+    # Store 3: In-Memory Vector Fallback
+    add_diag_box(
+        s4,
+        left=Inches(6.7),
+        top=Inches(5.92),
+        width=Inches(2.8),
+        height=Inches(1.05),
+        title="Vector DB Fallback",
+        subtitle="Circuit Breaker Redundancy",
+        bullets=["Local FAISS in-memory store", "Sub-50ms fallback on 504 timeouts"],
+    )
+
+    # Store 4: Cloud Trace & BigQuery
+    add_diag_box(
+        s4,
+        left=Inches(9.7),
+        top=Inches(5.92),
+        width=Inches(2.8),
+        height=Inches(1.05),
+        title="Cloud Trace & BigQuery",
+        subtitle="Observability & Quality Sink",
+        bullets=["OpenTelemetry distributed spans", "Nightly automated evaluation audits"],
+    )
+
+    # Arrows between Clinical Researcher & Grounding:
+    # 6: Down from Researcher to Grounding
+    add_arrow_connector(
+        s4,
+        Inches(5.7),
+        Inches(5.3),
+        Inches(5.7),
+        Inches(5.92),
+        color=COLOR_PRIMARY,
+        label="6. Query",
+        label_dx=0.25,
+        label_dy=-0.1,
+    )
+    # 7: Up from Grounding to Researcher
+    add_arrow_connector(
+        s4,
+        Inches(6.5),
+        Inches(5.92),
+        Inches(6.5),
+        Inches(5.3),
+        color=COLOR_PRIMARY,
+        label="7. Chunks",
+        label_dx=0.3,
+        label_dy=0.08,
+    )
+
+    # Telemetry Dotted Connector from Reviewer down to Cloud Trace
+    add_arrow_connector(
+        s4,
+        Inches(11.1),
+        Inches(5.3),
+        Inches(11.1),
+        Inches(5.92),
+        color=COLOR_TEXT_MUTED,
+        label="Telemetry",
+        label_dx=0.35,
+        label_dy=0.0,
+        is_dashed=True,
+    )
 
     add_notes(
         s4,
-        "Slide 4 walks through the technical architecture and request lifecycle:\n\n"
-        "1. Ingress & Security: Requests enter via Cloud Armor and FastAPI on Cloud Run. Before touching any model, Model Armor redacts 18 HIPAA Safe Harbor identifiers and filters jailbreak patterns.\n\n"
-        "2. Orchestration: The Root Orchestrator (Gemini 2.5 Flash) assesses the query. If it asks for diagnosis or prescriptions, the Safe Refusal Engine catches it in under 5ms. If valid, it delegates to the Researcher.\n\n"
-        "3. Research: The Clinical Researcher (Gemini 2.5 Pro) retrieves passages from Vertex AI Search and synthesizes a draft with explicit citations.\n\n"
-        "4. Review: The draft is reviewed by an independent Reviewer subagent (Gemini 3.5 Flash) with zero shared state. The CitationVerifier validates every citation against retrieved chunk IDs before release.\n\n"
-        "5. Telemetry: Traces are pushed to Cloud Trace, and telemetry data (latency, cost, tokens) is streamed to BigQuery."
+        "Slide 4 displays the concrete architecture diagram showing the visual flow across components:\n\n"
+        "1. Ingress & Perimeter: Clinician queries enter via Cloud Armor and FastAPI on Cloud Run. Model Armor performs Layer 8 guardrails—scrubbing 18 HIPAA Safe Harbor identifiers and filtering jailbreak injections.\n\n"
+        "2. Safe Refusal Branch: If the user asks for personal medical advice or dosing, the Safe Refusal Engine exits in under 5ms without invoking model tokens.\n\n"
+        "3. Multi-Agent Orchestration: If valid, the query passes to the Root Orchestrator (Gemini 2.5 Flash), which classifies intent and routes to the Clinical Researcher (Gemini 2.5 Pro).\n\n"
+        "4. Grounding: The Researcher retrieves 500-token chunks from Vertex AI Search (with fallback to an in-memory vector store) and fetches lab ranges via ClinicalDBTool, synthesizing an evidence draft with inline citation tags.\n\n"
+        "5. Independent Verification: The Reviewer & QC agent (Gemini 3.5 Flash) operates with zero shared state. Its CitationVerifier audits every single citation bracket against retrieved chunk IDs. Only 100% verified responses are streamed back to the client.\n\n"
+        "6. Observability: Every span is traced to Cloud Trace, and telemetry is recorded in BigQuery for continuous auditing."
     )
 
     # =========================================================================
