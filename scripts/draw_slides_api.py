@@ -1,19 +1,10 @@
 """Direct Google Slides REST API Drawing Script.
 
 Calls the Google Slides REST API (presentations.batchUpdate) to draw
-the complete visual architecture diagram directly on a target slide.
+the minimal-box, detailed-arrow architecture diagram directly on a target slide.
 
 Usage:
-    # 1. With token argument:
     python scripts/draw_slides_api.py --token "<ACCESS_TOKEN>"
-
-    # 2. Or using gcloud access token:
-    python scripts/draw_slides_api.py --token "$(gcloud auth print-access-token)"
-
-    # 3. Using custom presentation / slide ID:
-    python scripts/draw_slides_api.py --token "<TOKEN>" \
-        --presentation-id "1cdBc40xSexQXZ3GtXyOKMgSwuobGbfWX8sRn46Jr6cU" \
-        --slide-id "h66d1b35f290be7cc_11_38"
 """
 
 import argparse
@@ -40,8 +31,7 @@ COLOR_GREEN = {"red": 0.204, "green": 0.659, "blue": 0.325}     # #34A853
 def build_batch_update_requests(slide_id: str) -> list[dict]:
     requests = []
 
-    # Helper: Create shape
-    def make_box(
+    def make_clean_box(
         obj_id: str,
         x: float,
         y: float,
@@ -49,7 +39,7 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
         h: float,
         title: str,
         subtitle: str = "",
-        bullets: list[str] | None = None,
+        descriptor: str = "",
         shape_type: str = "ROUND_RECTANGLE",
         fill_color: dict | None = None,
         border_color: dict | None = None,
@@ -82,7 +72,7 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
                     "shapeBackgroundFill": {"solidFill": {"color": {"rgbColor": fill}}},
                     "outline": {
                         "outlineFill": {"solidFill": {"color": {"rgbColor": border}}},
-                        "weight": {"magnitude": 1.2, "unit": "PT"}
+                        "weight": {"magnitude": 1.5 if border in (COLOR_PRIMARY, COLOR_GREEN, COLOR_RED) else 1.0, "unit": "PT"}
                     }
                 }
             }
@@ -91,17 +81,10 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
         text = title
         if subtitle:
             text += f"\n{subtitle}"
-        if bullets:
-            text += "\n• " + "\n• ".join(bullets)
+        if descriptor:
+            text += f"\n{descriptor}"
 
-        requests.append({
-            "insertText": {
-                "objectId": obj_id,
-                "insertionIndex": 0,
-                "text": text
-            }
-        })
-        # Style title
+        requests.append({"insertText": {"objectId": obj_id, "insertionIndex": 0, "text": text}})
         requests.append({
             "updateTextStyle": {
                 "objectId": obj_id,
@@ -109,15 +92,14 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
                 "fields": "bold,fontSize,foregroundColor,fontFamily",
                 "style": {
                     "bold": True,
-                    "fontSize": {"magnitude": 9, "unit": "PT"},
+                    "fontSize": {"magnitude": 9.5, "unit": "PT"},
                     "fontFamily": "Arial",
                     "foregroundColor": {"opaqueColor": {"rgbColor": t_col}}
                 }
             }
         })
 
-    # Helper: Create Line
-    def make_line(obj_id: str, x1: float, y1: float, x2: float, y2: float, color: dict | None = None, is_dashed: bool = False):
+    def make_detailed_arrow(obj_id: str, x1: float, y1: float, x2: float, y2: float, color: dict | None = None, label: str = "", label_dx: float = 0.0, label_dy: float = -14.0, is_dashed: bool = False):
         col = color or COLOR_PRIMARY
         requests.append({
             "createLine": {
@@ -126,11 +108,7 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
                 "elementProperties": {
                     "pageObjectId": slide_id,
                     "size": {"width": {"magnitude": max(abs(x2 - x1), 1), "unit": "PT"}, "height": {"magnitude": max(abs(y2 - y1), 1), "unit": "PT"}},
-                    "transform": {
-                        "scaleX": 1, "scaleY": 1,
-                        "translateX": min(x1, x2), "translateY": min(y1, y2),
-                        "unit": "PT"
-                    }
+                    "transform": {"scaleX": 1, "scaleY": 1, "translateX": min(x1, x2), "translateY": min(y1, y2), "unit": "PT"}
                 }
             }
         })
@@ -149,84 +127,87 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
             }
         })
 
-    # Helper: Create Label
-    def make_label(obj_id: str, x: float, y: float, w: float, h: float, text: str, color: dict | None = None):
-        col = color or COLOR_PRIMARY
-        requests.append({
-            "createShape": {
-                "objectId": obj_id,
-                "shapeType": "TEXT_BOX",
-                "elementProperties": {
-                    "pageObjectId": slide_id,
-                    "size": {"width": {"magnitude": w, "unit": "PT"}, "height": {"magnitude": h, "unit": "PT"}},
-                    "transform": {"scaleX": 1, "scaleY": 1, "translateX": x, "translateY": y, "unit": "PT"}
+        if label:
+            mid_x = (x1 + x2) / 2 + label_dx
+            mid_y = (y1 + y2) / 2 + label_dy
+            lbl_id = f"lbl_{obj_id}"
+            requests.append({
+                "createShape": {
+                    "objectId": lbl_id,
+                    "shapeType": "TEXT_BOX",
+                    "elementProperties": {
+                        "pageObjectId": slide_id,
+                        "size": {"width": {"magnitude": 140, "unit": "PT"}, "height": {"magnitude": 14, "unit": "PT"}},
+                        "transform": {"scaleX": 1, "scaleY": 1, "translateX": mid_x - 70, "translateY": mid_y, "unit": "PT"}
+                    }
                 }
-            }
-        })
-        requests.append({"insertText": {"objectId": obj_id, "insertionIndex": 0, "text": text}})
-        requests.append({
-            "updateTextStyle": {
-                "objectId": obj_id,
-                "textRange": {"type": "ALL"},
-                "fields": "bold,fontSize,foregroundColor,fontFamily",
-                "style": {
-                    "bold": True,
-                    "fontSize": {"magnitude": 7, "unit": "PT"},
-                    "fontFamily": "Arial",
-                    "foregroundColor": {"opaqueColor": {"rgbColor": col}}
+            })
+            requests.append({"insertText": {"objectId": lbl_id, "insertionIndex": 0, "text": label}})
+            requests.append({
+                "updateTextStyle": {
+                    "objectId": lbl_id,
+                    "textRange": {"type": "ALL"},
+                    "fields": "bold,fontSize,foregroundColor,fontFamily",
+                    "style": {
+                        "bold": True,
+                        "fontSize": {"magnitude": 6.8, "unit": "PT"},
+                        "fontFamily": "Arial",
+                        "foregroundColor": {"opaqueColor": {"rgbColor": col}}
+                    }
                 }
+            })
+
+    # Header
+    requests.append({
+        "createShape": {
+            "objectId": "hdr_title",
+            "shapeType": "TEXT_BOX",
+            "elementProperties": {
+                "pageObjectId": slide_id,
+                "size": {"width": {"magnitude": 870, "unit": "PT"}, "height": {"magnitude": 50, "unit": "PT"}},
+                "transform": {"scaleX": 1, "scaleY": 1, "translateX": 45, "translateY": 25, "unit": "PT"}
             }
-        })
+        }
+    })
+    requests.append({"insertText": {"objectId": "hdr_title", "insertionIndex": 0, "text": "SYSTEM ARCHITECTURE\nMulti-Agent ADK Architecture Decouples Retrieval, Synthesis, and Verification"}})
 
-    # --- Header ---
-    make_label("hdr_title", 45, 25, 870, 50, "SYSTEM ARCHITECTURE\nMulti-Agent ADK Architecture Decouples Retrieval, Synthesis, and Verification", COLOR_DARK)
+    # Row 1: Ingress
+    make_clean_box("c1_ingress", 45, 95, 870, 88, "1. INGRESS & PERIMETER DEFENSE", title_color=COLOR_MUTED)
+    make_clean_box("b1_ui", 55, 115, 100, 58, "Clinician UI", "Web & REST API", "HTTPS / SSE streaming", fill_color=COLOR_BLUE_BG, border_color=COLOR_PRIMARY)
+    make_detailed_arrow("arr_1", 155, 144, 205, 144, label="1. HTTPS Inquiry")
 
-    # --- Container 1: Ingress ---
-    make_box("c1_ingress", 45, 95, 870, 90, "1. INGRESS & PERIMETER SECURITY GATEWAY", shape_type="ROUND_RECTANGLE", border_color=COLOR_BORDER, title_color=COLOR_MUTED)
-    make_box("b1_ui", 55, 115, 105, 60, "Clinician / UI", "Web App & REST", ["HTTPS / SSE", "Inline Citations"], fill_color=COLOR_BLUE_BG, border_color=COLOR_PRIMARY)
-    make_line("arr_1", 160, 145, 190, 145)
-    make_label("lbl_1", 160, 132, 40, 14, "1. Query")
+    make_clean_box("b2_waf", 205, 115, 100, 58, "Cloud Armor", "L7 WAF & DDoS", "Rate & bot filtering")
+    make_detailed_arrow("arr_2", 305, 144, 355, 144, label="2. Clean Traffic")
 
-    make_box("b2_waf", 190, 115, 110, 60, "Cloud Armor", "L7 WAF & DDoS", ["IP Throttling", "Bot Defense"])
-    make_line("arr_2", 300, 145, 330, 145)
-    make_label("lbl_2", 300, 132, 40, 14, "2. Clean")
+    make_clean_box("b3_gwy", 355, 115, 110, 58, "Cloud Run Gateway", "FastAPI Microservice", "Auth & session state")
+    make_detailed_arrow("arr_3", 465, 144, 515, 144, label="3. Auth Payload")
 
-    make_box("b3_gwy", 330, 115, 120, 60, "Cloud Run Gateway", "FastAPI Backend", ["Auth Token Check", "Streaming SSE"])
-    make_line("arr_3", 450, 145, 480, 145)
-    make_label("lbl_3", 450, 132, 40, 14, "3. Ingest")
+    make_clean_box("b4_ma", 515, 115, 115, 58, "Model Armor", "Layer 8 Guardrail", "HIPAA PHI & Jailbreak", border_color=COLOR_PRIMARY)
+    make_detailed_arrow("arr_4a", 630, 144, 680, 144, color=COLOR_RED, label="4a. Safe Refusal (<5ms)")
 
-    make_box("b4_ma", 480, 115, 145, 60, "Model Armor", "Layer 8 Guardrail", ["18 HIPAA PHI De-id", "Injection Filter"], border_color=COLOR_PRIMARY)
-    make_line("arr_4a", 625, 145, 660, 145, color=COLOR_RED)
-    make_label("lbl_4a", 620, 132, 60, 14, "Refusal (<5ms)", COLOR_RED)
+    make_clean_box("b5_ref", 680, 115, 225, 58, "Safe Refusal Engine Exit", "Personal Advice & Dosing Block", "Returns ER disclaimer | Zero tokens", fill_color=COLOR_RED_BG, border_color=COLOR_RED, title_color=COLOR_RED)
 
-    make_box("b5_ref", 660, 115, 245, 60, "Safe Refusal Engine Exit", "Boundary Lock: Diagnosis & Rx Dosing", ["Returns emergency disclaimer", "Zero LLM tokens spent"], fill_color=COLOR_RED_BG, border_color=COLOR_RED, title_color=COLOR_RED)
+    # Row 2: Agents
+    make_clean_box("c2_agents", 45, 195, 870, 168, "2. GOOGLE ADK MULTI-AGENT CORE (DECOUPLED SUPERVISOR-WORKER PATTERN)", border_color=COLOR_PRIMARY, title_color=COLOR_PRIMARY)
+    make_clean_box("b6_orch", 55, 215, 210, 138, "Root Orchestrator", "Supervisor | Gemini 2.5 Flash", "• Intent classification & policy routing\n• max_iterations=2 loop ceiling\n• Top-level conversation session state", border_color=COLOR_PRIMARY)
+    make_detailed_arrow("arr_5", 265, 284, 340, 284, label="5. Research Intent + Loop Guard (max_iter=2)")
 
-    # --- Container 2: Agents ---
-    make_box("c2_agents", 45, 195, 870, 175, "2. GOOGLE ADK MULTI-AGENT CORE (SUPERVISOR-WORKER DECOUPLED TOPOLOGY)", shape_type="ROUND_RECTANGLE", border_color=COLOR_PRIMARY, title_color=COLOR_PRIMARY)
-    make_box("b6_orch", 55, 215, 220, 145, "Root Orchestrator", "Supervisor | Gemini 2.5 Flash", ["Classifies clinical intent & domain", "SafeRefusalEngine policy routing", "Enforces max_iterations=2 loop ceiling", "Maintains conversation context"], border_color=COLOR_PRIMARY)
-    make_line("arr_5", 275, 287, 335, 287)
-    make_label("lbl_5", 285, 275, 50, 14, "5. Route")
+    make_clean_box("b7_res", 340, 215, 235, 138, "Clinical Researcher", "Worker | Gemini 2.5 Pro", "• Deep biomedical literature reasoning\n• Multi-source synthesis across NIH\n• Drafts response with [1],[2] citations", border_color=COLOR_PRIMARY)
+    make_detailed_arrow("arr_8", 575, 284, 650, 284, label="8. Draft Response with [1],[2] Anchors")
 
-    make_box("b7_res", 335, 215, 250, 145, "Clinical Researcher", "Worker | Gemini 2.5 Pro", ["Deep biomedical literature reasoning", "Executes semantic search over NIH data", "Queries lab test reference ranges", "Drafts synthesis with inline [1],[2] tags"], border_color=COLOR_PRIMARY)
-    make_line("arr_8", 585, 287, 645, 287)
-    make_label("lbl_8", 595, 275, 50, 14, "8. Draft")
+    make_clean_box("b8_rev", 650, 215, 255, 138, "Reviewer & QC Gate", "Auditor | Gemini 3.5 Flash", "• Zero shared state (eliminates bias)\n• CitationVerifier: 100% chunk match\n• Approves verified streaming release", border_color=COLOR_GREEN, title_color=COLOR_GREEN)
 
-    make_box("b8_rev", 645, 215, 260, 145, "Reviewer & QC Gate", "Auditor | Gemini 3.5 Flash", ["Zero shared hidden state (prevents bias)", "CitationVerifier: 100% chunk ID match", "Strips ungrounded/hallucinated claims", "Approves verified response release"], border_color=COLOR_GREEN, title_color=COLOR_GREEN)
-
-    # --- Container 3: Grounding & Observability ---
-    make_box("c3_ground", 45, 380, 870, 120, "3. GROUNDING DATA STORES & OBSERVABILITY SINK", shape_type="ROUND_RECTANGLE", border_color=COLOR_BORDER, title_color=COLOR_MUTED)
-    make_box("b9_vsearch", 55, 400, 200, 90, "Vertex AI Search", "Authoritative Literature Datastore", ["16,400+ NIH Q&A pairs indexed", "500-token semantic chunks (10% ovlp)"])
-    make_box("b10_cdb", 270, 400, 195, 90, "ClinicalDBTool", "Structured Reference Database", ["Lab test reference ranges", "Diagnostic biomarker thresholds"])
-    make_box("b11_faiss", 480, 400, 200, 90, "Vector DB Fallback", "Circuit Breaker Redundancy", ["Local FAISS in-memory store", "Sub-50ms fallback on 504 timeouts"])
-    make_box("b12_obs", 695, 400, 210, 90, "Cloud Trace & BigQuery", "Observability & Quality Sink", ["OpenTelemetry distributed spans", "Nightly automated evaluation audits"])
+    # Row 3: Grounding
+    make_clean_box("c3_ground", 45, 375, 870, 120, "3. GROUNDING DATA STORES & OBSERVABILITY SINK", border_color=COLOR_BORDER, title_color=COLOR_MUTED)
+    make_clean_box("b9_vsearch", 55, 395, 200, 90, "Vertex AI Search", "NIH Literature Datastore", "16,400+ verified medical Q&A pairs\n500-token chunks with 10% overlap")
+    make_clean_box("b10_cdb", 270, 395, 200, 90, "ClinicalDBTool", "Biomarker Reference DB", "Diagnostic reference ranges &\nclinical lab test thresholds")
+    make_clean_box("b11_faiss", 485, 395, 195, 90, "Vector DB Fallback", "Circuit Breaker Store", "Local FAISS in-memory index\nSub-50ms fallback on 504 timeouts")
+    make_clean_box("b12_obs", 695, 395, 210, 90, "Cloud Trace & BigQuery", "Observability & Audit Sink", "OpenTelemetry distributed spans &\nnightly continuous evaluation logs")
 
     # Inter-tier arrows
-    make_line("arr_6", 410, 360, 410, 400)
-    make_label("lbl_6", 412, 375, 50, 14, "6. Query")
-    make_line("arr_7", 465, 400, 465, 360)
-    make_label("lbl_7", 467, 375, 50, 14, "7. Chunks")
-    make_line("arr_tel", 800, 360, 800, 400, color=COLOR_MUTED, is_dashed=True)
-    make_label("lbl_tel", 805, 375, 60, 14, "Telemetry", COLOR_MUTED)
+    make_detailed_arrow("arr_6", 420, 353, 420, 395, label="6. Hybrid Dense+Lexical Query", label_dx=45, label_dy=-4)
+    make_detailed_arrow("arr_7", 485, 395, 485, 353, label="7. Top-K NIH Evidence Chunks", label_dx=45, label_dy=4)
+    make_detailed_arrow("arr_tel", 785, 353, 785, 395, color=COLOR_MUTED, label="Async OTel Traces & Cost Logs", label_dx=50, label_dy=0, is_dashed=True)
 
     return requests
 
