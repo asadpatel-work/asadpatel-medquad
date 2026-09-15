@@ -110,12 +110,46 @@ class ModelArmor:
         if not self._initialized:
             self._initialized = True
             try:
+                import google.auth
                 from google.api_core.client_options import ClientOptions
                 from google.cloud import modelarmor_v1
 
                 endpoint = f"modelarmor.{self.location}.rep.googleapis.com"
+                creds = None
+                try:
+                    import google.auth.transport.requests
+
+                    creds, _ = google.auth.default(
+                        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                    )
+                    request = google.auth.transport.requests.Request()
+                    creds.refresh(request)
+                except Exception as e:
+                    logger.debug("google.auth.default() refresh error: %s", e)
+                    creds = None
+
+                if creds is None:
+                    try:
+                        import subprocess
+                        from google.oauth2 import credentials
+
+                        token = (
+                            subprocess.check_output(
+                                ["gcloud", "auth", "print-access-token"],
+                                stderr=subprocess.DEVNULL,
+                            )
+                            .decode()
+                            .strip()
+                            .split("\n")[-1]
+                        )
+                        if token and token.startswith("ya29."):
+                            creds = credentials.Credentials(token)
+                    except Exception:
+                        pass
+
                 self._client = modelarmor_v1.ModelArmorClient(
                     transport="rest",
+                    credentials=creds,
                     client_options=ClientOptions(api_endpoint=endpoint),
                 )
                 logger.info(

@@ -167,6 +167,10 @@ if "containers" in template and len(template["containers"]) > 0:
         "ROOT_ORCHESTRATOR_MODEL": "gemini-2.5-flash",
         "RESEARCHER_MODEL": "gemini-2.5-pro",
         "REVIEWER_MODEL": "gemini-3.5-flash",
+        "ENABLE_MODEL_ARMOR": "true",
+        "MODEL_ARMOR_PROJECT_ID": PROJECT_ID,
+        "MODEL_ARMOR_LOCATION": REGION,
+        "MODEL_ARMOR_TEMPLATE_ID": "medquad-safety-template",
     }
     container["env"] = [{"name": k, "value": v} for k, v in env_vars.items()]
 

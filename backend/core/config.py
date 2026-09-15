@@ -112,7 +112,7 @@ class Settings(BaseSettings):
         ),
     )
     model_armor_template_id: str = Field(
-        default="",
+        default="medquad-safety-template",
         validation_alias=AliasChoices("MODEL_ARMOR_TEMPLATE_ID", "MODEL_ARMOR_TEMPLATE"),
     )
     strict_safe_refusal: bool = True
