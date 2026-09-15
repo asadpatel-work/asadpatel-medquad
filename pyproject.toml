@@ -25,6 +25,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "asyncpg>=0.29.0",
     "sqlalchemy>=2.0.30",
+    "google-cloud-modelarmor>=0.7.1",
 ]
 
 [dependency-groups]

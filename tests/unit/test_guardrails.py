@@ -99,3 +99,79 @@ def test_model_armor_phi_redaction():
     assert "[REDACTED_PHONE]" in res.sanitized_text
     assert "[REDACTED_DOB]" in res.sanitized_text
     assert "[REDACTED_MRN]" in res.sanitized_text
+    assert res.source == "local_fallback"
+
+
+def test_gcp_model_armor_client_integration():
+    """Verify ModelArmor processes GCP Model Armor client API responses."""
+    from unittest.mock import MagicMock
+
+    from google.cloud import modelarmor_v1
+
+    mock_client = MagicMock()
+
+    # Setup mock GCP Model Armor response with SDP de-identification
+    resp = modelarmor_v1.SanitizeUserPromptResponse()
+    res = resp.sanitization_result
+    res.filter_match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND
+
+    # Add SDP de-identification result
+    fr_sdp = modelarmor_v1.FilterResult()
+    fr_sdp.sdp_filter_result.deidentify_result.data = modelarmor_v1.DataItem(
+        text="Patient [REDACTED_NAME] with MRN [REDACTED_MRN]"
+    )
+    fr_sdp.sdp_filter_result.deidentify_result.info_types.extend(["PERSON_NAME", "MEDICAL_RECORD_NUMBER"])
+    res.filter_results["sdp_filter"] = fr_sdp
+
+    mock_client.sanitize_user_prompt.return_value = resp
+
+    armor = ModelArmor(
+        project_id="test-project",
+        location="us-central1",
+        template_id="test-template",
+        client=mock_client,
+    )
+
+    result = armor.sanitize("Patient John Doe with MRN 123456")
+
+    assert result.is_safe is True
+    assert result.jailbreak_detected is False
+    assert result.source == "gcp_model_armor"
+    assert "[REDACTED_NAME]" in result.sanitized_text
+    assert "[REDACTED_MRN]" in result.sanitized_text
+    assert result.redacted_phi_count == 2
+    mock_client.sanitize_user_prompt.assert_called_once()
+
+
+def test_gcp_model_armor_jailbreak_block():
+    """Verify ModelArmor blocks jailbreak attempts identified by GCP Model Armor."""
+    from unittest.mock import MagicMock
+
+    from google.cloud import modelarmor_v1
+
+    mock_client = MagicMock()
+
+    resp = modelarmor_v1.SanitizeUserPromptResponse()
+    res = resp.sanitization_result
+    res.filter_match_state = modelarmor_v1.FilterMatchState.MATCH_FOUND
+
+    fr_jb = modelarmor_v1.FilterResult()
+    fr_jb.pi_and_jailbreak_filter_result.match_state = modelarmor_v1.FilterMatchState.MATCH_FOUND
+    res.filter_results["pi_and_jailbreak_filter"] = fr_jb
+
+    mock_client.sanitize_user_prompt.return_value = resp
+
+    armor = ModelArmor(
+        project_id="test-project",
+        location="us-central1",
+        template_id="test-template",
+        client=mock_client,
+    )
+
+    result = armor.sanitize("Adversarial payload")
+
+    assert result.is_safe is False
+    assert result.jailbreak_detected is True
+    assert result.source == "gcp_model_armor"
+    assert len(result.violations) > 0
+

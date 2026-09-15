@@ -97,8 +97,24 @@ class Settings(BaseSettings):
     reviewer_model: str = "gemini-3.5-flash"
     gemini_reviewer_model: str = "gemini-3.5-flash"
 
-    # Safety Guardrails
+    # Safety Guardrails & GCP Model Armor
     enable_model_armor: bool = True
+    model_armor_project_id: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "MODEL_ARMOR_PROJECT_ID", "GCP_PROJECT_ID", "GOOGLE_CLOUD_PROJECT"
+        ),
+    )
+    model_armor_location: str = Field(
+        default="us-central1",
+        validation_alias=AliasChoices(
+            "MODEL_ARMOR_LOCATION", "GCP_REGION", "GOOGLE_CLOUD_LOCATION"
+        ),
+    )
+    model_armor_template_id: str = Field(
+        default="",
+        validation_alias=AliasChoices("MODEL_ARMOR_TEMPLATE_ID", "MODEL_ARMOR_TEMPLATE"),
+    )
     strict_safe_refusal: bool = True
 
     # Observability
