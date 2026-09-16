@@ -7,9 +7,6 @@
     <filter id="shadow-shield" x="-6%" y="-4%" width="112%" height="114%" filterUnits="userSpaceOnUse">
       <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1A73E8" flood-opacity="0.14"/>
     </filter>
-    <filter id="shadow-alert" x="-6%" y="-4%" width="112%" height="114%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#EA4335" flood-opacity="0.16"/>
-    </filter>
     <filter id="shadow-cloudrun" x="-2%" y="-2%" width="104%" height="106%" filterUnits="userSpaceOnUse">
       <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#4285F4" flood-opacity="0.15"/>
     </filter>
@@ -19,10 +16,7 @@
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1A73E8"/>
     </marker>
     <marker id="arr-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#34A853"/>
-    </marker>
-    <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#EA4335"/>
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#188038"/>
     </marker>
     <marker id="arr-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#5F6368"/>
@@ -146,12 +140,6 @@
       <circle cx="12" cy="12" r="10" fill="#E8F0FE" stroke="#F9AB00" stroke-width="1.5"/>
       <polygon points="13,3 6,13 11,13 10,21 18,10 13,10" fill="#F9AB00"/>
     </g>
-
-    <!-- 11. Safe Refusal Barrier Logo -->
-    <g id="logo-refusal">
-      <polygon points="7,2 17,2 22,7 22,17 17,22 7,22 2,17 2,7" fill="#EA4335"/>
-      <line x1="7" y1="12" x2="17" y2="12" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
-    </g>
   </defs>
 
   <!-- ========================================== -->
@@ -173,66 +161,55 @@
     <text x="18" y="18" font-size="9.5" font-weight="700" fill="#5F6368" letter-spacing="0.5">TIER 1: INGRESS &amp; PERIMETER DEFENSE</text>
 
     <!-- 1. Clinician UI (Browser Window Shape) -->
-    <g transform="translate(18, 28)" filter="url(#shadow-card)">
-      <rect width="130" height="78" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
-      <path d="M 0 8 Q 0 0 8 0 L 122 0 Q 130 0 130 8 L 130 18 L 0 18 Z" fill="#E8F0FE"/>
-      <circle cx="10" cy="9" r="2.5" fill="#EA4335"/>
-      <circle cx="18" cy="9" r="2.5" fill="#FBBC04"/>
-      <circle cx="26" cy="9" r="2.5" fill="#34A853"/>
-      <g transform="translate(53, 23)"><use href="#logo-react"/></g>
-      <text x="65" y="56" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician UI</text>
-      <text x="65" y="70" font-size="9" font-weight="500" fill="#5F6368" text-anchor="middle">React 18 / REST API</text>
+    <g transform="translate(20, 26)" filter="url(#shadow-card)">
+      <rect width="280" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
+      <path d="M 0 8 Q 0 0 8 0 L 272 0 Q 280 0 280 8 L 280 20 L 0 20 Z" fill="#E8F0FE"/>
+      <circle cx="12" cy="10" r="2.5" fill="#EA4335"/>
+      <circle cx="20" cy="10" r="2.5" fill="#FBBC04"/>
+      <circle cx="28" cy="10" r="2.5" fill="#34A853"/>
+      <g transform="translate(18, 34)"><use href="#logo-react"/></g>
+      <text x="155" y="42" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician Portal (UI)</text>
+      <text x="155" y="56" font-size="9" font-weight="500" fill="#202124" text-anchor="middle">React 18 Single-Page Application</text>
+      <text x="155" y="69" font-size="8" fill="#5F6368" text-anchor="middle">REST Ingress • Server-Sent Events (SSE)</text>
     </g>
 
     <!-- Arrow 1: UI -> Cloud Armor -->
-    <line x1="148" y1="67" x2="205" y2="67" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
-    <rect x="150" y="47" width="52" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="176" y="58" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">1. HTTPS</text>
+    <line x1="300" y1="66" x2="390" y2="66" stroke="#1A73E8" stroke-width="2" marker-end="url(#arr-blue)"/>
+    <rect x="312" y="44" width="66" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="345" y="56" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">HTTPS / TLS 1.3</text>
 
     <!-- 2. Cloud Armor (Shield Shape + Official Logo) -->
-    <g transform="translate(205, 23)" filter="url(#shadow-shield)">
-      <path d="M 12 0 L 123 0 L 135 15 L 135 56 Q 135 84 67 90 Q 0 84 0 56 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
-      <path d="M 12 0 L 123 0 L 135 15 L 135 26 L 0 26 L 0 15 Z" fill="#E8F0FE"/>
-      <g transform="translate(55, 30)"><use href="#logo-cloud-armor"/></g>
-      <text x="67" y="66" font-size="11.5" font-weight="700" fill="#202124" text-anchor="middle">Cloud Armor</text>
-      <text x="67" y="79" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 WAF &amp; DDoS</text>
+    <g transform="translate(390, 20)" filter="url(#shadow-shield)">
+      <path d="M 12 0 L 308 0 L 320 15 L 320 58 Q 320 86 160 92 Q 0 86 0 58 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
+      <path d="M 12 0 L 308 0 L 320 15 L 320 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
+      <g transform="translate(18, 38)"><use href="#logo-cloud-armor"/></g>
+      <text x="175" y="46" font-size="12" font-weight="700" fill="#202124" text-anchor="middle">Google Cloud Armor</text>
+      <text x="175" y="60" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 Web Application Firewall (WAF) &amp; DDoS</text>
+      <text x="175" y="73" font-size="8" fill="#5F6368" text-anchor="middle">OWASP Top 10 • Adaptive Rate Limiting</text>
     </g>
 
     <!-- Arrow 2: Cloud Armor -> Model Armor -->
-    <line x1="340" y1="67" x2="400" y2="67" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
-    <rect x="342" y="47" width="54" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="369" y="58" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">2. Cleaned</text>
+    <line x1="710" y1="66" x2="770" y2="66" stroke="#1A73E8" stroke-width="2" marker-end="url(#arr-blue)"/>
+    <rect x="712" y="44" width="56" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="740" y="56" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">WAF Inspected</text>
 
     <!-- 3. Model Armor (Shield Shape + Official Logo) -->
-    <g transform="translate(400, 23)" filter="url(#shadow-shield)">
-      <path d="M 12 0 L 128 0 L 140 15 L 140 56 Q 140 84 70 90 Q 0 84 0 56 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
-      <path d="M 12 0 L 128 0 L 140 15 L 140 26 L 0 26 L 0 15 Z" fill="#E8F0FE"/>
-      <g transform="translate(58, 30)"><use href="#logo-model-armor"/></g>
-      <text x="70" y="66" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Model Armor</text>
-      <text x="70" y="79" font-size="8.5" font-weight="600" fill="#5F6368" text-anchor="middle">Layer 8 Guardrail</text>
-    </g>
-
-    <!-- Arrow 3a: Model Armor -> Safe Refusal Exit -->
-    <line x1="540" y1="67" x2="615" y2="67" stroke="#EA4335" stroke-width="1.8" marker-end="url(#arr-red)"/>
-    <rect x="546" y="47" width="62" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#EA4335" stroke-width="0.8"/>
-    <text x="577" y="58" font-size="7.5" font-weight="700" fill="#EA4335" text-anchor="middle">3a. Refusal</text>
-
-    <!-- 4. Safe Refusal Engine Exit (Octagonal Stop Barrier) -->
-    <g transform="translate(615, 23)" filter="url(#shadow-alert)">
-      <polygon points="25,0 460,0 485,25 485,65 460,90 25,90 0,65 0,25" fill="#FEF2F2" stroke="#EA4335" stroke-width="2"/>
-      <g transform="translate(24, 33)"><use href="#logo-refusal"/></g>
-      <text x="255" y="41" font-size="12" font-weight="700" fill="#EA4335" text-anchor="middle">Safe Refusal Engine Exit</text>
-      <text x="255" y="57" font-size="9.5" font-weight="600" fill="#C5221F" text-anchor="middle">Dosing / Personal Medical Advice Block</text>
-      <text x="255" y="72" font-size="8" fill="#5F6368" text-anchor="middle">Sub-5ms Intercept • Zero Model Tokens Billed</text>
+    <g transform="translate(770, 20)" filter="url(#shadow-shield)">
+      <path d="M 12 0 L 298 0 L 310 15 L 310 58 Q 310 86 155 92 Q 0 86 0 58 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
+      <path d="M 12 0 L 298 0 L 310 15 L 310 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
+      <g transform="translate(18, 38)"><use href="#logo-model-armor"/></g>
+      <text x="170" y="46" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Google Cloud Model Armor</text>
+      <text x="170" y="60" font-size="9" font-weight="600" fill="#5F6368" text-anchor="middle">Layer 8 AI Safety Guardrail &amp; PHI DLP</text>
+      <text x="170" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Prompt Injection Intercept • 18 HIPAA Safe Harbor Tokens</text>
     </g>
   </g>
 
   <!-- ========================================== -->
-  <!-- CONNECTOR: Model Armor -> Cloud Run Container Workload -->
+  <!-- CONNECTOR: Perimeter Defense -> Cloud Run Workload -->
   <!-- ========================================== -->
-  <path d="M 470 197 L 470 220 L 140 220 L 140 240" fill="none" stroke="#34A853" stroke-width="2" marker-end="url(#arr-green)"/>
-  <rect x="180" y="210" width="260" height="20" rx="5" ry="5" fill="#FFFFFF" stroke="#CEEAD6" stroke-width="1.2"/>
-  <text x="310" y="224" font-size="8.5" font-weight="700" fill="#188038" text-anchor="middle">3b. Sanitized Query (18 HIPAA PHI Identifiers Scrubbed)</text>
+  <path d="M 925 197 L 925 218 L 105 218 L 105 250" fill="none" stroke="#188038" stroke-width="2" marker-end="url(#arr-green)"/>
+  <rect x="360" y="208" width="355" height="20" rx="5" ry="5" fill="#FFFFFF" stroke="#CEEAD6" stroke-width="1.2"/>
+  <text x="537" y="222" font-size="8.5" font-weight="700" fill="#188038" text-anchor="middle">Sanitized Ingress (18 HIPAA PHI Identifiers Scrubbed • Injection Free)</text>
 
   <!-- ========================================== -->
   <!-- TIER 2: GOOGLE CLOUD RUN (SERVERLESS WORKLOAD CONTAINER) -->
@@ -264,134 +241,134 @@
     <!-- ==================== INSIDE CLOUD RUN ==================== -->
 
     <!-- Component 1: FastAPI Gateway & Memory -->
-    <g transform="translate(18, 62)" filter="url(#shadow-card)">
-      <rect width="180" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#4285F4" stroke-width="1.5"/>
-      <rect width="180" height="28" rx="8" ry="8" fill="#F8F9FA"/>
-      <rect y="18" width="180" height="10" fill="#F8F9FA"/>
-      <text x="90" y="19" font-size="11" font-weight="700" fill="#202124" text-anchor="middle">FastAPI Gateway</text>
+    <g transform="translate(16, 62)" filter="url(#shadow-card)">
+      <rect width="170" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#4285F4" stroke-width="1.5"/>
+      <rect width="170" height="28" rx="8" ry="8" fill="#F8F9FA"/>
+      <rect y="18" width="170" height="10" fill="#F8F9FA"/>
+      <text x="85" y="19" font-size="11" font-weight="700" fill="#202124" text-anchor="middle">FastAPI Gateway</text>
       <!-- Details -->
-      <rect x="12" y="38" width="156" height="34" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="90" y="52" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Event Loop</text>
-      <text x="90" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">Non-blocking async/await</text>
+      <rect x="10" y="38" width="150" height="34" rx="4" ry="4" fill="#F1F3F4"/>
+      <text x="85" y="52" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Event Loop</text>
+      <text x="85" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">Non-blocking async/await</text>
       
-      <rect x="12" y="80" width="156" height="42" rx="4" ry="4" fill="#F8F9FA" stroke="#DADCE0" stroke-width="0.8"/>
-      <text x="90" y="95" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
-      <text x="90" y="108" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
-      <text x="90" y="118" font-size="7" fill="#188038" text-anchor="middle">LRU Cache + BigQuery Sync</text>
+      <rect x="10" y="80" width="150" height="42" rx="4" ry="4" fill="#F8F9FA" stroke="#DADCE0" stroke-width="0.8"/>
+      <text x="85" y="95" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
+      <text x="85" y="108" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
+      <text x="85" y="118" font-size="7" fill="#188038" text-anchor="middle">LRU Cache + BigQuery Sync</text>
       
-      <text x="90" y="145" font-size="8" font-weight="600" fill="#4285F4" text-anchor="middle">concurrency=80 per Inst</text>
+      <text x="85" y="145" font-size="8" font-weight="600" fill="#4285F4" text-anchor="middle">concurrency=80 per Inst</text>
     </g>
 
-    <!-- Arrow 4: Gateway -> Root Orchestrator -->
-    <line x1="198" y1="144" x2="248" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
-    <rect x="200" y="124" width="48" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="224" y="135" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">4. Dispatch</text>
+    <!-- Arrow: Gateway -> Root Orchestrator -->
+    <line x1="186" y1="144" x2="255" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+    <rect x="194" y="124" width="52" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="220" y="135" font-size="7.2" font-weight="700" fill="#1A73E8" text-anchor="middle">Dispatch</text>
 
     <!-- Component 2: Root Orchestrator (Supervisor Agent) -->
-    <g transform="translate(248, 62)" filter="url(#shadow-card)">
-      <rect width="230" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
-      <rect width="230" height="28" rx="8" ry="8" fill="#E8F0FE"/>
-      <rect y="18" width="230" height="10" fill="#E8F0FE"/>
-      <text x="115" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator (Python)</text>
+    <g transform="translate(255, 62)" filter="url(#shadow-card)">
+      <rect width="225" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
+      <rect width="225" height="28" rx="8" ry="8" fill="#E8F0FE"/>
+      <rect y="18" width="225" height="10" fill="#E8F0FE"/>
+      <text x="112" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator (Python)</text>
       
       <!-- Python Service Tag -->
-      <rect x="15" y="38" width="200" height="42" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="115" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent Logic</text>
-      <text x="115" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/orchestrator.py</text>
-      <text x="115" y="74" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">max_iterations=2 Safety Ceiling</text>
+      <rect x="12" y="38" width="201" height="42" rx="4" ry="4" fill="#F1F3F4"/>
+      <text x="112" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent Logic</text>
+      <text x="112" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/orchestrator.py</text>
+      <text x="112" y="74" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">max_iterations=2 Safety Ceiling</text>
 
       <!-- External LLM Call Pill -->
-      <rect x="15" y="90" width="200" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
-      <text x="115" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
-      <g transform="translate(25, 116)"><use href="#logo-gemini"/></g>
-      <text x="125" y="128" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Flash</text>
-      <text x="125" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Endpoint</text>
+      <rect x="12" y="90" width="201" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
+      <text x="112" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <g transform="translate(22, 116)"><use href="#logo-gemini"/></g>
+      <text x="122" y="128" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Flash</text>
+      <text x="122" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Endpoint</text>
     </g>
 
-    <!-- Arrow 5: Orchestrator -> Clinical Researcher -->
-    <line x1="478" y1="144" x2="528" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
-    <rect x="479" y="124" width="48" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="503" y="135" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">5. Intent</text>
+    <!-- Arrow: Orchestrator -> Clinical Researcher -->
+    <line x1="480" y1="144" x2="550" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+    <rect x="488" y="124" width="54" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="515" y="135" font-size="7.2" font-weight="700" fill="#1A73E8" text-anchor="middle">Delegate</text>
 
     <!-- Component 3: Clinical Researcher (Worker Agent Pool in Python) -->
-    <g transform="translate(528, 56)" filter="url(#shadow-card)">
+    <g transform="translate(550, 56)" filter="url(#shadow-card)">
       <!-- Worker Replica 3 (Back) -->
-      <rect x="12" y="2" width="250" height="165" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
-      <rect x="180" y="5" width="76" height="12" rx="3" ry="3" fill="#BDC1C6"/>
-      <text x="218" y="14" font-size="6.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker M</text>
+      <rect x="12" y="2" width="245" height="165" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
+      <rect x="175" y="5" width="76" height="12" rx="3" ry="3" fill="#BDC1C6"/>
+      <text x="213" y="14" font-size="6.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker M</text>
       
       <!-- Worker Replica 2 (Middle) -->
-      <rect x="6" y="5" width="250" height="165" rx="8" ry="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
-      <rect x="174" y="8" width="76" height="12" rx="3" ry="3" fill="#DADCE0"/>
-      <text x="212" y="17" font-size="6.5" font-weight="700" fill="#5F6368" text-anchor="middle">Worker 2</text>
+      <rect x="6" y="5" width="245" height="165" rx="8" ry="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+      <rect x="169" y="8" width="76" height="12" rx="3" ry="3" fill="#DADCE0"/>
+      <text x="207" y="17" font-size="6.5" font-weight="700" fill="#5F6368" text-anchor="middle">Worker 2</text>
 
       <!-- Worker Replica 1 (Front) -->
-      <rect x="0" y="8" width="250" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="2"/>
-      <rect x="0" y="8" width="250" height="28" rx="8" ry="8" fill="#E8F0FE"/>
-      <rect x="0" y="26" width="250" height="10" fill="#E8F0FE"/>
+      <rect x="0" y="8" width="245" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="2"/>
+      <rect x="0" y="8" width="245" height="28" rx="8" ry="8" fill="#E8F0FE"/>
+      <rect x="0" y="26" width="245" height="10" fill="#E8F0FE"/>
       <!-- Scaling Pool Badge -->
-      <rect x="165" y="14" width="78" height="14" rx="3" ry="3" fill="#1A73E8"/>
-      <text x="204" y="24" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">1 → M Coroutines</text>
-      <text x="82" y="27" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Researcher</text>
+      <rect x="160" y="14" width="78" height="14" rx="3" ry="3" fill="#1A73E8"/>
+      <text x="199" y="24" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">1 → M Coroutines</text>
+      <text x="78" y="27" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Researcher</text>
 
       <!-- Python Service Tag -->
-      <rect x="12" y="44" width="226" height="44" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="125" y="58" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Python Agent Worker (Stateless)</text>
-      <text x="125" y="70" font-size="7.5" fill="#5F6368" text-anchor="middle">Context Rewriting • Tool Calling Client</text>
-      <text x="125" y="80" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">Runs in Cloud Run Event Loop</text>
+      <rect x="12" y="44" width="221" height="44" rx="4" ry="4" fill="#F1F3F4"/>
+      <text x="122" y="58" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Python Agent Worker (Stateless)</text>
+      <text x="122" y="70" font-size="7.5" fill="#5F6368" text-anchor="middle">Context Rewriting • Tool Calling Client</text>
+      <text x="122" y="80" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">Runs in Cloud Run Event Loop</text>
 
       <!-- External LLM Call Pill -->
-      <rect x="12" y="96" width="226" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
-      <text x="125" y="110" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
-      <g transform="translate(25, 122)"><use href="#logo-gemini"/></g>
-      <text x="135" y="134" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Pro</text>
-      <text x="135" y="147" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Synthesis</text>
+      <rect x="12" y="96" width="221" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
+      <text x="122" y="110" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <g transform="translate(22, 122)"><use href="#logo-gemini"/></g>
+      <text x="132" y="134" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Pro</text>
+      <text x="132" y="147" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Synthesis</text>
     </g>
 
-    <!-- Arrow 8: Researcher -> Reviewer -->
-    <line x1="778" y1="144" x2="828" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
-    <rect x="780" y="124" width="48" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="804" y="135" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">8. Draft</text>
+    <!-- Arrow: Researcher -> Reviewer -->
+    <line x1="795" y1="144" x2="865" y2="144" stroke="#1A73E8" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+    <rect x="803" y="124" width="54" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="830" y="135" font-size="7.2" font-weight="700" fill="#1A73E8" text-anchor="middle">Synthesis</text>
 
     <!-- Component 4: Reviewer & QC Gate (Auditor Agent) -->
-    <g transform="translate(828, 62)" filter="url(#shadow-card)">
-      <rect width="254" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#34A853" stroke-width="1.8"/>
-      <rect width="254" height="28" rx="8" ry="8" fill="#E6F4EA"/>
-      <rect y="18" width="254" height="10" fill="#E6F4EA"/>
-      <text x="127" y="19" font-size="11.5" font-weight="700" fill="#137333" text-anchor="middle">Reviewer &amp; QC Gate (Python)</text>
+    <g transform="translate(865, 62)" filter="url(#shadow-card)">
+      <rect width="220" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#34A853" stroke-width="1.8"/>
+      <rect width="220" height="28" rx="8" ry="8" fill="#E6F4EA"/>
+      <rect y="18" width="220" height="10" fill="#E6F4EA"/>
+      <text x="110" y="19" font-size="11.5" font-weight="700" fill="#137333" text-anchor="middle">Reviewer &amp; QC Gate (Python)</text>
 
       <!-- Python Service Tag -->
-      <rect x="12" y="38" width="230" height="42" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="127" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Auditor Logic + CitationVerifier</text>
-      <text x="127" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/reviewer_agent.py</text>
-      <text x="127" y="74" font-size="7.5" font-weight="600" fill="#137333" text-anchor="middle">Deterministic 1:1 Grounding Match</text>
+      <rect x="10" y="38" width="200" height="42" rx="4" ry="4" fill="#F1F3F4"/>
+      <text x="110" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Auditor Logic + CitationVerifier</text>
+      <text x="110" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/reviewer_agent.py</text>
+      <text x="110" y="74" font-size="7.5" font-weight="600" fill="#137333" text-anchor="middle">Deterministic 1:1 Grounding Match</text>
 
       <!-- External LLM Call Pill -->
-      <rect x="12" y="90" width="230" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#CEEAD6" stroke-width="1.2"/>
-      <text x="127" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
-      <g transform="translate(25, 116)"><use href="#logo-gemini"/></g>
-      <text x="135" y="128" font-size="10" font-weight="700" fill="#137333" text-anchor="middle">Gemini 3.5 Flash</text>
-      <text x="135" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Zero-Bias Verification</text>
+      <rect x="10" y="90" width="200" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#CEEAD6" stroke-width="1.2"/>
+      <text x="110" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <g transform="translate(20, 116)"><use href="#logo-gemini"/></g>
+      <text x="120" y="128" font-size="10" font-weight="700" fill="#137333" text-anchor="middle">Gemini 3.5 Flash</text>
+      <text x="120" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Zero-Bias Verification</text>
     </g>
   </g>
 
   <!-- ========================================== -->
   <!-- VERTICAL CONNECTORS: Cloud Run Researcher <-> Tier 3 Data Stores -->
   <!-- ========================================== -->
-  <!-- 6. Query (Down) -->
+  <!-- Semantic Retrieval (Down) -->
   <line x1="620" y1="487" x2="620" y2="538" stroke="#1A73E8" stroke-width="2" marker-end="url(#arr-blue)"/>
-  <rect x="535" y="500" width="80" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-  <text x="575" y="512" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">6. Hybrid Query</text>
+  <rect x="525" y="500" width="90" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+  <text x="570" y="512" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Semantic Retrieval</text>
 
-  <!-- 7. Chunks (Up) -->
+  <!-- Grounded Evidence (Up) -->
   <line x1="710" y1="538" x2="710" y2="487" stroke="#1A73E8" stroke-width="2" marker-end="url(#arr-blue)"/>
-  <rect x="715" y="500" width="85" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-  <text x="757" y="512" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">7. Top-K Chunks</text>
+  <rect x="715" y="500" width="92" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+  <text x="761" y="512" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Grounded Evidence</text>
 
   <!-- Telemetry Sink (Down dashed) -->
   <line x1="970" y1="487" x2="970" y2="538" stroke="#5F6368" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arr-muted)"/>
-  <rect x="975" y="500" width="105" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#DADCE0" stroke-width="0.8"/>
-  <text x="1027" y="512" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">OTel Spans &amp; Metrics</text>
+  <rect x="965" y="500" width="118" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#DADCE0" stroke-width="0.8"/>
+  <text x="1024" y="512" font-size="7.2" font-weight="700" fill="#5F6368" text-anchor="middle">Distributed Spans &amp; Logs</text>
 
   <!-- ========================================== -->
   <!-- TIER 3: GROUNDING DATA & OBSERVABILITY SINK -->
