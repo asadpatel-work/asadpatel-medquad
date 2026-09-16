@@ -53,6 +53,8 @@ terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform.lock.hcl
+terraform/*.tfvars
+terraform/certs/
 
 # Datasets (stored in GCS bucket gs://capstone-506616-medquad-corpus)
 data/medquad_raw/
