@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +22,7 @@ from backend.api.routes.ingestion import router as ingestion_router
 from backend.api.routes.sessions import router as sessions_router
 from backend.api.routes.telemetry import router as telemetry_router
 from backend.core.config import get_settings
+from backend.core.iap_auth import AuthenticatedClinician, get_current_clinician
 from backend.core.logging import setup_logging
 from backend.core.telemetry import setup_telemetry
 
@@ -121,6 +122,40 @@ async def add_process_time_and_request_id(request: Request, call_next):
     process_time = round((time.time() - start_time) * 1000, 2)
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Process-Time-MS"] = str(process_time)
+    return response
+
+
+@app.middleware("http")
+async def iap_identity_middleware(request: Request, call_next):
+    """Middleware extracting Google IAP authenticated identity and populating request state."""
+    path = request.url.path
+    is_protected_api = path.startswith("/api/v1/") and not path.startswith("/api/v1/health")
+
+    try:
+        clinician = await get_current_clinician(request)
+        request.state.clinician = clinician
+        request.state.clinician_email = clinician.email
+        request.state.clinician_id = clinician.user_id
+    except HTTPException as http_exc:
+        if settings.enable_iap and is_protected_api:
+            return JSONResponse(
+                status_code=http_exc.status_code,
+                content={
+                    "error": "Unauthorized",
+                    "detail": http_exc.detail,
+                    "auth": "Google IAP",
+                },
+                headers=http_exc.headers or {},
+            )
+        request.state.clinician = AuthenticatedClinician(
+            email="anonymous@hospital.org",
+            user_id="anon-001",
+            is_authenticated=False,
+            auth_source="unauthenticated",
+        )
+        request.state.clinician_email = "anonymous@hospital.org"
+
+    response = await call_next(request)
     return response
 
 

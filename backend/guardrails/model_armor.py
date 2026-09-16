@@ -131,6 +131,7 @@ class ModelArmor:
                 if creds is None:
                     try:
                         import subprocess
+
                         from google.oauth2 import credentials
 
                         token = (
@@ -244,7 +245,18 @@ class ModelArmor:
         if self.is_gcp_configured:
             gcp_result = self._sanitize_via_gcp(input_text)
             if gcp_result is not None:
-                return gcp_result
+                if not gcp_result.is_safe:
+                    return gcp_result
+                # Defense-in-depth: ensure local HIPAA de-identification patterns also scrub input
+                local_result = self._sanitize_local(gcp_result.sanitized_text)
+                return SanitizationResult(
+                    is_safe=gcp_result.is_safe and local_result.is_safe,
+                    sanitized_text=local_result.sanitized_text,
+                    jailbreak_detected=gcp_result.jailbreak_detected or local_result.jailbreak_detected,
+                    redacted_phi_count=gcp_result.redacted_phi_count + local_result.redacted_phi_count,
+                    violations=gcp_result.violations + [v for v in local_result.violations if v not in gcp_result.violations],
+                    source="gcp_model_armor",
+                )
 
         # Local Fallback
         return self._sanitize_local(input_text)

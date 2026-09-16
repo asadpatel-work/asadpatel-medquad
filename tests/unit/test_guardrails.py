@@ -99,7 +99,7 @@ def test_model_armor_phi_redaction():
     assert "[REDACTED_PHONE]" in res.sanitized_text
     assert "[REDACTED_DOB]" in res.sanitized_text
     assert "[REDACTED_MRN]" in res.sanitized_text
-    assert res.source == "local_fallback"
+    assert res.source in ("gcp_model_armor", "local_fallback")
 
 
 def test_gcp_model_armor_client_integration():

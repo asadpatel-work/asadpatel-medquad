@@ -176,12 +176,12 @@ def build_deck() -> Presentation:
     add_big_box(
         s1, lefts[0], top_pos, box_w, box_h,
         card_title="Clinical Productivity",
-        metric_val="85% Time Reduction",
-        subtitle="Synthesis in <7s vs 45m Manual Search",
+        metric_val="Sub-7s Latency",
+        subtitle="Instant Synthesis vs 15m+ Manual Search",
         bullets=[
-            "Replaces multi-tab PubMed manual searches with instant grounded synthesis.",
-            "Saves ~8.5 hours weekly per clinician on medical literature investigation.",
-            "Accelerates clinical trial matching and evidence-based treatment decisions.",
+            "Automates literature retrieval across 16,400+ peer-reviewed NIH medical documents.",
+            "Compresses research turnaround from 15+ minutes to sub-7 second grounded synthesis.",
+            "Accelerates evidence-based treatment inquiries and clinical literature reviews.",
         ],
         accent_color=COLOR_PRIMARY,
     )
@@ -216,7 +216,7 @@ def build_deck() -> Presentation:
         s1,
         "Slide 1: Business Impact\n\n"
         "This slide highlights the three core operational and clinical benefits MedQuAD delivers:\n\n"
-        "1. Clinical Productivity: Literature review currently consumes hours of manual search across disparate medical databases. MedQuAD compresses this workflow from 45 minutes to under 7 seconds, saving an estimated 8.5 hours per clinician weekly.\n\n"
+        "1. Clinical Productivity: Literature review currently consumes 15 to 45 minutes of manual searching across PubMed and disparate medical repositories. MedQuAD compresses this investigation into a sub-7 second grounded synthesis, directly accelerating evidence-based decisions.\n\n"
         "2. Diagnostic Quality: In healthcare, hallucinated citations are unacceptable. Our dual-agent architecture enforces 100% citation provenance against 16,400 peer-reviewed NIH documents, preventing hallucinations before results are released.\n\n"
         "3. Operational Scale: Running serverless on Cloud Run and Vertex AI ties cost strictly to clinical utilization at under two cents per synthesis, with zero idle cluster overhead."
     )
@@ -351,12 +351,12 @@ def build_deck() -> Presentation:
     add_big_box(
         s4, lefts[0], top_pos, box_w, box_h,
         card_title="Perimeter Defense",
-        metric_val="Edge & Input Security",
-        subtitle="Cloud Armor & Model Armor",
+        metric_val="WAF & Zero-Trust SSO",
+        subtitle="Cloud Armor, IAP, & Model Armor",
         bullets=[
-            "Cloud Armor blocks OWASP Top 10 vulnerabilities, DDoS, and bad actors at Google edge.",
-            "Model Armor intercepts adversarial prompt injections and jailbreaks before model invocation.",
-            "Input rate limiting and request length ceilings prevent denial-of-wallet attacks.",
+            "Cloud Armor blocks OWASP Top 10 vulnerabilities, DDoS, and bad actors at Google's edge.",
+            "Identity-Aware Proxy (IAP) enforces institutional SSO and cryptographically validates JWT tokens.",
+            "Model Armor intercepts adversarial prompt injections and sanitizes PHI before model invocation.",
         ],
         accent_color=COLOR_PRIMARY,
     )
@@ -391,7 +391,7 @@ def build_deck() -> Presentation:
         s4,
         "Slide 4: Security Posture\n\n"
         "Our security architecture follows a rigorous defense-in-depth model:\n\n"
-        "1. Perimeter Defense: Google Cloud Armor protects against DDoS and OWASP Top 10 attacks at the network edge, while Model Armor acts as an AI security guardrail, inspecting prompts for jailbreaks and prompt injections before reaching models.\n\n"
+        "1. Perimeter Defense & Zero-Trust: Google Cloud Armor protects against DDoS and OWASP Top 10 attacks at the network edge, Google Identity-Aware Proxy (IAP) validates clinician identity via institutional SSO before traffic reaches the backend, and Model Armor inspects prompts for jailbreaks and scrubs PHI before reaching models.\n\n"
         "2. Data Protection: All traffic is encrypted in transit via TLS 1.3, and all data at rest uses AES-256. Query context lives in ephemeral memory and is never stored in persistent unencrypted files.\n\n"
         "3. Identity & Workload Isolation: The Cloud Run workload runs as a dedicated non-root user (medquad) on a read-only filesystem, authenticated through Workload Identity with least-privilege IAM roles and zero hardcoded credentials."
     )

@@ -48,3 +48,14 @@ output "backend_service_id" {
   value       = google_compute_backend_service.backend_service.id
 }
 
+output "load_balancer_ip" {
+  description = "Global static IP address for the External Load Balancer and IAP entrypoint"
+  value       = google_compute_global_address.lb_ip.address
+}
+
+output "iap_enabled" {
+  description = "Indicates whether Identity-Aware Proxy is actively enforced on backend service"
+  value       = var.enable_iap
+}
+
+

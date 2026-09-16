@@ -170,32 +170,37 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
     <rect x="0" y="0" width="1100" height="120" rx="10" ry="10" fill="#F8F9FA" stroke="#E0E3E7" stroke-width="1"/>
     <text x="18" y="18" font-size="9.5" font-weight="700" fill="#5F6368" letter-spacing="0.5">TIER 1: INGRESS &amp; PERIMETER DEFENSE</text>
 
-    <!-- 1. Clinician UI (Browser Window Shape) -->
-    <g transform="translate(20, 26)" filter="url(#shadow-card)">
-      <rect width="280" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
+    <!-- 1. Clinician UI (Browser Window Shape) - Hosted on Cloud Run -->
+    <g transform="translate(20, 24)" filter="url(#shadow-card)">
+      <rect width="280" height="84" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
       <path d="M 0 8 Q 0 0 8 0 L 272 0 Q 280 0 280 8 L 280 20 L 0 20 Z" fill="#E8F0FE"/>
       <circle cx="12" cy="10" r="2.5" fill="#EA4335"/>
       <circle cx="20" cy="10" r="2.5" fill="#FBBC04"/>
       <circle cx="28" cy="10" r="2.5" fill="#34A853"/>
-      <g transform="translate(18, 34)"><use href="#logo-react"/></g>
-      <text x="155" y="45" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician Portal (UI)</text>
-      <text x="155" y="60" font-size="9" font-weight="500" fill="#202124" text-anchor="middle">React 18 Single-Page Application</text>
-      <text x="155" y="72" font-size="8" fill="#5F6368" text-anchor="middle">REST &amp; Streaming SSE Ingress</text>
+      <!-- Faux URL Bar -->
+      <rect x="44" y="3.5" width="224" height="13" rx="3" ry="3" fill="#FFFFFF" stroke="#DADCE0" stroke-width="0.8"/>
+      <text x="156" y="13" font-size="7" font-weight="600" fill="#5F6368" text-anchor="middle">https://medquad-frontend.run.app</text>
+      <!-- Logos: React & Cloud Run -->
+      <g transform="translate(14, 34)"><use href="#logo-react"/></g>
+      <g transform="translate(40, 34)"><use href="#logo-cloud-run"/></g>
+      <text x="164" y="44" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician Portal (UI)</text>
+      <text x="164" y="58" font-size="8.5" font-weight="600" fill="#202124" text-anchor="middle">React 18 SPA • Hosted on Google Cloud Run</text>
+      <text x="164" y="71" font-size="7.5" fill="#5F6368" text-anchor="middle">Serverless Frontend Container (0 → 5 Replicas)</text>
     </g>
 
-    <!-- Arrow 1: UI -> Cloud Armor -->
+    <!-- Arrow 1: UI -> Cloud Armor & IAP -->
     <line x1="300" y1="66" x2="390" y2="66" stroke="#1A73E8" stroke-width="2" marker-end="url(#arr-blue)"/>
-    <rect x="312" y="44" width="66" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
-    <text x="345" y="56" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">HTTPS / TLS 1.3</text>
+    <rect x="306" y="44" width="78" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
+    <text x="345" y="56" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">TLS 1.3 • IAP SSO</text>
 
-    <!-- 2. Cloud Armor (Shield Shape + Official Logo) -->
+    <!-- 2. Cloud Armor + Identity-Aware Proxy (Shield Shape + Official Logo) -->
     <g transform="translate(390, 20)" filter="url(#shadow-shield)">
       <path d="M 12 0 L 308 0 L 320 15 L 320 58 Q 320 86 160 92 Q 0 86 0 58 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
       <path d="M 12 0 L 308 0 L 320 15 L 320 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
       <g transform="translate(18, 38)"><use href="#logo-cloud-armor"/></g>
-      <text x="175" y="46" font-size="12" font-weight="700" fill="#202124" text-anchor="middle">Google Cloud Armor</text>
-      <text x="175" y="61" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 WAF &amp; DDoS Protection</text>
-      <text x="175" y="74" font-size="8" fill="#5F6368" text-anchor="middle">OWASP Rules • Rate Limiting</text>
+      <text x="175" y="46" font-size="11.5" font-weight="700" fill="#202124" text-anchor="middle">Cloud Armor + IAP Proxy</text>
+      <text x="175" y="61" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 WAF &amp; Zero-Trust SSO</text>
+      <text x="175" y="74" font-size="8" fill="#5F6368" text-anchor="middle">OWASP Rules • JWT Validation</text>
     </g>
 
     <!-- Arrow 2: Cloud Armor -> Model Armor -->
@@ -237,13 +242,13 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
 
     <!-- Container Replica 1 (Front Active Service) -->
     <rect x="0" y="12" width="1100" height="235" rx="12" ry="12" fill="#FFFFFF" stroke="#4285F4" stroke-width="2.2"/>
-    
+
     <!-- Cloud Run Header Banner -->
     <path d="M 0 24 Q 0 12 12 12 L 1088 12 Q 1100 12 1100 24 L 1100 48 L 0 48 Z" fill="#E8F0FE"/>
     <g transform="translate(16, 18)"><use href="#logo-cloud-run"/></g>
     <text x="48" y="32" font-size="11" font-weight="700" fill="#1A73E8" letter-spacing="0.5">TIER 2: GOOGLE CLOUD RUN (SERVERLESS CONTAINER WORKLOAD • 0 → N REPLICAS)</text>
     <text x="48" y="44" font-size="8.5" font-weight="500" fill="#5F6368">FastAPI ASGI Microservice • Multi-Agent Core (Python 3.11)</text>
-    
+
     <!-- Autoscaling Badge -->
     <rect x="980" y="18" width="108" height="20" rx="4" ry="4" fill="#1A73E8"/>
     <text x="1034" y="32" font-size="8" font-weight="700" fill="#FFFFFF" text-anchor="middle">Autoscaling (0 → N)</text>
@@ -260,11 +265,11 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
       <rect x="10" y="38" width="150" height="34" rx="4" ry="4" fill="#F1F3F4"/>
       <text x="85" y="55" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Server</text>
       <text x="85" y="66" font-size="7.5" fill="#5F6368" text-anchor="middle">Async Request Handling</text>
-      
+
       <rect x="10" y="80" width="150" height="42" rx="4" ry="4" fill="#F8F9FA" stroke="#DADCE0" stroke-width="0.8"/>
       <text x="85" y="97" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
       <text x="85" y="111" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
-      
+
       <text x="85" y="145" font-size="8" font-weight="600" fill="#5F6368" text-anchor="middle">Max Concurrency = 80</text>
     </g>
 
@@ -279,7 +284,7 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
       <rect width="225" height="28" rx="8" ry="8" fill="#E8F0FE"/>
       <rect y="18" width="225" height="10" fill="#E8F0FE"/>
       <text x="112" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator</text>
-      
+
       <!-- Supervisor Box -->
       <rect x="12" y="38" width="201" height="42" rx="4" ry="4" fill="#F1F3F4"/>
       <text x="112" y="53" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent</text>
@@ -304,7 +309,7 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
       <rect x="12" y="2" width="245" height="165" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
       <rect x="175" y="5" width="76" height="12" rx="3" ry="3" fill="#BDC1C6"/>
       <text x="213" y="14" font-size="6.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker M</text>
-      
+
       <!-- Worker Replica 2 (Middle) -->
       <rect x="6" y="5" width="245" height="165" rx="8" ry="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
       <rect x="169" y="8" width="76" height="12" rx="3" ry="3" fill="#DADCE0"/>

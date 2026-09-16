@@ -463,6 +463,14 @@ resource "google_compute_backend_service" "backend_service" {
     group = google_compute_region_network_endpoint_group.backend_neg.id
   }
 
+  dynamic "iap" {
+    for_each = var.enable_iap ? [1] : []
+    content {
+      oauth2_client_id     = var.iap_client_id
+      oauth2_client_secret = var.iap_client_secret
+    }
+  }
+
   depends_on = [
     google_compute_security_policy.cloud_armor_policy,
     google_compute_region_network_endpoint_group.backend_neg,

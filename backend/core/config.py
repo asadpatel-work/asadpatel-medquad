@@ -58,6 +58,22 @@ class Settings(BaseSettings):
     # API Keys & Auth
     gemini_api_key: str = Field(default="", validation_alias="GEMINI_API_KEY")
 
+    # Identity-Aware Proxy (IAP) & Zero-Trust Authentication
+    enable_iap: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_IAP", "IAP_ENABLED"),
+    )
+    iap_audience: str = Field(
+        default="",
+        validation_alias=AliasChoices("IAP_AUDIENCE", "IAP_AUD"),
+    )
+    iap_expected_issuer: str = "https://cloud.google.com/iap"
+    iap_allow_anonymous_in_dev: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("IAP_ALLOW_ANONYMOUS_IN_DEV", "ALLOW_ANONYMOUS_IN_DEV"),
+    )
+    iap_jwk_keys_url: str = "https://www.gstatic.com/iap/verify/public_key"
+
     # GCP Infrastructure
     gcp_project_id: str = "capstone-506616"
     gcp_region: str = "us-central1"

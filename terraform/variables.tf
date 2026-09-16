@@ -34,4 +34,32 @@ variable "invoker_member" {
   default     = "serviceAccount:sa-medquad-runtime@capstone-506616.iam.gserviceaccount.com"
 }
 
+variable "enable_iap" {
+  description = "Whether to enable Identity-Aware Proxy (IAP) on the External Load Balancer"
+  type        = bool
+  default     = false
+}
+
+variable "iap_client_id" {
+  description = "OAuth 2.0 Client ID for Identity-Aware Proxy"
+  type        = string
+  default     = ""
+}
+
+variable "iap_client_secret" {
+  description = "OAuth 2.0 Client Secret for Identity-Aware Proxy"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "iap_accessors" {
+  description = "List of IAM identities granted roles/iap.httpsResourceAccessor"
+  type        = list(string)
+  default     = [
+    "user:admin@asadpatel.altostrat.com"
+  ]
+}
+
+
 
