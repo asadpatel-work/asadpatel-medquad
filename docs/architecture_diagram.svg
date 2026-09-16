@@ -25,11 +25,12 @@
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#5F6368"/>
     </marker>
 
-    <!-- Gemini Sparkle Gradient -->
-    <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1A73E8"/>
-      <stop offset="50%" stop-color="#8AB4F8"/>
-      <stop offset="100%" stop-color="#4285F4"/>
+    <!-- Official Google Gemini Multi-Color Gradient -->
+    <linearGradient id="gemini-official-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1BA1E3"/>
+      <stop offset="32%" stop-color="#5468FF"/>
+      <stop offset="68%" stop-color="#9855FF"/>
+      <stop offset="100%" stop-color="#D552FF"/>
     </linearGradient>
 
     <!-- Data Store Cylinder Gradient -->
@@ -39,46 +40,96 @@
       <stop offset="100%" stop-color="#E8EAED"/>
     </linearGradient>
 
-    <!-- ==================== PRODUCT & SYSTEM LOGOS ==================== -->
-    <!-- Gemini 4-Point Star Logo -->
+    <!-- ==================== ACTUAL OFFICIAL GOOGLE PRODUCT LOGOS ==================== -->
+    
+    <!-- 1. Official Google Gemini Star -->
     <g id="logo-gemini">
-      <path d="M 12 1 Q 12 12 1 12 Q 12 12 12 23 Q 12 12 23 12 Q 12 12 12 1 Z" fill="url(#gemini-grad)"/>
+      <path fill="url(#gemini-official-grad)" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/>
     </g>
 
-    <!-- Cloud Run Logo -->
+    <!-- 2. Official Google Cloud Run Logo -->
     <g id="logo-cloud-run">
-      <path d="M 4 14 L 10 4 L 14 4 L 8 14 Z" fill="#4285F4"/>
-      <path d="M 9 14 L 15 4 L 19 4 L 13 14 Z" fill="#669DF6"/>
-      <path d="M 14 14 L 20 4 L 24 4 L 18 14 Z" fill="#8AB4F8"/>
-      <path d="M 6 17 L 22 17 L 20 20 L 8 20 Z" fill="#3367D6"/>
+      <polygon fill="#aecbfa" points="8.9 2.63 12.02 12 21.38 12 8.9 2.63"/>
+      <polygon fill="#4285f4" points="21.38 12 12.02 12 8.9 21.38 21.38 12"/>
+      <polygon fill="#4285f4" points="3.44 21.38 6.57 19.81 8.9 12 5.78 12 3.44 21.38"/>
+      <polygon fill="#aecbfa" points="3.44 2.63 5.78 12 8.9 12 6.57 4.19 3.44 2.63"/>
     </g>
 
-    <!-- Cloud Armor Logo -->
+    <!-- 3. Official Google Cloud Armor Logo -->
     <g id="logo-cloud-armor">
-      <path d="M 12 2 L 22 6 L 22 13 Q 22 20 12 24 Q 2 20 2 13 L 2 6 Z" fill="#1A73E8"/>
-      <path d="M 12 4.5 L 20 8 L 20 12.5 Q 20 18.5 12 22 Q 4 18.5 4 12.5 L 4 8 Z" fill="#FFFFFF"/>
-      <path d="M 12 6 L 18.5 9 L 18.5 12 Q 18.5 17 12 20 Q 5.5 17 5.5 12 L 5.5 9 Z" fill="#4285F4"/>
-      <path d="M 9.5 12 L 11.5 14 L 15 10.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon fill="#aecbfa" points="9.76 20.6 8.72 19.55 14.17 14.07 15.21 15.12 9.76 20.6"/>
+      <polygon fill="#aecbfa" points="7.03 18.32 5.99 17.27 13.34 9.88 14.38 10.93 7.03 18.32"/>
+      <polygon fill="#aecbfa" points="5.34 14.98 4.3 13.93 9.18 9.03 10.22 10.08 5.34 14.98"/>
+      <path fill="#669df6" d="M12,3.61l6.78,3v4.55A9.71,9.71,0,0,1,12,20.48a9.7,9.7,0,0,1-6.78-9.31V6.63l6.78-3M12,2,3.75,5.68v5.49A11.17,11.17,0,0,0,11.85,22L12,22l.15,0a11.17,11.17,0,0,0,8.1-10.78V5.68L12,2Z"/>
+      <circle fill="#669df6" cx="14.69" cy="14.62" r="1.42"/>
+      <circle fill="#669df6" cx="13.85" cy="10.45" r="1.42"/>
+      <circle fill="#669df6" cx="9.69" cy="9.6" r="1.42"/>
     </g>
 
-    <!-- Model Armor Logo -->
+    <!-- 4. Official Google Cloud Model Armor (Armor Shield + Gemini AI Guardrail Star) -->
     <g id="logo-model-armor">
-      <path d="M 12 2 L 22 6 L 22 13 Q 22 20 12 24 Q 2 20 2 13 L 2 6 Z" fill="#1A73E8"/>
-      <path d="M 12 4.5 L 20 8 L 20 12.5 Q 20 18.5 12 22 Q 4 18.5 4 12.5 L 4 8 Z" fill="#FFFFFF"/>
-      <!-- Inner Sparkle Lock -->
-      <path d="M 12 7 Q 12 12 7 12 Q 12 12 12 17 Q 12 12 17 12 Q 12 12 12 7 Z" fill="#1A73E8"/>
+      <polygon fill="#aecbfa" points="9.76 20.6 8.72 19.55 14.17 14.07 15.21 15.12 9.76 20.6"/>
+      <polygon fill="#aecbfa" points="7.03 18.32 5.99 17.27 13.34 9.88 14.38 10.93 7.03 18.32"/>
+      <path fill="#669df6" d="M12,3.61l6.78,3v4.55A9.71,9.71,0,0,1,12,20.48a9.7,9.7,0,0,1-6.78-9.31V6.63l6.78-3M12,2,3.75,5.68v5.49A11.17,11.17,0,0,0,11.85,22L12,22l.15,0a11.17,11.17,0,0,0,8.1-10.78V5.68L12,2Z"/>
+      <g transform="translate(6, 6) scale(0.5)">
+        <path fill="url(#gemini-official-grad)" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/>
+      </g>
     </g>
 
-    <!-- Vertex AI Logo -->
+    <!-- 5. Official Google Cloud Vertex AI Logo -->
     <g id="logo-vertex-ai">
-      <polygon points="12,2 22,8 22,18 12,24 2,18 2,8" fill="none" stroke="#4285F4" stroke-width="2"/>
-      <circle cx="12" cy="13" r="3.5" fill="#34A853"/>
-      <line x1="12" y1="2" x2="12" y2="9.5" stroke="#4285F4" stroke-width="1.5"/>
-      <line x1="22" y1="18" x2="15.5" y2="13" stroke="#4285F4" stroke-width="1.5"/>
-      <line x1="2" y1="18" x2="8.5" y2="13" stroke="#4285F4" stroke-width="1.5"/>
+      <path fill="#669df6" d="M20,13.89A.77.77,0,0,0,19,13.73l-7,5.14v.22a.72.72,0,1,1,0,1.43v0a.74.74,0,0,0,.45-.15l7.41-5.47A.76.76,0,0,0,20,13.89Z"/>
+      <path fill="#aecbfa" d="M12,20.52a.72.72,0,0,1,0-1.43h0v-.22L5,13.73a.76.76,0,0,0-1,.16.74.74,0,0,0,.16,1l7.41,5.47a.73.73,0,0,0,.44.15v0Z"/>
+      <path fill="#4285f4" d="M12,18.34a1.47,1.47,0,1,0,1.47,1.47A1.47,1.47,0,0,0,12,18.34Zm0,2.18a.72.72,0,1,1,.72-.71A.71.71,0,0,1,12,20.52Z"/>
+      <path fill="#aecbfa" d="M6,6.11a.76.76,0,0,1-.75-.75V3.48a.76.76,0,1,1,1.51,0V5.36A.76.76,0,0,1,6,6.11Z"/>
+      <circle fill="#aecbfa" cx="5.98" cy="12" r="0.76"/>
+      <circle fill="#aecbfa" cx="5.98" cy="9.79" r="0.76"/>
+      <circle fill="#aecbfa" cx="5.98" cy="7.57" r="0.76"/>
+      <path fill="#4285f4" d="M18,8.31a.76.76,0,0,1-.75-.76V5.67a.75.75,0,1,1,1.5,0V7.55A.75.75,0,0,1,18,8.31Z"/>
+      <circle fill="#4285f4" cx="18.02" cy="12.01" r="0.76"/>
+      <circle fill="#4285f4" cx="18.02" cy="9.76" r="0.76"/>
+      <circle fill="#4285f4" cx="18.02" cy="3.48" r="0.76"/>
+      <path fill="#669df6" d="M12,15a.76.76,0,0,1-.75-.75V12.34a.76.76,0,0,1,1.51,0v1.89A.76.76,0,0,1,12,15Z"/>
+      <circle fill="#669df6" cx="12" cy="16.45" r="0.76"/>
+      <circle fill="#669df6" cx="12" cy="10.14" r="0.76"/>
+      <circle fill="#669df6" cx="12" cy="7.92" r="0.76"/>
+      <path fill="#4285f4" d="M15,10.54a.76.76,0,0,1-.75-.75V7.91a.76.76,0,1,1,1.51,0V9.79A.76.76,0,0,1,15,10.54Z"/>
+      <circle fill="#4285f4" cx="15.01" cy="5.69" r="0.76"/>
+      <circle fill="#4285f4" cx="15.01" cy="14.19" r="0.76"/>
+      <circle fill="#4285f4" cx="15.01" cy="11.97" r="0.76"/>
+      <circle fill="#aecbfa" cx="8.99" cy="14.19" r="0.76"/>
+      <circle fill="#aecbfa" cx="8.99" cy="7.92" r="0.76"/>
+      <circle fill="#aecbfa" cx="8.99" cy="5.69" r="0.76"/>
+      <path fill="#aecbfa" d="M9,12.73A.76.76,0,0,1,8.24,12V10.1a.75.75,0,1,1,1.5,0V12A.75.75,0,0,1,9,12.73Z"/>
     </g>
 
-    <!-- Clinical DB / Table Logo -->
+    <!-- 6. Official Google Cloud BigQuery Logo -->
+    <g id="logo-bigquery">
+      <path fill="#aecbfa" d="M6.73,10.83v2.63A4.91,4.91,0,0,0,8.44,15.2V10.83Z"/>
+      <path fill="#669df6" d="M9.89,8.41v7.53A7.62,7.62,0,0,0,11,16,8,8,0,0,0,12,16V8.41Z"/>
+      <path fill="#aecbfa" d="M13.64,11.86v3.29a5,5,0,0,0,1.7-1.82V11.86Z"/>
+      <path fill="#4285f4" d="M17.74,16.32l-1.42,1.42a.42.42,0,0,0,0,.6l3.54,3.54a.42.42,0,0,0,.59,0l1.43-1.43a.42.42,0,0,0,0-.59l-3.54-3.54a.42.42,0,0,0-.6,0"/>
+      <path fill="#669df6" d="M11,2a9,9,0,1,0,9,9,9,9,0,0,0-9-9m0,15.69A6.68,6.68,0,1,1,17.69,11,6.68,6.68,0,0,1,11,17.69"/>
+    </g>
+
+    <!-- 7. Official Google Cloud Trace Logo -->
+    <g id="logo-cloud-trace">
+      <polygon fill="#4285f4" points="12 14 22 14 22 10 12 10 12 14"/>
+      <polygon fill="#4285f4" points="12 22 22 22 22 18 12 18 12 22"/>
+      <polygon fill="#669df6" points="8 22 12 22 12 18 8 18 8 22"/>
+      <rect fill="#669df6" x="2" y="2" width="6" height="4"/>
+      <rect fill="#669df6" x="2" y="10" width="10" height="4"/>
+    </g>
+
+    <!-- 8. Official React Logo -->
+    <g id="logo-react">
+      <circle cx="12" cy="12" r="2.2" fill="#61DAFB"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#61DAFB" stroke-width="1.2" transform="rotate(30 12 12)"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#61DAFB" stroke-width="1.2" transform="rotate(90 12 12)"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#61DAFB" stroke-width="1.2" transform="rotate(150 12 12)"/>
+    </g>
+
+    <!-- 9. Clinical DB / Table Logo -->
     <g id="logo-clinical-db">
       <rect x="3" y="3" width="18" height="18" rx="3" ry="3" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
       <line x1="3" y1="9" x2="21" y2="9" stroke="#1A73E8" stroke-width="1.5"/>
@@ -88,43 +139,13 @@
       <circle cx="12" cy="6" r="1.5" fill="#1A73E8"/>
     </g>
 
-    <!-- Vector DB / Lightning Fallback Logo -->
+    <!-- 10. Vector DB / Circuit Breaker Logo -->
     <g id="logo-vector-fallback">
       <circle cx="12" cy="12" r="10" fill="#E8F0FE" stroke="#F9AB00" stroke-width="1.5"/>
       <polygon points="13,3 6,13 11,13 10,21 18,10 13,10" fill="#F9AB00"/>
     </g>
 
-    <!-- BigQuery Logo -->
-    <g id="logo-bigquery">
-      <ellipse cx="12" cy="7" rx="9" ry="3.5" fill="#669DF6"/>
-      <path d="M 3 7 L 3 17 A 9 3.5 0 0 0 21 17 L 21 7 Z" fill="#4285F4"/>
-      <ellipse cx="12" cy="17" rx="9" ry="3.5" fill="#3367D6"/>
-      <circle cx="16" cy="15" r="4" fill="#FFFFFF"/>
-      <circle cx="16" cy="15" r="2.5" fill="#EA4335"/>
-      <line x1="19" y1="18" x2="22" y2="21" stroke="#3367D6" stroke-width="2" stroke-linecap="round"/>
-    </g>
-
-    <!-- Cloud Trace Logo -->
-    <g id="logo-cloud-trace">
-      <circle cx="5" cy="12" r="3" fill="#34A853"/>
-      <circle cx="14" cy="6" r="3" fill="#4285F4"/>
-      <circle cx="14" cy="18" r="3" fill="#FBBC04"/>
-      <circle cx="21" cy="12" r="3" fill="#EA4335"/>
-      <line x1="5" y1="12" x2="14" y2="6" stroke="#BDC1C6" stroke-width="1.5"/>
-      <line x1="5" y1="12" x2="14" y2="18" stroke="#BDC1C6" stroke-width="1.5"/>
-      <line x1="14" y1="6" x2="21" y2="12" stroke="#BDC1C6" stroke-width="1.5"/>
-      <line x1="14" y1="18" x2="21" y2="12" stroke="#BDC1C6" stroke-width="1.5"/>
-    </g>
-
-    <!-- React / UI Logo -->
-    <g id="logo-react">
-      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#00D8FF" stroke-width="1.2" transform="rotate(30 12 12)"/>
-      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#00D8FF" stroke-width="1.2" transform="rotate(90 12 12)"/>
-      <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#00D8FF" stroke-width="1.2" transform="rotate(150 12 12)"/>
-      <circle cx="12" cy="12" r="2" fill="#00D8FF"/>
-    </g>
-
-    <!-- Safe Refusal Barrier Logo -->
+    <!-- 11. Safe Refusal Barrier Logo -->
     <g id="logo-refusal">
       <polygon points="7,2 17,2 22,7 22,17 17,22 7,22 2,17 2,7" fill="#EA4335"/>
       <line x1="7" y1="12" x2="17" y2="12" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
@@ -157,7 +178,7 @@
       <circle cx="10" cy="9" r="2.5" fill="#EA4335"/>
       <circle cx="18" cy="9" r="2.5" fill="#FBBC04"/>
       <circle cx="26" cy="9" r="2.5" fill="#34A853"/>
-      <!-- Icon & Text -->
+      <!-- Official React Logo -->
       <g transform="translate(46, 23)"><use href="#logo-react"/></g>
       <text x="57" y="56" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician UI</text>
       <text x="57" y="70" font-size="9" font-weight="500" fill="#5F6368" text-anchor="middle">React 18 / REST API</text>
@@ -168,10 +189,11 @@
     <rect x="135" y="53" width="46" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="158" y="64" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">1. HTTPS</text>
 
-    <!-- 2. Cloud Armor (Shield Shape) -->
+    <!-- 2. Cloud Armor (Shield Shape + Official Cloud Armor Logo) -->
     <g transform="translate(183, 30)" filter="url(#shadow-shield)">
       <path d="M 12 0 L 113 0 L 125 15 L 125 58 Q 125 86 62 92 Q 0 86 0 58 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
       <path d="M 12 0 L 113 0 L 125 15 L 125 26 L 0 26 L 0 15 Z" fill="#E8F0FE"/>
+      <!-- Official Google Cloud Armor Logo -->
       <g transform="translate(51, 32)"><use href="#logo-cloud-armor"/></g>
       <text x="62" y="68" font-size="11.5" font-weight="700" fill="#202124" text-anchor="middle">Cloud Armor</text>
       <text x="62" y="81" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 WAF &amp; DDoS</text>
@@ -182,7 +204,7 @@
     <rect x="309" y="53" width="44" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="331" y="64" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">2. Clean</text>
 
-    <!-- 3. Cloud Run Gateway (Autoscaling Stack: 0 -> N Instances) -->
+    <!-- 3. Cloud Run Gateway (Autoscaling Stack: 0 -> N Instances + Official Cloud Run Logo) -->
     <g transform="translate(355, 30)" filter="url(#shadow-card)">
       <!-- Card Replica 3 (Back) -->
       <rect x="12" y="4" width="138" height="78" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
@@ -199,7 +221,7 @@
       <!-- Scaling Badge -->
       <rect x="70" y="15" width="62" height="14" rx="3" ry="3" fill="#4285F4"/>
       <text x="101" y="25" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">0 → N Replicas</text>
-      <!-- Icon & Text -->
+      <!-- Official Google Cloud Run Logo -->
       <g transform="translate(8, 42)"><use href="#logo-cloud-run"/></g>
       <text x="82" y="52" font-size="11.5" font-weight="700" fill="#202124" text-anchor="middle">Cloud Run</text>
       <text x="82" y="66" font-size="9" font-weight="600" fill="#4285F4" text-anchor="middle">FastAPI Gateway</text>
@@ -211,10 +233,11 @@
     <rect x="506" y="53" width="46" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="529" y="64" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">3. Payload</text>
 
-    <!-- 4. Model Armor (Shield Shape) -->
+    <!-- 4. Model Armor (Shield Shape + Official Model Armor Logo) -->
     <g transform="translate(555, 30)" filter="url(#shadow-shield)">
       <path d="M 12 0 L 118 0 L 130 15 L 130 58 Q 130 86 65 92 Q 0 86 0 58 L 0 15 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
       <path d="M 12 0 L 118 0 L 130 15 L 130 26 L 0 26 L 0 15 Z" fill="#E8F0FE"/>
+      <!-- Official Model Armor Logo -->
       <g transform="translate(53, 32)"><use href="#logo-model-armor"/></g>
       <text x="65" y="68" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Model Armor</text>
       <text x="65" y="81" font-size="8.5" font-weight="600" fill="#5F6368" text-anchor="middle">Layer 8 Guardrail</text>
@@ -250,13 +273,13 @@
     <rect x="0" y="0" width="1080" height="175" rx="10" ry="10" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
     <text x="18" y="20" font-size="9.5" font-weight="700" fill="#1A73E8" letter-spacing="0.5">TIER 2: GOOGLE ADK MULTI-AGENT CORE (DECOUPLED SUPERVISOR-WORKER PATTERN)</text>
 
-    <!-- Agent 1: Root Orchestrator (Supervisor) -->
+    <!-- Agent 1: Root Orchestrator (Supervisor + Official Gemini Star Logo) -->
     <g transform="translate(20, 42)" filter="url(#shadow-card)">
       <rect width="210" height="108" rx="10" ry="10" fill="#FFFFFF" stroke="#1A73E8" stroke-width="2"/>
       <rect width="210" height="32" rx="10" ry="10" fill="#E8F0FE"/>
       <rect y="22" width="210" height="10" fill="#E8F0FE"/>
-      <!-- Logo & Header -->
-      <g transform="translate(10, 5)"><use href="#logo-gemini"/></g>
+      <!-- Official Google Gemini Logo -->
+      <g transform="translate(10, 4)"><use href="#logo-gemini"/></g>
       <text x="115" y="21" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator</text>
       <!-- Subtitle badge -->
       <rect x="45" y="40" width="120" height="18" rx="4" ry="4" fill="#F1F3F4"/>
@@ -270,7 +293,7 @@
     <rect x="238" y="74" width="94" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="285" y="86" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">5. Research Intent</text>
 
-    <!-- Agent 2: Clinical Researcher (Scaling Worker Pool: 1 -> M concurrent) -->
+    <!-- Agent 2: Clinical Researcher (Scaling Worker Pool + Official Gemini Logo) -->
     <g transform="translate(340, 32)" filter="url(#shadow-card)">
       <!-- Worker Replica 3 (Back) -->
       <rect x="14" y="2" width="230" height="108" rx="10" ry="10" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
@@ -287,8 +310,8 @@
       <!-- Scaling Pool Badge -->
       <rect x="146" y="15" width="76" height="14" rx="3" ry="3" fill="#1A73E8"/>
       <text x="184" y="25" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">1 → M Workers</text>
-      <!-- Logo & Header -->
-      <g transform="translate(10, 15)"><use href="#logo-gemini"/></g>
+      <!-- Official Google Gemini Logo -->
+      <g transform="translate(10, 14)"><use href="#logo-gemini"/></g>
       <text x="82" y="31" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Researcher</text>
       <!-- Subtitle badge -->
       <rect x="55" y="48" width="120" height="18" rx="4" ry="4" fill="#F1F3F4"/>
@@ -302,13 +325,13 @@
     <rect x="592" y="74" width="94" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="639" y="86" font-size="7.5" font-weight="700" fill="#1A73E8" text-anchor="middle">8. Draft + [1],[2]</text>
 
-    <!-- Agent 3: Reviewer & QC Gate (Auditor Shield Shape) -->
+    <!-- Agent 3: Reviewer & QC Gate (Auditor Shield Shape + Official Gemini Logo) -->
     <g transform="translate(695, 42)" filter="url(#shadow-shield)">
       <rect width="360" height="108" rx="10" ry="10" fill="#FFFFFF" stroke="#34A853" stroke-width="2"/>
       <rect width="360" height="32" rx="10" ry="10" fill="#E6F4EA"/>
       <rect y="22" width="360" height="10" fill="#E6F4EA"/>
-      <!-- Logo & Header -->
-      <g transform="translate(12, 5)"><use href="#logo-gemini"/></g>
+      <!-- Official Google Gemini Logo -->
+      <g transform="translate(12, 4)"><use href="#logo-gemini"/></g>
       <text x="185" y="21" font-size="12.5" font-weight="700" fill="#137333" text-anchor="middle">Reviewer &amp; QC Gate</text>
       <!-- Subtitle badge -->
       <rect x="85" y="40" width="190" height="18" rx="4" ry="4" fill="#F1F3F4"/>
@@ -344,7 +367,7 @@
     <rect x="0" y="0" width="1080" height="145" rx="10" ry="10" fill="#F8F9FA" stroke="#E0E3E7" stroke-width="1"/>
     <text x="18" y="20" font-size="9.5" font-weight="700" fill="#5F6368" letter-spacing="0.5">TIER 3: GROUNDING DATA STORES &amp; OBSERVABILITY SINK (3D DATABASE CYLINDERS)</text>
 
-    <!-- Store 1: Vertex AI Search (Cylinder Shape + Sharded Replica Stack) -->
+    <!-- Store 1: Vertex AI Search (Cylinder Shape + Sharded Replica Stack + Official Vertex AI Logo) -->
     <g transform="translate(18, 30)" filter="url(#shadow-card)">
       <!-- Replica Back Cylinder -->
       <ellipse cx="127" cy="12" rx="110" ry="10" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
@@ -355,20 +378,19 @@
       <path d="M 10 16 L 10 96 A 110 10 0 0 0 230 96 L 230 16 Z" fill="url(#cylinder-grad)" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="96" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="56" rx="110" ry="10" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-      <!-- Logo & Text -->
+      <!-- Official Google Cloud Vertex AI Logo -->
       <g transform="translate(20, 36)"><use href="#logo-vertex-ai"/></g>
       <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vertex AI Search</text>
       <text x="135" y="60" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">NIH MedQuAD Datastore</text>
       <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">16,400+ Records • Scaled Serving</text>
     </g>
 
-    <!-- Store 2: Clinical DB Tool (Cylinder Shape + Logo) -->
+    <!-- Store 2: Clinical DB Tool (Cylinder Shape + Table Logo) -->
     <g transform="translate(283, 30)" filter="url(#shadow-card)">
       <ellipse cx="120" cy="16" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <path d="M 10 16 L 10 96 A 110 10 0 0 0 230 96 L 230 16 Z" fill="url(#cylinder-grad)" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="96" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="56" rx="110" ry="10" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-      <!-- Logo & Text -->
       <g transform="translate(20, 36)"><use href="#logo-clinical-db"/></g>
       <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical DB Tool</text>
       <text x="135" y="60" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Biomarker &amp; Lab Thresholds</text>
@@ -381,20 +403,19 @@
       <path d="M 10 16 L 10 96 A 110 10 0 0 0 230 96 L 230 16 Z" fill="url(#cylinder-grad)" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="96" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="56" rx="110" ry="10" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-      <!-- Logo & Text -->
       <g transform="translate(20, 36)"><use href="#logo-vector-fallback"/></g>
       <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vector DB Fallback</text>
       <text x="135" y="60" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Circuit Breaker Store</text>
       <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Sub-50ms In-Memory Failover</text>
     </g>
 
-    <!-- Store 4: Observability Sink (BigQuery & Cloud Trace) -->
+    <!-- Store 4: Observability Sink (BigQuery & Cloud Trace + Official GCP Logos) -->
     <g transform="translate(813, 30)" filter="url(#shadow-card)">
       <ellipse cx="120" cy="16" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <path d="M 10 16 L 10 96 A 110 10 0 0 0 230 96 L 230 16 Z" fill="url(#cylinder-grad)" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="96" rx="110" ry="10" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="56" rx="110" ry="10" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-      <!-- Logos & Text -->
+      <!-- Official Google Cloud BigQuery & Trace Logos -->
       <g transform="translate(18, 36)"><use href="#logo-bigquery"/></g>
       <g transform="translate(200, 36)"><use href="#logo-cloud-trace"/></g>
       <text x="120" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Cloud Trace &amp; BigQuery</text>
