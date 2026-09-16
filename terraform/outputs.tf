@@ -37,3 +37,14 @@ output "nightly_audit_scheduler_id" {
   description = "Cloud Scheduler Job ID for automated nightly conversation validation"
   value       = google_cloud_scheduler_job.nightly_validation_audit.id
 }
+
+output "cloud_armor_security_policy_id" {
+  description = "Resource ID of the Cloud Armor Layer 7 WAF security policy"
+  value       = google_compute_security_policy.cloud_armor_policy.id
+}
+
+output "backend_service_id" {
+  description = "Global Compute Backend Service ID attaching Cloud Armor to Serverless NEG"
+  value       = google_compute_backend_service.backend_service.id
+}
+

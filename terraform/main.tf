@@ -19,6 +19,7 @@ provider "google" {
 locals {
   services = [
     "run.googleapis.com",
+    "compute.googleapis.com",
     "discoveryengine.googleapis.com",
     "aiplatform.googleapis.com",
     "bigquery.googleapis.com",
@@ -67,6 +68,7 @@ resource "google_project_iam_member" "sa_roles" {
     "roles/secretmanager.secretAccessor",
     "roles/storage.objectAdmin",
     "roles/run.invoker",
+    "roles/modelarmor.user",
   ])
   project = var.project_id
   role    = each.key
@@ -246,6 +248,22 @@ resource "google_cloud_run_v2_service" "backend" {
         name  = "REVIEWER_MODEL"
         value = "gemini-3.5-flash"
       }
+      env {
+        name  = "ENABLE_MODEL_ARMOR"
+        value = "true"
+      }
+      env {
+        name  = "MODEL_ARMOR_PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "MODEL_ARMOR_LOCATION"
+        value = var.region
+      }
+      env {
+        name  = "MODEL_ARMOR_TEMPLATE_ID"
+        value = "medquad-safety-template"
+      }
     }
   }
 
@@ -339,4 +357,116 @@ resource "google_cloud_scheduler_job" "nightly_validation_audit" {
     google_cloud_run_v2_service_iam_member.backend_invoker,
   ]
 }
+
+# 8. Cloud Armor L7 Security Policy & Serverless Ingress
+resource "google_compute_security_policy" "cloud_armor_policy" {
+  name        = "medquad-cloud-armor-policy"
+  description = "Cloud Armor Layer 7 WAF, OWASP Top 10 mitigation, and rate limiting for MedQuAD"
+  project     = var.project_id
+
+  # Rule 1000: Block SQL Injection
+  rule {
+    action   = "deny(403)"
+    priority = "1000"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('sqli-v422-stable')"
+      }
+    }
+    description = "Block OWASP SQL Injection attacks"
+  }
+
+  # Rule 1001: Block Cross-Site Scripting (XSS)
+  rule {
+    action   = "deny(403)"
+    priority = "1001"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('xss-v422-stable')"
+      }
+    }
+    description = "Block OWASP Cross-Site Scripting (XSS) attacks"
+  }
+
+  # Rule 1002: Block Remote Code Execution (RCE)
+  rule {
+    action   = "deny(403)"
+    priority = "1002"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('rce-v422-stable')"
+      }
+    }
+    description = "Block OWASP Remote Code Execution attacks"
+  }
+
+  # Rule 2000: Rate Limiting (Max 100 requests / minute per client IP)
+  rule {
+    action   = "rate_based_ban"
+    priority = "2000"
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    rate_limit_options {
+      conform_action = "allow"
+      exceed_action  = "deny(429)"
+      rate_limit_threshold {
+        count        = 100
+        interval_sec = 60
+      }
+      ban_duration_sec = 300
+    }
+    description = "Per-IP rate limiting: 100 requests per minute"
+  }
+
+  # Default rule: Allow legitimate traffic
+  rule {
+    action   = "allow"
+    priority = "2147483647"
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    description = "Default allow rule"
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# 8b. Serverless Network Endpoint Group (NEG) for Cloud Run Backend
+resource "google_compute_region_network_endpoint_group" "backend_neg" {
+  name                  = "medquad-backend-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+  project               = var.project_id
+
+  cloud_run {
+    service = google_cloud_run_v2_service.backend.name
+  }
+
+  depends_on = [google_cloud_run_v2_service.backend]
+}
+
+# 8c. Backend Service attaching Cloud Armor Security Policy to Serverless NEG
+resource "google_compute_backend_service" "backend_service" {
+  name            = "medquad-backend-service"
+  description     = "Global backend service for MedQuAD routing to Serverless NEG with Cloud Armor L7 WAF"
+  project         = var.project_id
+  security_policy = google_compute_security_policy.cloud_armor_policy.id
+
+  backend {
+    group = google_compute_region_network_endpoint_group.backend_neg.id
+  }
+
+  depends_on = [
+    google_compute_security_policy.cloud_armor_policy,
+    google_compute_region_network_endpoint_group.backend_neg,
+  ]
+}
+
 
