@@ -37,13 +37,13 @@
       <stop offset="100%" stop-color="#E8EAED"/>
     </linearGradient>
 
-    <!-- ==================== OFFICIAL GOOGLE LOGOS ==================== -->
-    <!-- 1. Official Google Gemini Star -->
+    <!-- ==================== OFFICIAL PRODUCT LOGOS ==================== -->
+    <!-- 1. Google Gemini Star -->
     <g id="logo-gemini">
       <path fill="url(#gemini-official-grad)" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/>
     </g>
 
-    <!-- 2. Official Google Cloud Run Logo -->
+    <!-- 2. Google Cloud Run Logo -->
     <g id="logo-cloud-run">
       <polygon fill="#aecbfa" points="8.9 2.63 12.02 12 21.38 12 8.9 2.63"/>
       <polygon fill="#4285f4" points="21.38 12 12.02 12 8.9 21.38 21.38 12"/>
@@ -51,7 +51,7 @@
       <polygon fill="#aecbfa" points="3.44 2.63 5.78 12 8.9 12 6.57 4.19 3.44 2.63"/>
     </g>
 
-    <!-- 3. Official Google Cloud Armor Logo -->
+    <!-- 3. Google Cloud Armor Logo -->
     <g id="logo-cloud-armor">
       <polygon fill="#aecbfa" points="9.76 20.6 8.72 19.55 14.17 14.07 15.21 15.12 9.76 20.6"/>
       <polygon fill="#aecbfa" points="7.03 18.32 5.99 17.27 13.34 9.88 14.38 10.93 7.03 18.32"/>
@@ -62,7 +62,7 @@
       <circle fill="#669df6" cx="9.69" cy="9.6" r="1.42"/>
     </g>
 
-    <!-- 4. Official Google Cloud Model Armor -->
+    <!-- 4. Google Cloud Model Armor Logo -->
     <g id="logo-model-armor">
       <polygon fill="#aecbfa" points="9.76 20.6 8.72 19.55 14.17 14.07 15.21 15.12 9.76 20.6"/>
       <polygon fill="#aecbfa" points="7.03 18.32 5.99 17.27 13.34 9.88 14.38 10.93 7.03 18.32"/>
@@ -72,7 +72,7 @@
       </g>
     </g>
 
-    <!-- 5. Official Google Cloud Vertex AI Logo -->
+    <!-- 5. Google Cloud Vertex AI Logo -->
     <g id="logo-vertex-ai">
       <path fill="#669df6" d="M20,13.89A.77.77,0,0,0,19,13.73l-7,5.14v.22a.72.72,0,1,1,0,1.43v0a.74.74,0,0,0,.45-.15l7.41-5.47A.76.76,0,0,0,20,13.89Z"/>
       <path fill="#aecbfa" d="M12,20.52a.72.72,0,0,1,0-1.43h0v-.22L5,13.73a.76.76,0,0,0-1,.16.74.74,0,0,0,.16,1l7.41,5.47a.73.73,0,0,0,.44.15v0Z"/>
@@ -99,7 +99,7 @@
       <path fill="#aecbfa" d="M9,12.73A.76.76,0,0,1,8.24,12V10.1a.75.75,0,1,1,1.5,0V12A.75.75,0,0,1,9,12.73Z"/>
     </g>
 
-    <!-- 6. Official Google Cloud BigQuery Logo -->
+    <!-- 6. Google Cloud BigQuery Logo -->
     <g id="logo-bigquery">
       <path fill="#aecbfa" d="M6.73,10.83v2.63A4.91,4.91,0,0,0,8.44,15.2V10.83Z"/>
       <path fill="#669df6" d="M9.89,8.41v7.53A7.62,7.62,0,0,0,11,16,8,8,0,0,0,12,16V8.41Z"/>
@@ -108,7 +108,7 @@
       <path fill="#669df6" d="M11,2a9,9,0,1,0,9,9,9,9,0,0,0-9-9m0,15.69A6.68,6.68,0,1,1,17.69,11,6.68,6.68,0,0,1,11,17.69"/>
     </g>
 
-    <!-- 7. Official Google Cloud Trace Logo -->
+    <!-- 7. Google Cloud Trace Logo -->
     <g id="logo-cloud-trace">
       <polygon fill="#4285f4" points="12 14 22 14 22 10 12 10 12 14"/>
       <polygon fill="#4285f4" points="12 22 22 22 22 18 12 18 12 22"/>
@@ -117,7 +117,7 @@
       <rect fill="#669df6" x="2" y="10" width="10" height="4"/>
     </g>
 
-    <!-- 8. Official React Logo -->
+    <!-- 8. React Logo -->
     <g id="logo-react">
       <circle cx="12" cy="12" r="2.2" fill="#61DAFB"/>
       <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#61DAFB" stroke-width="1.2" transform="rotate(30 12 12)"/>
@@ -125,7 +125,7 @@
       <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#61DAFB" stroke-width="1.2" transform="rotate(150 12 12)"/>
     </g>
 
-    <!-- 9. Clinical DB / Table Logo -->
+    <!-- 9. Clinical DB Logo -->
     <g id="logo-clinical-db">
       <rect x="3" y="3" width="18" height="18" rx="3" ry="3" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
       <line x1="3" y1="9" x2="21" y2="9" stroke="#1A73E8" stroke-width="1.5"/>
@@ -135,7 +135,7 @@
       <circle cx="12" cy="6" r="1.5" fill="#1A73E8"/>
     </g>
 
-    <!-- 10. Vector DB / Circuit Breaker Logo -->
+    <!-- 10. Vector DB Fallback Logo -->
     <g id="logo-vector-fallback">
       <circle cx="12" cy="12" r="10" fill="#E8F0FE" stroke="#F9AB00" stroke-width="1.5"/>
       <polygon points="13,3 6,13 11,13 10,21 18,10 13,10" fill="#F9AB00"/>
@@ -148,7 +148,7 @@
   <g id="header" transform="translate(40, 22)">
     <text x="0" y="0" font-size="11" font-weight="700" fill="#1A73E8" letter-spacing="1">SYSTEM ARCHITECTURE</text>
     <text x="0" y="24" font-size="19" font-weight="700" fill="#202124">MedQuAD Multi-Agent Clinical Research Platform</text>
-    <text x="0" y="42" font-size="12" font-weight="400" fill="#5F6368">Google Cloud Run Microservice Workload • ADK Supervisor-Worker Pipeline • Vertex AI Foundation Models</text>
+    <text x="0" y="42" font-size="12" font-weight="400" fill="#5F6368">Google Cloud Run Microservice • ADK Multi-Agent Core • Vertex AI Foundation Models</text>
     <line x1="0" y1="50" x2="1100" y2="50" stroke="#E0E3E7" stroke-width="1"/>
   </g>
 
@@ -168,9 +168,9 @@
       <circle cx="20" cy="10" r="2.5" fill="#FBBC04"/>
       <circle cx="28" cy="10" r="2.5" fill="#34A853"/>
       <g transform="translate(18, 34)"><use href="#logo-react"/></g>
-      <text x="155" y="42" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician Portal (UI)</text>
-      <text x="155" y="56" font-size="9" font-weight="500" fill="#202124" text-anchor="middle">React 18 Single-Page Application</text>
-      <text x="155" y="69" font-size="8" fill="#5F6368" text-anchor="middle">REST Ingress • Server-Sent Events (SSE)</text>
+      <text x="155" y="45" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinician Portal (UI)</text>
+      <text x="155" y="60" font-size="9" font-weight="500" fill="#202124" text-anchor="middle">React 18 Single-Page Application</text>
+      <text x="155" y="72" font-size="8" fill="#5F6368" text-anchor="middle">REST &amp; Streaming SSE Ingress</text>
     </g>
 
     <!-- Arrow 1: UI -> Cloud Armor -->
@@ -184,8 +184,8 @@
       <path d="M 12 0 L 308 0 L 320 15 L 320 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
       <g transform="translate(18, 38)"><use href="#logo-cloud-armor"/></g>
       <text x="175" y="46" font-size="12" font-weight="700" fill="#202124" text-anchor="middle">Google Cloud Armor</text>
-      <text x="175" y="60" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 Web Application Firewall (WAF) &amp; DDoS</text>
-      <text x="175" y="73" font-size="8" fill="#5F6368" text-anchor="middle">OWASP Top 10 • Adaptive Rate Limiting</text>
+      <text x="175" y="61" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">L7 WAF &amp; DDoS Protection</text>
+      <text x="175" y="74" font-size="8" fill="#5F6368" text-anchor="middle">OWASP Rules • Rate Limiting</text>
     </g>
 
     <!-- Arrow 2: Cloud Armor -> Model Armor -->
@@ -199,8 +199,8 @@
       <path d="M 12 0 L 298 0 L 310 15 L 310 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
       <g transform="translate(18, 38)"><use href="#logo-model-armor"/></g>
       <text x="170" y="46" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Google Cloud Model Armor</text>
-      <text x="170" y="60" font-size="9" font-weight="600" fill="#5F6368" text-anchor="middle">AI Safety Guardrail &amp; PHI DLP</text>
-      <text x="170" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Prompt Injection Intercept • 18 HIPAA Safe Harbor Tokens</text>
+      <text x="170" y="61" font-size="9" font-weight="600" fill="#1A73E8" text-anchor="middle">Prompt Sanitization &amp; DLP</text>
+      <text x="170" y="74" font-size="8" fill="#5F6368" text-anchor="middle">Prompt Injection &amp; PHI Redaction</text>
     </g>
   </g>
 
@@ -208,8 +208,8 @@
   <!-- CONNECTOR: Perimeter Defense -> Cloud Run Workload -->
   <!-- ========================================== -->
   <path d="M 925 197 L 925 218 L 105 218 L 105 250" fill="none" stroke="#188038" stroke-width="2" marker-end="url(#arr-green)"/>
-  <rect x="360" y="208" width="355" height="20" rx="5" ry="5" fill="#FFFFFF" stroke="#CEEAD6" stroke-width="1.2"/>
-  <text x="537" y="222" font-size="8.5" font-weight="700" fill="#188038" text-anchor="middle">Sanitized Ingress (18 HIPAA PHI Identifiers Scrubbed • Injection Free)</text>
+  <rect x="420" y="208" width="230" height="20" rx="5" ry="5" fill="#FFFFFF" stroke="#CEEAD6" stroke-width="1.2"/>
+  <text x="535" y="222" font-size="8.5" font-weight="700" fill="#188038" text-anchor="middle">Sanitized Request (PHI Redacted)</text>
 
   <!-- ========================================== -->
   <!-- TIER 2: GOOGLE CLOUD RUN (SERVERLESS WORKLOAD CONTAINER) -->
@@ -232,7 +232,7 @@
     <path d="M 0 24 Q 0 12 12 12 L 1088 12 Q 1100 12 1100 24 L 1100 48 L 0 48 Z" fill="#E8F0FE"/>
     <g transform="translate(16, 18)"><use href="#logo-cloud-run"/></g>
     <text x="48" y="32" font-size="11" font-weight="700" fill="#1A73E8" letter-spacing="0.5">TIER 2: GOOGLE CLOUD RUN (SERVERLESS CONTAINER WORKLOAD • 0 → N REPLICAS)</text>
-    <text x="48" y="44" font-size="8.5" font-weight="500" fill="#5F6368">FastAPI ASGI Microservice Packaging the Google ADK Multi-Agent Core in Python 3.11</text>
+    <text x="48" y="44" font-size="8.5" font-weight="500" fill="#5F6368">FastAPI ASGI Microservice • Multi-Agent Core (Python 3.11)</text>
     
     <!-- Autoscaling Badge -->
     <rect x="980" y="18" width="108" height="20" rx="4" ry="4" fill="#1A73E8"/>
@@ -248,15 +248,14 @@
       <text x="85" y="19" font-size="11" font-weight="700" fill="#202124" text-anchor="middle">FastAPI Gateway</text>
       <!-- Details -->
       <rect x="10" y="38" width="150" height="34" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="85" y="52" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Event Loop</text>
-      <text x="85" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">Non-blocking async/await</text>
+      <text x="85" y="55" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Server</text>
+      <text x="85" y="66" font-size="7.5" fill="#5F6368" text-anchor="middle">Async Request Handling</text>
       
       <rect x="10" y="80" width="150" height="42" rx="4" ry="4" fill="#F8F9FA" stroke="#DADCE0" stroke-width="0.8"/>
-      <text x="85" y="95" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
-      <text x="85" y="108" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
-      <text x="85" y="118" font-size="7" fill="#188038" text-anchor="middle">LRU Cache + BigQuery Sync</text>
+      <text x="85" y="97" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
+      <text x="85" y="111" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
       
-      <text x="85" y="145" font-size="8" font-weight="600" fill="#4285F4" text-anchor="middle">concurrency=80 per Inst</text>
+      <text x="85" y="145" font-size="8" font-weight="600" fill="#5F6368" text-anchor="middle">Max Concurrency = 80</text>
     </g>
 
     <!-- Arrow: Gateway -> Root Orchestrator -->
@@ -269,20 +268,19 @@
       <rect width="225" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
       <rect width="225" height="28" rx="8" ry="8" fill="#E8F0FE"/>
       <rect y="18" width="225" height="10" fill="#E8F0FE"/>
-      <text x="112" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator (Python)</text>
+      <text x="112" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator</text>
       
-      <!-- Python Service Tag -->
+      <!-- Supervisor Box -->
       <rect x="12" y="38" width="201" height="42" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="112" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent Logic</text>
-      <text x="112" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/orchestrator.py</text>
-      <text x="112" y="74" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">max_iterations=2 Safety Ceiling</text>
+      <text x="112" y="53" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent</text>
+      <text x="112" y="67" font-size="8" font-weight="500" fill="#5F6368" text-anchor="middle">Task Planning &amp; max_iterations=2</text>
 
       <!-- External LLM Call Pill -->
       <rect x="12" y="90" width="201" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
-      <text x="112" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <text x="112" y="105" font-size="7.5" font-weight="600" fill="#70757A" text-anchor="middle">VERTEX AI INFERENCE</text>
       <g transform="translate(22, 116)"><use href="#logo-gemini"/></g>
       <text x="122" y="128" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Flash</text>
-      <text x="122" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Endpoint</text>
+      <text x="122" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Routing &amp; Decision Logic</text>
     </g>
 
     <!-- Arrow: Orchestrator -> Clinical Researcher -->
@@ -290,7 +288,7 @@
     <rect x="488" y="124" width="54" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="515" y="135" font-size="7.2" font-weight="700" fill="#1A73E8" text-anchor="middle">Delegate</text>
 
-    <!-- Component 3: Clinical Researcher (Worker Agent Pool in Python) -->
+    <!-- Component 3: Clinical Researcher (Worker Agent Pool) -->
     <g transform="translate(550, 56)" filter="url(#shadow-card)">
       <!-- Worker Replica 3 (Back) -->
       <rect x="12" y="2" width="245" height="165" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
@@ -307,22 +305,21 @@
       <rect x="0" y="8" width="245" height="28" rx="8" ry="8" fill="#E8F0FE"/>
       <rect x="0" y="26" width="245" height="10" fill="#E8F0FE"/>
       <!-- Scaling Pool Badge -->
-      <rect x="160" y="14" width="78" height="14" rx="3" ry="3" fill="#1A73E8"/>
-      <text x="199" y="24" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">1 → M Coroutines</text>
+      <rect x="165" y="14" width="72" height="14" rx="3" ry="3" fill="#1A73E8"/>
+      <text x="201" y="24" font-size="6.8" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker Pool</text>
       <text x="78" y="27" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Researcher</text>
 
-      <!-- Python Service Tag -->
+      <!-- Worker Logic Box -->
       <rect x="12" y="44" width="221" height="44" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="122" y="58" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Python Agent Worker (Stateless)</text>
-      <text x="122" y="70" font-size="7.5" fill="#5F6368" text-anchor="middle">Context Rewriting • Tool Calling Client</text>
-      <text x="122" y="80" font-size="7.5" font-weight="600" fill="#1A73E8" text-anchor="middle">Runs in Cloud Run Event Loop</text>
+      <text x="122" y="58" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Researcher Agent Worker</text>
+      <text x="122" y="72" font-size="8" fill="#5F6368" text-anchor="middle">Query Rewriting &amp; Tool Calling</text>
 
       <!-- External LLM Call Pill -->
       <rect x="12" y="96" width="221" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#D2E3FC" stroke-width="1.2"/>
-      <text x="122" y="110" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <text x="122" y="110" font-size="7.5" font-weight="600" fill="#70757A" text-anchor="middle">VERTEX AI INFERENCE</text>
       <g transform="translate(22, 122)"><use href="#logo-gemini"/></g>
       <text x="132" y="134" font-size="10" font-weight="700" fill="#1A73E8" text-anchor="middle">Gemini 2.5 Pro</text>
-      <text x="132" y="147" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Managed Synthesis</text>
+      <text x="132" y="147" font-size="7.5" fill="#5F6368" text-anchor="middle">Clinical Synthesis &amp; Reasoning</text>
     </g>
 
     <!-- Arrow: Researcher -> Reviewer -->
@@ -330,25 +327,24 @@
     <rect x="803" y="124" width="54" height="15" rx="4" ry="4" fill="#FFFFFF" stroke="#1A73E8" stroke-width="0.8"/>
     <text x="830" y="135" font-size="7.2" font-weight="700" fill="#1A73E8" text-anchor="middle">Synthesis</text>
 
-    <!-- Component 4: Reviewer & QC Gate (Auditor Agent) -->
+    <!-- Component 4: Reviewer & QC Gate -->
     <g transform="translate(865, 62)" filter="url(#shadow-card)">
       <rect width="220" height="165" rx="8" ry="8" fill="#FFFFFF" stroke="#34A853" stroke-width="1.8"/>
       <rect width="220" height="28" rx="8" ry="8" fill="#E6F4EA"/>
       <rect y="18" width="220" height="10" fill="#E6F4EA"/>
-      <text x="110" y="19" font-size="11.5" font-weight="700" fill="#137333" text-anchor="middle">Reviewer &amp; QC Gate (Python)</text>
+      <text x="110" y="19" font-size="11.5" font-weight="700" fill="#137333" text-anchor="middle">Reviewer &amp; QC Gate</text>
 
-      <!-- Python Service Tag -->
+      <!-- Auditor Box -->
       <rect x="10" y="38" width="200" height="42" rx="4" ry="4" fill="#F1F3F4"/>
-      <text x="110" y="52" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Auditor Logic + CitationVerifier</text>
-      <text x="110" y="64" font-size="7.5" fill="#5F6368" text-anchor="middle">backend/agents/reviewer_agent.py</text>
-      <text x="110" y="74" font-size="7.5" font-weight="600" fill="#137333" text-anchor="middle">Deterministic 1:1 Grounding Match</text>
+      <text x="110" y="53" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Grounding &amp; QC Auditor</text>
+      <text x="110" y="67" font-size="8" font-weight="500" fill="#5F6368" text-anchor="middle">Citation Matching &amp; Verification</text>
 
       <!-- External LLM Call Pill -->
       <rect x="10" y="90" width="200" height="60" rx="6" ry="6" fill="#F8F9FA" stroke="#CEEAD6" stroke-width="1.2"/>
-      <text x="110" y="105" font-size="7.5" font-weight="700" fill="#5F6368" text-anchor="middle">EXTERNAL INFERENCE CALL</text>
+      <text x="110" y="105" font-size="7.5" font-weight="600" fill="#70757A" text-anchor="middle">VERTEX AI INFERENCE</text>
       <g transform="translate(20, 116)"><use href="#logo-gemini"/></g>
       <text x="120" y="128" font-size="10" font-weight="700" fill="#137333" text-anchor="middle">Gemini 3.5 Flash</text>
-      <text x="120" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Vertex AI Zero-Bias Verification</text>
+      <text x="120" y="141" font-size="7.5" fill="#5F6368" text-anchor="middle">Evidence Verification</text>
     </g>
   </g>
 
@@ -368,15 +364,15 @@
   <!-- Telemetry Sink (Down dashed) -->
   <line x1="970" y1="487" x2="970" y2="538" stroke="#5F6368" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arr-muted)"/>
   <rect x="965" y="500" width="118" height="17" rx="4" ry="4" fill="#FFFFFF" stroke="#DADCE0" stroke-width="0.8"/>
-  <text x="1024" y="512" font-size="7.2" font-weight="700" fill="#5F6368" text-anchor="middle">Distributed Spans &amp; Logs</text>
+  <text x="1024" y="512" font-size="7.2" font-weight="700" fill="#5F6368" text-anchor="middle">Telemetry &amp; Audit Logs</text>
 
   <!-- ========================================== -->
-  <!-- TIER 3: GROUNDING DATA & OBSERVABILITY SINK -->
+  <!-- TIER 3: DATA STORES & OBSERVABILITY SINK -->
   <!-- ========================================== -->
   <g id="tier-3" transform="translate(40, 538)">
     <!-- Container -->
     <rect x="0" y="0" width="1100" height="135" rx="10" ry="10" fill="#F8F9FA" stroke="#E0E3E7" stroke-width="1"/>
-    <text x="18" y="18" font-size="9.5" font-weight="700" fill="#5F6368" letter-spacing="0.5">TIER 3: GROUNDING DATA STORES &amp; OBSERVABILITY SINK (3D DATABASE CYLINDERS)</text>
+    <text x="18" y="18" font-size="9.5" font-weight="700" fill="#5F6368" letter-spacing="0.5">TIER 3: DATA STORES &amp; OBSERVABILITY SINK</text>
 
     <!-- Store 1: Vertex AI Search -->
     <g transform="translate(18, 25)" filter="url(#shadow-card)">
@@ -391,9 +387,9 @@
       <ellipse cx="120" cy="52" rx="112" ry="9" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
       <!-- Logo & Text -->
       <g transform="translate(20, 34)"><use href="#logo-vertex-ai"/></g>
-      <text x="135" y="44" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vertex AI Search</text>
-      <text x="135" y="58" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">NIH MedQuAD Datastore</text>
-      <text x="135" y="70" font-size="8" fill="#5F6368" text-anchor="middle">16,400+ Records • Scaled Serving</text>
+      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vertex AI Search</text>
+      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">NIH MedQuAD Index</text>
+      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">16,400+ Medical QA Records</text>
     </g>
 
     <!-- Store 2: Clinical DB Tool -->
@@ -403,9 +399,9 @@
       <ellipse cx="120" cy="92" rx="112" ry="9" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="52" rx="112" ry="9" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
       <g transform="translate(20, 34)"><use href="#logo-clinical-db"/></g>
-      <text x="135" y="44" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical DB Tool</text>
-      <text x="135" y="58" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Biomarker &amp; Lab Thresholds</text>
-      <text x="135" y="70" font-size="8" fill="#5F6368" text-anchor="middle">Diagnostic Reference Ranges</text>
+      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Reference DB</text>
+      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Biomarkers &amp; Lab Ranges</text>
+      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Reference Tables &amp; Thresholds</text>
     </g>
 
     <!-- Store 3: Vector DB Fallback -->
@@ -415,9 +411,9 @@
       <ellipse cx="120" cy="92" rx="112" ry="9" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="52" rx="112" ry="9" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
       <g transform="translate(20, 34)"><use href="#logo-vector-fallback"/></g>
-      <text x="135" y="44" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vector DB Fallback</text>
-      <text x="135" y="58" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Circuit Breaker Store</text>
-      <text x="135" y="70" font-size="8" fill="#5F6368" text-anchor="middle">Sub-50ms In-Memory Failover</text>
+      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Vector DB Fallback</text>
+      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Circuit Breaker Store</text>
+      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Local Embeddings Index</text>
     </g>
 
     <!-- Store 4: Observability Sink (BigQuery & Cloud Trace) -->
@@ -429,12 +425,12 @@
       <!-- Logos & Text -->
       <g transform="translate(18, 34)"><use href="#logo-bigquery"/></g>
       <g transform="translate(206, 34)"><use href="#logo-cloud-trace"/></g>
-      <text x="124" y="44" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Cloud Trace &amp; BigQuery</text>
-      <text x="124" y="58" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Telemetry &amp; Audit Sink</text>
-      <text x="124" y="70" font-size="8" fill="#5F6368" text-anchor="middle">Distributed Spans &amp; Eval Logs</text>
+      <text x="124" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Cloud Trace &amp; BigQuery</text>
+      <text x="124" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Observability &amp; Logging</text>
+      <text x="124" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Spans &amp; Audit Logs</text>
     </g>
   </g>
 
   <!-- Footer -->
-  <text x="40" y="702" font-size="9.5" fill="#70757A">MedQuAD Enterprise Architecture • Capstone 506616 • HIPAA Safe Harbor Compliant • Google Cloud Run &amp; Vertex AI</text>
+  <text x="40" y="702" font-size="9.5" fill="#70757A">MedQuAD System Architecture • Capstone Project 506616</text>
 </svg>
