@@ -225,7 +225,7 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
       <path d="M 12 0 L 298 0 L 310 15 L 310 25 L 0 25 L 0 15 Z" fill="#E8F0FE"/>
       <g transform="translate(18, 38)"><use href="#logo-model-armor"/></g>
       <text x="170" y="46" font-size="12" font-weight="700" fill="#1A73E8" text-anchor="middle">Google Cloud Model Armor</text>
-      <text x="170" y="60" font-size="9" font-weight="600" fill="#5F6368" text-anchor="middle">Layer 8 AI Safety Guardrail &amp; PHI DLP</text>
+      <text x="170" y="60" font-size="9" font-weight="600" fill="#5F6368" text-anchor="middle">AI Safety Guardrail &amp; PHI DLP</text>
       <text x="170" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Prompt Injection Intercept • 18 HIPAA Safe Harbor Tokens</text>
     </g>
   </g>
