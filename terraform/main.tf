@@ -178,9 +178,9 @@ EOF
 
 # 5. Cloud Run Service: MedQuAD Multi-Agent Backend
 resource "google_cloud_run_v2_service" "backend" {
-  name     = "medquad-backend"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                 = "medquad-backend"
+  location             = var.region
+  ingress              = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     service_account = google_service_account.runtime_sa.email
@@ -204,6 +204,14 @@ resource "google_cloud_run_v2_service" "backend" {
         }
       }
 
+      env {
+        name  = "ENABLE_IAP"
+        value = "true"
+      }
+      env {
+        name  = "IAP_AUDIENCE"
+        value = "/projects/1055109340350/global/backendServices/8170589415761269874"
+      }
       env {
         name  = "ENVIRONMENT"
         value = var.environment
@@ -272,9 +280,9 @@ resource "google_cloud_run_v2_service" "backend" {
 
 # 6. Cloud Run Service: React Frontend
 resource "google_cloud_run_v2_service" "frontend" {
-  name     = "medquad-frontend"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                 = "medquad-frontend"
+  location             = var.region
+  ingress              = "INGRESS_TRAFFIC_ALL"
 
   template {
     scaling {
@@ -368,6 +376,7 @@ resource "google_compute_security_policy" "cloud_armor_policy" {
   rule {
     action   = "deny(403)"
     priority = "1000"
+    preview  = true
     match {
       expr {
         expression = "evaluatePreconfiguredExpr('sqli-v422-stable')"
@@ -380,6 +389,7 @@ resource "google_compute_security_policy" "cloud_armor_policy" {
   rule {
     action   = "deny(403)"
     priority = "1001"
+    preview  = true
     match {
       expr {
         expression = "evaluatePreconfiguredExpr('xss-v422-stable')"
@@ -392,6 +402,7 @@ resource "google_compute_security_policy" "cloud_armor_policy" {
   rule {
     action   = "deny(403)"
     priority = "1002"
+    preview  = true
     match {
       expr {
         expression = "evaluatePreconfiguredExpr('rce-v422-stable')"

@@ -11,11 +11,15 @@ resource "google_compute_url_map" "medquad_url_map" {
 
 # 2. SSL Certificate for HTTPS Ingress (Required for Identity-Aware Proxy)
 resource "google_compute_ssl_certificate" "medquad_cert" {
-  name        = "medquad-iap-cert"
+  name_prefix = "medquad-iap-cert-"
   description = "SSL Certificate for MedQuAD HTTPS Load Balancer and IAP"
   project     = var.project_id
   private_key = file("${path.module}/certs/medquad.key")
   certificate = file("${path.module}/certs/medquad.crt")
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # 3. Target HTTPS Proxy for Global Load Balancer with IAP
