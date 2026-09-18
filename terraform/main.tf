@@ -310,6 +310,7 @@ locals {
   invoker_members = toset([
     var.invoker_member,
     "user:admin@asadpatel.altostrat.com",
+    "serviceAccount:service-1055109340350@gcp-sa-iap.iam.gserviceaccount.com",
   ])
 }
 
