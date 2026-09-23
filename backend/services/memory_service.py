@@ -64,55 +64,90 @@ class MemoryService:
             if raw_bucket and not settings.use_mock_search:
                 self._bucket_name = raw_bucket
                 self._gcs_client = storage.Client(project=settings.gcp_project_id)
-                logger.info("MemoryService persistent storage linked to GCS bucket: %s", self._bucket_name)
+                logger.info(
+                    "MemoryService persistent storage linked to GCS bucket: %s", self._bucket_name
+                )
         except Exception as e:
             logger.info("MemoryService running with local disk persistence: %s", e)
 
     def _save_session(self, session: SessionState) -> None:
         """Persists session state to local disk and GCS."""
+        if not session.messages and not session.metadata:
+            return
+
+        serialized = session.model_dump_json(indent=2)
+        session_id = session.session_id
+        msg_count = len(session.messages)
+
         try:
-            file_path = self._local_dir / f"{session.session_id}.json"
-            file_path.write_text(session.model_dump_json(indent=2))
+            file_path = self._local_dir / f"{session_id}.json"
+            file_path.write_text(serialized)
         except Exception as e:
-            logger.warning("Failed to write session %s to local disk: %s", session.session_id, e)
+            logger.warning("Failed to write session %s to local disk: %s", session_id, e)
 
         if self._gcs_client and self._bucket_name:
-            def _upload() -> None:
+
+            def _upload(payload: str, sid: str, count: int) -> None:
                 try:
                     bucket = self._gcs_client.bucket(self._bucket_name)
-                    blob = bucket.blob(f"sessions/{session.session_id}.json")
-                    blob.upload_from_string(session.model_dump_json(), content_type="application/json")
+                    blob = bucket.blob(f"sessions/{sid}.json")
+                    if blob.exists():
+                        try:
+                            remote_raw = blob.download_as_text()
+                            remote_data = json.loads(remote_raw)
+                            remote_count = len(remote_data.get("messages", []))
+                            if remote_count > count:
+                                logger.info(
+                                    "Skipping GCS upload for %s: remote has %d msgs > current %d",
+                                    sid,
+                                    remote_count,
+                                    count,
+                                )
+                                return
+                        except Exception:
+                            pass
+                    blob.upload_from_string(payload, content_type="application/json")
                 except Exception as upload_err:
-                    logger.warning("Failed to sync session %s to GCS: %s", session.session_id, upload_err)
+                    logger.warning("Failed to sync session %s to GCS: %s", sid, upload_err)
 
-            self._executor.submit(_upload)
+            self._executor.submit(_upload, serialized, session_id, msg_count)
 
     def _load_session_from_storage(self, session_id: str) -> SessionState | None:
-        """Attempts to load session from local disk or GCS."""
+        """Attempts to load session from local disk or GCS, selecting the most up-to-date state."""
         # 1. Check local disk
+        disk_state: SessionState | None = None
         file_path = self._local_dir / f"{session_id}.json"
         if file_path.exists():
             try:
                 data = json.loads(file_path.read_text())
-                state = SessionState.model_validate(data)
-                self._sessions[session_id] = state
-                return state
+                disk_state = SessionState.model_validate(data)
             except Exception as e:
                 logger.warning("Failed to read session %s from disk: %s", session_id, e)
 
         # 2. Check GCS
+        gcs_state: SessionState | None = None
         if self._gcs_client and self._bucket_name:
             try:
                 bucket = self._gcs_client.bucket(self._bucket_name)
                 blob = bucket.blob(f"sessions/{session_id}.json")
                 if blob.exists():
                     data = json.loads(blob.download_as_text())
-                    state = SessionState.model_validate(data)
-                    self._sessions[session_id] = state
-                    file_path.write_text(state.model_dump_json(indent=2))
-                    return state
+                    gcs_state = SessionState.model_validate(data)
             except Exception as e:
                 logger.warning("Failed to download session %s from GCS: %s", session_id, e)
+
+        # Select candidate with the most messages to prevent regression
+        candidates = [
+            c for c in [self._sessions.get(session_id), disk_state, gcs_state] if c is not None
+        ]
+        if candidates:
+            best_state = max(candidates, key=lambda s: len(s.messages))
+            self._sessions[session_id] = best_state
+            try:
+                file_path.write_text(best_state.model_dump_json(indent=2))
+            except Exception:
+                pass
+            return best_state
 
         return None
 
@@ -130,7 +165,6 @@ class MemoryService:
             metadata=metadata or {},
         )
         self._sessions[session_id] = new_session
-        self._save_session(new_session)
         return new_session
 
     def get_session(self, session_id: str) -> SessionState | None:
@@ -187,6 +221,7 @@ class MemoryService:
                 logger.warning("Failed to delete session file %s: %s", file_path, e)
 
         if self._gcs_client and self._bucket_name:
+
             def _delete_blob() -> None:
                 try:
                     bucket = self._gcs_client.bucket(self._bucket_name)
@@ -194,7 +229,9 @@ class MemoryService:
                     if blob.exists():
                         blob.delete()
                 except Exception as del_err:
-                    logger.warning("Failed to delete session blob %s from GCS: %s", session_id, del_err)
+                    logger.warning(
+                        "Failed to delete session blob %s from GCS: %s", session_id, del_err
+                    )
 
             self._executor.submit(_delete_blob)
 

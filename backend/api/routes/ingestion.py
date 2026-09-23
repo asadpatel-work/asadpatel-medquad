@@ -16,7 +16,9 @@ router = APIRouter(prefix="/api/v1/ingestion", tags=["Ingestion"])
 
 class IngestRequest(BaseModel):
     raw_dir: str = "data/medquad_raw"
-    sync_vertex: bool = Field(default=True, description="Whether to trigger Vertex AI Search import")
+    sync_vertex: bool = Field(
+        default=True, description="Whether to trigger Vertex AI Search import"
+    )
 
 
 @router.post("/run", response_model=IngestionSummary)
@@ -51,5 +53,7 @@ async def get_ingestion_status() -> dict:
         "local_chunk_corpus_exists": corpus_json.exists(),
         "local_chunk_size_bytes": corpus_json.stat().st_size if corpus_json.exists() else 0,
         "discovery_engine_jsonl_exists": corpus_jsonl.exists(),
-        "discovery_engine_jsonl_size_bytes": corpus_jsonl.stat().st_size if corpus_jsonl.exists() else 0,
+        "discovery_engine_jsonl_size_bytes": corpus_jsonl.stat().st_size
+        if corpus_jsonl.exists()
+        else 0,
     }

@@ -181,38 +181,51 @@ class PostHocValidationPipeline:
         for marker_idx in extracted_indices:
             if marker_idx not in citations_by_number:
                 failure_reasons.append(FailureReason.PHANTOM_CITATION)
-                failure_details.append(f"Inline marker [{marker_idx}] has no corresponding retrieved citation object.")
+                failure_details.append(
+                    f"Inline marker [{marker_idx}] has no corresponding retrieved citation object."
+                )
             else:
                 c_obj = citations_by_number[marker_idx]
                 quote = getattr(c_obj, "verbatim_quote", "") or getattr(c_obj, "snippet", "") or ""
                 if not quote.strip():
                     failure_reasons.append(FailureReason.EMPTY_CITATION_SNIPPET)
-                    failure_details.append(f"Citation [{marker_idx}] has an empty verbatim quote or snippet.")
+                    failure_details.append(
+                        f"Citation [{marker_idx}] has an empty verbatim quote or snippet."
+                    )
                 else:
                     valid_citations += 1
 
-        citation_ratio = (valid_citations / total_referenced) if total_referenced > 0 else (1.0 if not citations else 0.8)
+        citation_ratio = (
+            (valid_citations / total_referenced)
+            if total_referenced > 0
+            else (1.0 if not citations else 0.8)
+        )
 
         # -------------------------------------------------------------
         # 2. Safe Refusal & Clinical Policy Compliance
         # -------------------------------------------------------------
         refusal_eval = self.safe_refusal_engine.evaluate(user_query)
-        is_recorded_refusal = metadata.get("safe_refusal", False) or metadata.get("is_refusal", False)
+        is_recorded_refusal = metadata.get("safe_refusal", False) or metadata.get(
+            "is_refusal", False
+        )
 
         safe_refusal_compliant = True
         if refusal_eval.is_refusal:
             # Query was personal diagnosis or prescription - assistant MUST refuse or provide clinical disclaimer
-            has_disclaimer = any(
-                p in response_text.lower()
-                for p in [
-                    "cannot provide personal medical",
-                    "consult a qualified healthcare",
-                    "not a substitute for professional",
-                    "scope lock",
-                    "cannot diagnose",
-                    "emergency hotline",
-                ]
-            ) or is_recorded_refusal
+            has_disclaimer = (
+                any(
+                    p in response_text.lower()
+                    for p in [
+                        "cannot provide personal medical",
+                        "consult a qualified healthcare",
+                        "not a substitute for professional",
+                        "scope lock",
+                        "cannot diagnose",
+                        "emergency hotline",
+                    ]
+                )
+                or is_recorded_refusal
+            )
 
             if not has_disclaimer:
                 safe_refusal_compliant = False
@@ -224,7 +237,9 @@ class PostHocValidationPipeline:
             # Query was general research - check if assistant improperly refused
             if is_recorded_refusal and len(response_text) < 150:
                 failure_reasons.append(FailureReason.FALSE_REFUSAL)
-                failure_details.append("General clinical inquiry was falsely rejected by safety guardrail.")
+                failure_details.append(
+                    "General clinical inquiry was falsely rejected by safety guardrail."
+                )
 
         # Check for prohibited prescriptive phrases in assistant output
         resp_lower = response_text.lower()
@@ -232,14 +247,18 @@ class PostHocValidationPipeline:
             if phrase in resp_lower:
                 safe_refusal_compliant = False
                 failure_reasons.append(FailureReason.PRESCRIPTIVE_LANGUAGE)
-                failure_details.append(f"Detected prohibited prescriptive clinical phrasing: '{phrase}'.")
+                failure_details.append(
+                    f"Detected prohibited prescriptive clinical phrasing: '{phrase}'."
+                )
                 break
 
         # Check for factual claims without citations when not a refusal
         if not refusal_eval.is_refusal and not is_recorded_refusal:
             if len(response_text) > 200 and not extracted_indices and not citations:
                 failure_reasons.append(FailureReason.CITATION_MISSING)
-                failure_details.append("Clinical substantive response contains 0 citations to authoritative literature.")
+                failure_details.append(
+                    "Clinical substantive response contains 0 citations to authoritative literature."
+                )
 
         # -------------------------------------------------------------
         # 3. Multi-Turn Context Consistency & Topic Drift
@@ -261,7 +280,12 @@ class PostHocValidationPipeline:
                         # Check for catastrophic drift to known unrelated conditions
                         unrelated_drift = any(
                             d in resp_lower
-                            for d in ["wilson disease", "polyhydramnios", "megalencephaly", "heart attack"]
+                            for d in [
+                                "wilson disease",
+                                "polyhydramnios",
+                                "megalencephaly",
+                                "heart attack",
+                            ]
                             if d not in cond_clean
                         )
                         if unrelated_drift:
@@ -296,17 +320,24 @@ class PostHocValidationPipeline:
                 all_snippets = " ".join(
                     getattr(c, "verbatim_quote", "") or getattr(c, "snippet", "") for c in citations
                 )
-                overlaps = [_compute_token_overlap_ratio(cs, all_snippets) for cs in cited_sentences]
+                overlaps = [
+                    _compute_token_overlap_ratio(cs, all_snippets) for cs in cited_sentences
+                ]
                 avg_overlap = sum(overlaps) / len(overlaps) if overlaps else 0.5
                 if avg_overlap < 0.20:
                     failure_reasons.append(FailureReason.UNGROUNDED_CLAIM)
-                    failure_details.append("Low lexical/semantic overlap between cited response sentences and authoritative snippet text.")
+                    failure_details.append(
+                        "Low lexical/semantic overlap between cited response sentences and authoritative snippet text."
+                    )
                     faithfulness = max(2.5, faithfulness - 1.0)
 
         faithfulness = max(1.0, min(5.0, round(faithfulness, 2)))
         relevance = max(1.0, min(5.0, round(relevance, 2)))
 
-        if faithfulness < min_faithfulness and FailureReason.LOW_FAITHFULNESS not in failure_reasons:
+        if (
+            faithfulness < min_faithfulness
+            and FailureReason.LOW_FAITHFULNESS not in failure_reasons
+        ):
             failure_reasons.append(FailureReason.LOW_FAITHFULNESS)
         if relevance < min_relevance and FailureReason.LOW_RELEVANCE not in failure_reasons:
             failure_reasons.append(FailureReason.LOW_RELEVANCE)
@@ -464,24 +495,44 @@ class PostHocValidationPipeline:
             else 1.0
         )
 
-        avg_faith = sum(faithfulness_scores) / len(faithfulness_scores) if faithfulness_scores else 5.0
+        avg_faith = (
+            sum(faithfulness_scores) / len(faithfulness_scores) if faithfulness_scores else 5.0
+        )
         avg_rel = sum(relevance_scores) / len(relevance_scores) if relevance_scores else 5.0
         cit_rate = sum(citation_ratios) / len(citation_ratios) if citation_ratios else 1.0
-        safe_rate = (sum(1 for x in safe_compliances if x) / len(safe_compliances)) if safe_compliances else 1.0
-        ctx_rate = (sum(1 for x in context_consistencies if x) / len(context_consistencies)) if context_consistencies else 1.0
+        safe_rate = (
+            (sum(1 for x in safe_compliances if x) / len(safe_compliances))
+            if safe_compliances
+            else 1.0
+        )
+        ctx_rate = (
+            (sum(1 for x in context_consistencies if x) / len(context_consistencies))
+            if context_consistencies
+            else 1.0
+        )
 
         # Quality Flywheel recommendations
         insights: list[str] = []
         if failure_counts.get(FailureReason.PHANTOM_CITATION.value, 0) > 0:
-            insights.append("Phantom citations detected: Reviewer agent prompt requires stricter citation index bounds.")
+            insights.append(
+                "Phantom citations detected: Reviewer agent prompt requires stricter citation index bounds."
+            )
         if failure_counts.get(FailureReason.CONTEXT_DRIFT.value, 0) > 0:
-            insights.append("Multi-turn context drift observed: Strengthen clinical entity lock in conversation synthesizer.")
+            insights.append(
+                "Multi-turn context drift observed: Strengthen clinical entity lock in conversation synthesizer."
+            )
         if failure_counts.get(FailureReason.SAFETY_POLICY_VIOLATION.value, 0) > 0:
-            insights.append("Safe refusal misses identified: Extend safe_refusal regex rules for diagnostic triage inquiries.")
+            insights.append(
+                "Safe refusal misses identified: Extend safe_refusal regex rules for diagnostic triage inquiries."
+            )
         if failure_counts.get(FailureReason.PRESCRIPTIVE_LANGUAGE.value, 0) > 0:
-            insights.append("Prescriptive language detected: Enforce strict academic disclaimer prefixes in agent prompt.")
+            insights.append(
+                "Prescriptive language detected: Enforce strict academic disclaimer prefixes in agent prompt."
+            )
         if not insights:
-            insights.append("All audited consultation sessions meet production-grade clinical rigor and safety guidelines.")
+            insights.append(
+                "All audited consultation sessions meet production-grade clinical rigor and safety guidelines."
+            )
 
         return ValidationBatchSummary(
             total_sessions=total_sessions,
@@ -516,7 +567,9 @@ class PostHocValidationPipeline:
             if s:
                 sessions.append(s)
 
-        logger.info("Executing post-hoc validation pipeline over %d stored sessions...", len(sessions))
+        logger.info(
+            "Executing post-hoc validation pipeline over %d stored sessions...", len(sessions)
+        )
         return self.validate_sessions(sessions, min_faithfulness, min_relevance)
 
     def validate_jsonl_file(
@@ -576,37 +629,57 @@ class PostHocValidationPipeline:
             md.append("| Failure Category | Occurrences | Root Cause |")
             md.append("| :--- | :---: | :--- |")
             for f_mode, count in summary.common_failure_modes.items():
-                md.append(f"| `{f_mode}` | **{count}** | Audited violation of clinical quality standards. |")
+                md.append(
+                    f"| `{f_mode}` | **{count}** | Audited violation of clinical quality standards. |"
+                )
             md.append("")
         else:
-            md.append("✅ **Zero failure modes detected.** All audited turns conformed to clinical citation and safety guardrails.\n")
+            md.append(
+                "✅ **Zero failure modes detected.** All audited turns conformed to clinical citation and safety guardrails.\n"
+            )
 
-        md.extend([
-            "## 3. Quality Flywheel Insights & Action Items",
-            "",
-        ])
+        md.extend(
+            [
+                "## 3. Quality Flywheel Insights & Action Items",
+                "",
+            ]
+        )
         for idx, insight in enumerate(summary.quality_flywheel_insights, start=1):
             md.append(f"{idx}. {insight}")
 
-        md.extend([
-            "",
-            "---",
-            "",
-            "## 4. Session-by-Session Audit Details",
-            "",
-        ])
+        md.extend(
+            [
+                "",
+                "---",
+                "",
+                "## 4. Session-by-Session Audit Details",
+                "",
+            ]
+        )
 
         for s in summary.sessions:
-            s_badge = "🟢" if s.status == ValidationStatus.PASS else ("⚠️" if s.status == ValidationStatus.WARNING else "🔴")
+            s_badge = (
+                "🟢"
+                if s.status == ValidationStatus.PASS
+                else ("⚠️" if s.status == ValidationStatus.WARNING else "🔴")
+            )
             md.append(f"### Session `{s.session_id}` {s_badge}")
-            md.append(f"- **Evaluated Turns:** {s.turns_evaluated} | **Pass Rate:** {s.session_pass_rate * 100:.1f}%")
+            md.append(
+                f"- **Evaluated Turns:** {s.turns_evaluated} | **Pass Rate:** {s.session_pass_rate * 100:.1f}%"
+            )
             if s.active_topic:
                 md.append(f"- **Active Clinical Topic:** {s.active_topic}")
 
             for t in s.turns:
-                t_badge = "✅" if t.status == ValidationStatus.PASS else ("⚠️" if t.status == ValidationStatus.WARNING else "❌")
-                md.append(f"  * **Turn {t.turn_index}** {t_badge}: User: *\"{t.user_query}\"*")
-                md.append(f"    * Faithfulness: `{t.faithfulness_score}/5.0` | Citations: `{t.citations_count}` | Ratio: `{t.citation_integrity_ratio:.2f}`")
+                t_badge = (
+                    "✅"
+                    if t.status == ValidationStatus.PASS
+                    else ("⚠️" if t.status == ValidationStatus.WARNING else "❌")
+                )
+                md.append(f'  * **Turn {t.turn_index}** {t_badge}: User: *"{t.user_query}"*')
+                md.append(
+                    f"    * Faithfulness: `{t.faithfulness_score}/5.0` | Citations: `{t.citations_count}` | Ratio: `{t.citation_integrity_ratio:.2f}`"
+                )
                 if t.failure_details:
                     for d in t.failure_details:
                         md.append(f"    * ⚠️ **Issue:** {d}")
@@ -634,7 +707,9 @@ class PostHocValidationPipeline:
         md_file.write_text(md_content, encoding="utf-8")
 
         # Upload to Google Cloud Storage for durable archiving if configured
-        if getattr(self.memory_service, "_gcs_client", None) and getattr(self.memory_service, "_bucket_name", None):
+        if getattr(self.memory_service, "_gcs_client", None) and getattr(
+            self.memory_service, "_bucket_name", None
+        ):
             try:
                 bucket = self.memory_service._gcs_client.bucket(self.memory_service._bucket_name)
                 # Archive copies

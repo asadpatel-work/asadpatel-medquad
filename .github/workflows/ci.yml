@@ -1,0 +1,142 @@
+name: CI - Lint, Test & Security Scan
+
+on:
+  push:
+    branches: [main, master, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-format:
+    name: Code Quality & Linting (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Ruff Lint Checks
+        run: ruff check backend/ tests/
+
+      - name: Run Ruff Format Verification
+        run: ruff format --check backend/ tests/
+
+  unit-and-guardrail-tests:
+    name: Unit & Guardrail Test Suite
+    runs-on: ubuntu-latest
+    needs: [lint-and-format]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Astral uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "latest"
+
+      - name: Install Dependencies
+        run: |
+          uv pip install --system -e ".[dev]"
+
+      - name: Run Pytest with Coverage
+        env:
+          ENVIRONMENT: "test"
+          GCP_PROJECT_ID: "capstone-506616"
+          USE_MOCK_SEARCH: "true"
+          ENABLE_MODEL_ARMOR: "true"
+          ENABLE_IAP: "false"
+        run: |
+          pytest tests/unit/ \
+            --cov=backend \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing:skip-covered \
+            -v
+
+      - name: Upload Test Coverage Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-coverage-report
+          path: coverage.xml
+          retention-days: 7
+
+  docker-build-and-healthcheck:
+    name: Container Build & Health Validation
+    runs-on: ubuntu-latest
+    needs: [lint-and-format]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: medquad-backend:ci-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Container Boot & Health Endpoint
+        run: |
+          echo "Starting container..."
+          docker run -d \
+            --name test-backend \
+            -p 8000:8000 \
+            -e ENVIRONMENT=development \
+            -e GCP_PROJECT_ID=capstone-506616 \
+            -e USE_MOCK_SEARCH=true \
+            -e ENABLE_IAP=false \
+            medquad-backend:ci-test
+
+          echo "Awaiting health check..."
+          for i in {1..15}; do
+            if curl -f http://localhost:8000/api/v1/health; then
+              echo ""
+              echo "✔ Health check passed!"
+              docker stop test-backend
+              exit 0
+            fi
+            echo "Waiting for service to be healthy ($i/15)..."
+            sleep 2
+          done
+
+          echo "✖ Health check timed out!"
+          docker logs test-backend
+          docker stop test-backend
+          exit 1
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: medquad-backend:ci-test
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"

@@ -47,7 +47,9 @@ class AuthenticatedClinician:
 class IAPVerifier:
     """Validates Google Cloud IAP cryptographically signed JWT assertion tokens."""
 
-    def __init__(self, keys_url: str = IAP_JWK_URL, cache_ttl: int = IAP_KEY_CACHE_TTL_SECONDS) -> None:
+    def __init__(
+        self, keys_url: str = IAP_JWK_URL, cache_ttl: int = IAP_KEY_CACHE_TTL_SECONDS
+    ) -> None:
         self.keys_url = keys_url
         self.cache_ttl = cache_ttl
         self._keys_cache: dict[str, str] = {}
@@ -64,7 +66,9 @@ class IAPVerifier:
                 self._last_fetched_time = now
                 logger.info("Successfully fetched %d Google IAP public keys", len(self._keys_cache))
             except Exception as e:
-                logger.warning("Failed to fetch Google IAP public keys from %s: %s", self.keys_url, e)
+                logger.warning(
+                    "Failed to fetch Google IAP public keys from %s: %s", self.keys_url, e
+                )
                 if not self._keys_cache:
                     return {}
         return self._keys_cache
@@ -91,7 +95,9 @@ class IAPVerifier:
 
         # Verify issuer
         if claims.get("iss") != expected_issuer:
-            raise ValueError(f"Invalid IAP JWT issuer: expected {expected_issuer}, got {claims.get('iss')}")
+            raise ValueError(
+                f"Invalid IAP JWT issuer: expected {expected_issuer}, got {claims.get('iss')}"
+            )
 
         return claims
 
@@ -125,8 +131,16 @@ async def get_current_clinician(request: Request) -> AuthenticatedClinician:
         if not jwt_assertion:
             # Check development bypass rule
             if settings.environment == "development" and settings.iap_allow_anonymous_in_dev:
-                dev_email = _clean_google_identity(raw_email_header) if raw_email_header else "dev-clinician@medquad.local"
-                dev_id = _clean_google_identity(raw_user_id_header) if raw_user_id_header else "dev-user-001"
+                dev_email = (
+                    _clean_google_identity(raw_email_header)
+                    if raw_email_header
+                    else "dev-clinician@medquad.local"
+                )
+                dev_id = (
+                    _clean_google_identity(raw_user_id_header)
+                    if raw_user_id_header
+                    else "dev-user-001"
+                )
                 logger.debug("IAP dev bypass: Using simulated clinician %s", dev_email)
                 return AuthenticatedClinician(
                     email=dev_email,
@@ -148,7 +162,9 @@ async def get_current_clinician(request: Request) -> AuthenticatedClinician:
                 expected_audience=expected_aud,
                 expected_issuer=settings.iap_expected_issuer,
             )
-            email = _clean_google_identity(claims.get("email", raw_email_header or "unknown@hospital.org"))
+            email = _clean_google_identity(
+                claims.get("email", raw_email_header or "unknown@hospital.org")
+            )
             user_id = _clean_google_identity(claims.get("sub", raw_user_id_header or "unknown-sub"))
             return AuthenticatedClinician(
                 email=email,
@@ -168,7 +184,9 @@ async def get_current_clinician(request: Request) -> AuthenticatedClinician:
     # If IAP is disabled, check if headers were provided by proxy or use dev identity
     if raw_email_header:
         email = _clean_google_identity(raw_email_header)
-        user_id = _clean_google_identity(raw_user_id_header) if raw_user_id_header else "mock-user-id"
+        user_id = (
+            _clean_google_identity(raw_user_id_header) if raw_user_id_header else "mock-user-id"
+        )
         return AuthenticatedClinician(
             email=email,
             user_id=user_id,

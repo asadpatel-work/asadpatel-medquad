@@ -71,6 +71,18 @@ EMERGENCY_PATTERNS = [
     ),
     re.compile(r"\b(sudden\s+numbness\s+in\s+face|slurred\s+speech|stroke)\b", re.IGNORECASE),
     re.compile(r"\b(suicide|overdose|overdosed|swallowed\s+poison)\b", re.IGNORECASE),
+    re.compile(
+        r"^(?:please\s+)?help(?:\s+me)?(?:\s+(?:please|doctor|now|urgently|fast))?[\s\.\!\?]*$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^(?:i\s+need\s+help|emergency|medical\s+emergency|save\s+me|someone\s+help(?:\s+me)?|call\s+(?:911|an\s+ambulance))[\s\.\!\?]*$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bhelp\s+me\b(?!\s+(?:understand|explain|learn|find|research|summarize|read|clarify|review|study|search))\b",
+        re.IGNORECASE,
+    ),
 ]
 
 REFUSAL_MESSAGES = {

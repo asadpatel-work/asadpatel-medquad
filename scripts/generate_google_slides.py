@@ -184,8 +184,8 @@ def add_detailed_arrow(
         line_xml.append(cust_dash)
 
     if label:
-        mid_x = (x1 + x2) / 2 + Inches(label_dx)
-        mid_y = (y1 + y2) / 2 + Inches(label_dy)
+        mid_x = int((x1 + x2) / 2) + Inches(label_dx)
+        mid_y = int((y1 + y2) / 2) + Inches(label_dy)
         tb = slide.shapes.add_textbox(mid_x - Inches(1.1), mid_y, Inches(2.2), Inches(0.24))
         tf = tb.text_frame
         tf.word_wrap = True
@@ -210,7 +210,7 @@ def add_detailed_ortho_arrow(
     label_x_offset=0.0,
 ):
     """Draws an orthogonal (stepped) connector with arrowhead and descriptive flow label."""
-    mid_y = (y1 + y2) / 2
+    mid_y = int((y1 + y2) / 2)
     c1 = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x1, mid_y)
     c1.line.color.rgb = color
     c1.line.width = Pt(width)
@@ -229,7 +229,7 @@ def add_detailed_ortho_arrow(
     line_xml.append(head_end)
 
     if label:
-        tb = slide.shapes.add_textbox((x1 + x2) / 2 - Inches(1.8) + Inches(label_x_offset), mid_y - Inches(0.22), Inches(3.6), Inches(0.22))
+        tb = slide.shapes.add_textbox(int((x1 + x2) / 2) - Inches(1.8) + Inches(label_x_offset), mid_y - Inches(0.22), Inches(3.6), Inches(0.22))
         tf = tb.text_frame
         p = tf.paragraphs[0]
         p.text = label

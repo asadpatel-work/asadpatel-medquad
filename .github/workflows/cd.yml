@@ -1,0 +1,152 @@
+name: CD - Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+concurrency:
+  group: deploy-cloudrun-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: "capstone-506616"
+  GCP_REGION: "us-central1"
+  CLOUD_RUN_SERVICE: "medquad-backend"
+  ARTIFACT_REPO: "medquad"
+  IMAGE_NAME: "medquad-backend"
+
+permissions:
+  contents: read
+  id-token: write # Required for keyless OIDC Workload Identity Federation
+
+jobs:
+  deploy:
+    name: Build, Scan & Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          # Supports both Keyless Workload Identity Federation (Enterprise Standard)
+          # and Service Account Key fallback (via GitHub Secret GCP_SA_KEY)
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set Image Identifiers
+        run: |
+          REGISTRY_URL="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.IMAGE_NAME }}"
+          IMAGE_TAG="${REGISTRY_URL}:${{ github.sha }}"
+          IMAGE_LATEST="${REGISTRY_URL}:latest"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_LATEST=${IMAGE_LATEST}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Production Container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_LATEST }}
+          cache-from: type=registry,ref=${{ env.IMAGE_LATEST }}
+          cache-to: type=inline
+
+      - name: Record Active Revision (For Instant Rollback)
+        id: pre_deploy
+        run: |
+          PREV_REV=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE }} \
+            --region=${{ env.GCP_REGION }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --format="value(status.latestReadyRevisionName)" 2>/dev/null || echo "")
+          echo "PREVIOUS_REVISION=${PREV_REV}" >> $GITHUB_OUTPUT
+          echo "Current active revision prior to rollout: ${PREV_REV}"
+
+      - name: Deploy Revision to Google Cloud Run
+        id: deploy_run
+        run: |
+          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE }} \
+            --image=${{ env.IMAGE_TAG }} \
+            --region=${{ env.GCP_REGION }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --platform=managed \
+            --cpu=2 \
+            --memory=2Gi \
+            --concurrency=80 \
+            --timeout=300 \
+            --min-instances=1 \
+            --max-instances=10 \
+            --set-env-vars="ENVIRONMENT=production,GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }},USE_MOCK_SEARCH=false,VERTEX_DATASTORE_ID=medquad-corpus-v1,VERTEX_AI_SEARCH_DATASTORE_ID=medquad-corpus-v1,VERTEX_AI_SEARCH_ENGINE_ID=medquad-search-app-v2,MEDQUAD_CORPUS_PATH=data/full_medquad.json,BIGQUERY_TELEMETRY_TABLE=${{ env.GCP_PROJECT_ID }}.telemetry.agent_metrics,ROOT_ORCHESTRATOR_MODEL=gemini-2.5-flash,RESEARCHER_MODEL=gemini-2.5-pro,REVIEWER_MODEL=gemini-3.5-flash,ENABLE_MODEL_ARMOR=true,MODEL_ARMOR_PROJECT_ID=${{ env.GCP_PROJECT_ID }},MODEL_ARMOR_LOCATION=us-central1,MODEL_ARMOR_TEMPLATE_ID=medquad-safety-template,ENABLE_IAP=true,IAP_AUDIENCE=/projects/1055109340350/global/backendServices/8170589415761269874"
+
+      - name: Get Service URL
+        id: get_url
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE }} \
+            --region=${{ env.GCP_REGION }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --format="value(status.url)")
+          echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_OUTPUT
+          echo "Deployed Cloud Run URL: ${SERVICE_URL}"
+
+      - name: Post-Deployment Smoke Test & Health Check
+        run: |
+          URL="${{ steps.get_url.outputs.SERVICE_URL }}/api/v1/health"
+          echo "Probing service health endpoint at: ${URL}"
+          
+          # Retry loop with 5 attempts
+          SUCCESS=false
+          for i in {1..5}; do
+            RESPONSE=$(curl -s -w "\n%{http_code}" -m 10 "${URL}" || echo "FAILED")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            
+            if [ "$HTTP_CODE" == "200" ]; then
+              echo "✔ Smoke check passed with HTTP 200. Response: ${BODY}"
+              SUCCESS=true
+              break
+            fi
+            echo "Attempt $i failed (HTTP ${HTTP_CODE}). Retrying in 5 seconds..."
+            sleep 5
+          done
+
+          if [ "$SUCCESS" != "true" ]; then
+            echo "✖ Smoke test failed to verify healthy service!"
+            exit 1
+          fi
+
+      - name: Automatic Rollback on Failure
+        if: failure() && steps.pre_deploy.outputs.PREVIOUS_REVISION != ''
+        run: |
+          echo "⚠️ Rollout failed or health check did not pass."
+          echo "Initiating automatic rollback to previous stable revision: ${{ steps.pre_deploy.outputs.PREVIOUS_REVISION }}"
+          gcloud run services update-traffic ${{ env.CLOUD_RUN_SERVICE }} \
+            --region=${{ env.GCP_REGION }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --to-revisions=${{ steps.pre_deploy.outputs.PREVIOUS_REVISION }}=100
+          echo "✔ Rollback completed. Traffic rerouted 100% to ${{ steps.pre_deploy.outputs.PREVIOUS_REVISION }}"

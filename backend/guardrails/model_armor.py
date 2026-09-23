@@ -85,15 +85,9 @@ class ModelArmor:
     ) -> None:
         self.settings = get_settings()
         self.project_id = (
-            project_id
-            or self.settings.model_armor_project_id
-            or self.settings.gcp_project_id
+            project_id or self.settings.model_armor_project_id or self.settings.gcp_project_id
         )
-        self.location = (
-            location
-            or self.settings.model_armor_location
-            or self.settings.gcp_region
-        )
+        self.location = location or self.settings.model_armor_location or self.settings.gcp_region
         self.template_id = template_id or self.settings.model_armor_template_id
         self._custom_client = client
         self._client: Any = None
@@ -252,9 +246,12 @@ class ModelArmor:
                 return SanitizationResult(
                     is_safe=gcp_result.is_safe and local_result.is_safe,
                     sanitized_text=local_result.sanitized_text,
-                    jailbreak_detected=gcp_result.jailbreak_detected or local_result.jailbreak_detected,
-                    redacted_phi_count=gcp_result.redacted_phi_count + local_result.redacted_phi_count,
-                    violations=gcp_result.violations + [v for v in local_result.violations if v not in gcp_result.violations],
+                    jailbreak_detected=gcp_result.jailbreak_detected
+                    or local_result.jailbreak_detected,
+                    redacted_phi_count=gcp_result.redacted_phi_count
+                    + local_result.redacted_phi_count,
+                    violations=gcp_result.violations
+                    + [v for v in local_result.violations if v not in gcp_result.violations],
                     source="gcp_model_armor",
                 )
 

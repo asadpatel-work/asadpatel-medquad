@@ -68,6 +68,7 @@ async def get_latest_report() -> dict:
     json_data = {}
     if latest_json.exists():
         import json
+
         json_data = json.loads(latest_json.read_text(encoding="utf-8"))
 
     return {

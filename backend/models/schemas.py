@@ -72,6 +72,10 @@ class ChatRequest(BaseModel):
     )
     query: str | None = Field(default=None, description="Alias for message")
     stream: bool = Field(default=False, description="Whether to stream response tokens via SSE")
+    history: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Optional conversational history turns from client for multi-turn continuity",
+    )
 
     @model_validator(mode="after")
     def populate_query_message(self) -> ChatRequest:
@@ -117,6 +121,10 @@ class ChatResponse(BaseModel):
         default=False, description="True if query triggered Safe Refusal guardrails"
     )
     is_refusal: bool = Field(default=False, description="Alias for safe_refusal")
+    refusal_type: str | None = Field(
+        default=None,
+        description="Category of refusal: security_violation, personal_diagnosis, prescription_request, emergency_crisis, or None",
+    )
     is_grounded: bool = Field(
         default=True, description="True if answer is backed by retrieved citations"
     )

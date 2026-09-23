@@ -26,7 +26,9 @@ def test_authenticated_clinician_display_name():
 
 
 def test_clean_google_identity():
-    assert _clean_google_identity("accounts.google.com:doctor@hospital.org") == "doctor@hospital.org"
+    assert (
+        _clean_google_identity("accounts.google.com:doctor@hospital.org") == "doctor@hospital.org"
+    )
     assert _clean_google_identity("doctor@hospital.org") == "doctor@hospital.org"
     assert _clean_google_identity("accounts.google.com:11823719") == "11823719"
 

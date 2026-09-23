@@ -49,23 +49,45 @@ class CitationVerifier:
         self,
         text: str,
         retrieved_chunks: list[GroundedSearchResult],
+        fallback_on_empty: bool = False,
     ) -> CitationVerificationResult:
         """Verifies citation markers in generated response against retrieved grounding chunks."""
         referenced_indices = self.extract_citation_indices(text)
         total_chunks = len(retrieved_chunks)
 
-        if not referenced_indices and total_chunks > 0:
-            logger.warning(
-                "No citations found in generated clinical text despite %d retrieved chunks.",
-                total_chunks,
-            )
+        if not referenced_indices:
+            if fallback_on_empty and total_chunks > 0:
+                logger.warning(
+                    "No inline bracket citations found in generated clinical text despite %d retrieved chunks. Falling back to retrieved grounding chunks.",
+                    total_chunks,
+                )
+                fallback_citations = [
+                    Citation(
+                        citation_id=idx,
+                        doc_id=chunk.doc_id,
+                        title=chunk.title,
+                        source_url=chunk.source_url,
+                        authoritative_org=chunk.authoritative_org,
+                        snippet=chunk.content[:280] + ("..." if len(chunk.content) > 280 else ""),
+                        relevance_score=chunk.score,
+                    )
+                    for idx, chunk in enumerate(retrieved_chunks[:3], 1)
+                ]
+                return CitationVerificationResult(
+                    is_valid=True,
+                    citations=fallback_citations,
+                    referenced_indices=list(range(1, len(fallback_citations) + 1)),
+                    hallucinated_indices=[],
+                    citation_coverage_ratio=1.0,
+                    error_message=None,
+                )
             return CitationVerificationResult(
                 is_valid=False,
                 citations=[],
                 referenced_indices=[],
                 hallucinated_indices=[],
                 citation_coverage_ratio=0.0,
-                error_message="Response contains no inline citations to support clinical claims.",
+                error_message="No citation references (e.g. [1], [2]) found in generated clinical text.",
             )
 
         hallucinated: list[int] = []

@@ -97,7 +97,6 @@ async def test_root_orchestrator_clinical_flow():
     assert len(session.messages) == 2
 
 
-
 @pytest.mark.asyncio
 async def test_root_orchestrator_scope_lock_refusal():
     """Verify deterministic Safe Refusal when user asks for personal diagnosis or prescription."""
@@ -136,7 +135,10 @@ async def test_researcher_agent_multi_turn_contextualization():
 
     history = [
         {"role": "user", "content": "tell me about Blepharitis"},
-        {"role": "assistant", "content": "Blepharitis is an inflammatory condition affecting the eyelids."},
+        {
+            "role": "assistant",
+            "content": "Blepharitis is an inflammatory condition affecting the eyelids.",
+        },
     ]
 
     # Test query contextualization helper
@@ -160,3 +162,86 @@ async def test_researcher_agent_multi_turn_contextualization():
     assert "Wilson" not in top_chunk.title
     assert "Heart Attack" not in top_chunk.title
 
+
+@pytest.mark.asyncio
+async def test_scoliosis_follow_up_potential_treatments():
+    """Verify 'potential treatments?' follow-up extracts scoliosis and avoids ovarian tumors."""
+    search_tool = SearchTool(use_mock=False)
+    researcher = ResearcherAgent(search_tool=search_tool)
+
+    turn1_history = [
+        {"role": "user", "content": "tell me about scoliosis"},
+        {
+            "role": "assistant",
+            "content": "Scoliosis is a sideways curvature of the spine that occurs most often during the growth spurt just before puberty.",
+        },
+    ]
+
+    topic = researcher._extract_active_medical_topic(turn1_history)
+    assert topic == "scoliosis"
+
+    rewritten, active_topic = await researcher._contextualize_query(
+        "potential treatments?", turn1_history
+    )
+    assert active_topic == "scoliosis"
+    assert "scoliosis" in rewritten.lower()
+    assert "treatment" in rewritten.lower()
+
+    draft = await researcher.conduct_research(
+        query="potential treatments?",
+        category=MedicalCategory.GENERAL_MEDICINE,
+        conversation_history=turn1_history,
+    )
+
+    assert len(draft.retrieved_chunks) > 0
+    # Must retrieve scoliosis chunks, NOT Ovarian Low Malignant Potential Tumors
+    assert any("scoliosis" in c.title.lower() for c in draft.retrieved_chunks)
+    assert not any("ovarian" in c.title.lower() for c in draft.retrieved_chunks)
+
+    # Test Turn 3: "is surgery required?"
+    turn2_history = turn1_history + [
+        {"role": "user", "content": "potential treatments?"},
+        {
+            "role": "assistant",
+            "content": "Treatments for scoliosis include observation, back braces, and spinal fusion surgery.",
+        },
+    ]
+    turn3_topic = researcher._extract_active_medical_topic(turn2_history)
+    assert turn3_topic == "scoliosis"
+    assert turn3_topic != "potential treatments"
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_hydrates_client_history():
+    """Verify RootOrchestrator hydrates history from client request on container cold starts."""
+    memory = MemoryService()
+    orchestrator = RootOrchestrator(
+        researcher=ResearcherAgent(search_tool=SearchTool(use_mock=True)),
+        reviewer=ReviewerAgent(),
+        memory_service=memory,
+    )
+
+    session_id = f"sess-cold-start-{uuid.uuid4().hex[:8]}"
+
+    # Simulate Turn 2 arriving at a replica that does not have Turn 1 in memory
+    client_history = [
+        {"role": "user", "content": "tell me about Blepharitis"},
+        {"role": "assistant", "content": "Blepharitis is an inflammation of the eyelids."},
+    ]
+
+    request = ChatRequest(
+        message="describe the symptoms",
+        session_id=session_id,
+        history=client_history,
+    )
+
+    response = await orchestrator.process_chat(request)
+    assert response.session_id == session_id
+    assert response.safe_refusal is False
+    assert len(response.citations) > 0
+    assert any("Blepharitis" in c.title for c in response.citations)
+
+    # Verify session now contains all 4 messages
+    persisted = memory.get_session(session_id)
+    assert persisted is not None
+    assert len(persisted.messages) == 4

@@ -17,7 +17,11 @@ export interface AgentThoughtStep {
   step_type: string;
   description: string;
   duration_ms?: number;
-  timestamp: string;
+  latency_ms?: number;
+  timestamp?: string;
+  tool_called?: string;
+  tool_input?: any;
+  tool_output_summary?: string;
 }
 
 export interface ChatMessage {
@@ -26,7 +30,10 @@ export interface ChatMessage {
   content: string;
   category?: string;
   safe_refusal?: boolean;
+  refusal_type?: string;
   is_grounded?: boolean;
+  is_pending?: boolean;
+  interrupted?: boolean;
   citations?: Citation[];
   thought_steps?: AgentThoughtStep[];
   latency_ms?: number;
@@ -50,4 +57,17 @@ export interface SessionSummary {
   message_count: number;
   category?: string;
   cached_messages?: ChatMessage[];
+  is_loading?: boolean;
 }
+
+export interface SessionRunState {
+  sessionId: string;
+  messages: ChatMessage[];
+  isLoading: boolean;
+  liveThoughtSteps: AgentThoughtStep[];
+  activeAgentName: string | null;
+  streamingText: string;
+  selectedCitation: Citation | null;
+  inputDraft: string;
+}
+

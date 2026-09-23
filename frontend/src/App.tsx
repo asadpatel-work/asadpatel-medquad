@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Citation, ChatMessage, TelemetryStats, SessionSummary } from './types';
+import { Citation, ChatMessage, TelemetryStats, SessionSummary, AgentThoughtStep, SessionRunState } from './types';
+
+const sanitizeMessages = (msgs: ChatMessage[]): ChatMessage[] => {
+  if (!Array.isArray(msgs)) return [];
+  return msgs.map((m) => {
+    if (m.is_pending) {
+      return {
+        ...m,
+        is_pending: false,
+        interrupted: true,
+        content: '⚠️ Query execution was interrupted by a page refresh or network disconnection.',
+      };
+    }
+    return m;
+  });
+};
 
 export const App: React.FC = () => {
   const [sessionsList, setSessionsList] = useState<SessionSummary[]>(() => {
@@ -10,11 +25,21 @@ export const App: React.FC = () => {
       return [];
     }
   });
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => `session-${Date.now().toString(36)}`);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputQuery, setInputQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('medquad_sessions');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed[0].session_id;
+        }
+      }
+    } catch {}
+    return `session-${Date.now().toString(36)}`;
+  });
+
+  const [sessionsMap, setSessionsMap] = useState<Record<string, SessionRunState>>({});
   const [telemetry, setTelemetry] = useState<TelemetryStats | null>(null);
   const [showTelemetryModal, setShowTelemetryModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string | null>(null);
@@ -24,21 +49,97 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const defaultSessionState = (sid: string): SessionRunState => ({
+    sessionId: sid,
+    messages: [],
+    isLoading: false,
+    liveThoughtSteps: [],
+    activeAgentName: null,
+    streamingText: '',
+    selectedCitation: null,
+    inputDraft: '',
+  });
+
+  const currentSession: SessionRunState = sessionsMap[activeSessionId] || defaultSessionState(activeSessionId);
+  const messages = currentSession.messages;
+  const isLoading = currentSession.isLoading;
+  const liveThoughtSteps = currentSession.liveThoughtSteps;
+  const activeAgentName = currentSession.activeAgentName;
+  const streamingText = currentSession.streamingText;
+  const selectedCitation = currentSession.selectedCitation;
+  const inputDraft = currentSession.inputDraft;
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, liveThoughtSteps, streamingText]);
 
+  // Initial mount: hydrate sessionsMap and ensure an active session slot exists immediately
   useEffect(() => {
+    let savedSessions: SessionSummary[] = [];
     try {
-      localStorage.setItem('medquad_sessions', JSON.stringify(sessionsList));
-    } catch (e) {
-      console.error('Failed to cache sessions', e);
+      const raw = localStorage.getItem('medquad_sessions');
+      if (raw) savedSessions = JSON.parse(raw);
+    } catch (e) {}
+
+    let initialSid = activeSessionId;
+    const initialMap: Record<string, SessionRunState> = {};
+
+    if (Array.isArray(savedSessions) && savedSessions.length > 0) {
+      initialSid = savedSessions[0].session_id;
+      savedSessions.forEach((s) => {
+        let cachedMsgs: ChatMessage[] = [];
+        try {
+          const stored = localStorage.getItem(`medquad_messages_${s.session_id}`);
+          if (stored) cachedMsgs = JSON.parse(stored);
+        } catch (e) {}
+        if (cachedMsgs.length === 0 && s.cached_messages) {
+          cachedMsgs = s.cached_messages;
+        }
+        cachedMsgs = sanitizeMessages(cachedMsgs);
+        try {
+          localStorage.setItem(`medquad_messages_${s.session_id}`, JSON.stringify(cachedMsgs));
+        } catch (e) {}
+        const lastAss = cachedMsgs.filter((m) => m.role === 'assistant').pop();
+        initialMap[s.session_id] = {
+          sessionId: s.session_id,
+          messages: cachedMsgs,
+          isLoading: false,
+          liveThoughtSteps: [],
+          activeAgentName: null,
+          streamingText: '',
+          selectedCitation: lastAss?.citations?.[0] || null,
+          inputDraft: '',
+        };
+      });
+    } else {
+      // First boot: create immediate session history slot
+      const newSummary: SessionSummary = {
+        session_id: initialSid,
+        title: 'New Consultation',
+        preview: 'Ready for clinical query...',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        message_count: 0,
+        category: 'Clinical',
+      };
+      savedSessions = [newSummary];
+      initialMap[initialSid] = defaultSessionState(initialSid);
+      try {
+        localStorage.setItem('medquad_sessions', JSON.stringify(savedSessions));
+      } catch (e) {}
     }
-  }, [sessionsList]);
+
+    setSessionsList(savedSessions);
+    setSessionsMap(initialMap);
+    setActiveSessionId(initialSid);
+
+    fetchBackendSessions();
+    fetchTelemetry();
+  }, []);
 
   const fetchBackendSessions = async () => {
     try {
@@ -49,10 +150,22 @@ export const App: React.FC = () => {
           setSessionsList((prev) => {
             const map = new Map<string, SessionSummary>();
             prev.forEach((s) => map.set(s.session_id, s));
-            data.forEach((s: SessionSummary) => map.set(s.session_id, { ...map.get(s.session_id), ...s }));
-            return Array.from(map.values()).sort(
+            data.forEach((s: SessionSummary) => {
+              const existing = map.get(s.session_id);
+              map.set(s.session_id, {
+                ...s,
+                title: existing?.title || s.title,
+                preview: existing?.preview || s.preview,
+                cached_messages: existing?.cached_messages,
+              });
+            });
+            const merged = Array.from(map.values()).sort(
               (a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime()
             );
+            try {
+              localStorage.setItem('medquad_sessions', JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
           });
         }
       }
@@ -93,6 +206,52 @@ export const App: React.FC = () => {
     };
   };
 
+  const getAgentIcon = (name: string) => {
+    if (name.includes('Model Armor')) return '🛡️';
+    if (name.includes('Orchestrator')) return '🎯';
+    if (name.includes('Researcher')) return '🔍';
+    if (name.includes('Reviewer')) return '🔬';
+    return '⚡';
+  };
+
+  const getStepIcon = (type: string) => {
+    switch (type) {
+      case 'security_check':
+        return '🛡️';
+      case 'security_violation':
+        return '🚨';
+      case 'phi_redaction':
+        return '🔒';
+      case 'routing':
+        return '🧭';
+      case 'scope_lock_refusal':
+        return '⚠️';
+      case 'delegation':
+        return '🔀';
+      case 'plan':
+        return '📋';
+      case 'search_active':
+      case 'search':
+        return '📚';
+      case 'tool_execution':
+        return '💉';
+      case 'synthesize_active':
+      case 'synthesize':
+        return '✍️';
+      case 'audit_active':
+      case 'citation_audit':
+        return '🔬';
+      case 'quality_approval':
+        return '✅';
+      case 'safety_violation':
+        return '🛑';
+      case 'error':
+        return '❌';
+      default:
+        return '⚡';
+    }
+  };
+
   const fetchTelemetry = async () => {
     try {
       const res = await fetch('/api/v1/telemetry/stats');
@@ -105,51 +264,35 @@ export const App: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchBackendSessions().then(() => {
-      if (messages.length === 0 && sessionsList.length > 0) {
-        handleSelectSession(sessionsList[0].session_id);
-      }
-    });
-    fetchTelemetry();
-  }, []);
-
   const handleSelectSession = async (sessionId: string) => {
-    if (!sessionId) return;
-    if (sessionId === activeSessionId && messages.length > 0) return;
+    if (!sessionId || sessionId === activeSessionId) return;
 
-    setIsLoading(true);
+    // Ensure session is initialized in sessionsMap
+    setSessionsMap((prev) => {
+      if (prev[sessionId]) return prev;
+      let cached: ChatMessage[] = [];
+      try {
+        const stored = localStorage.getItem(`medquad_messages_${sessionId}`);
+        if (stored) cached = JSON.parse(stored);
+      } catch (e) {}
+      cached = sanitizeMessages(cached);
+      try {
+        localStorage.setItem(`medquad_messages_${sessionId}`, JSON.stringify(cached));
+      } catch (e) {}
+      const lastAss = cached.filter((m) => m.role === 'assistant').pop();
+      return {
+        ...prev,
+        [sessionId]: {
+          ...defaultSessionState(sessionId),
+          messages: cached,
+          selectedCitation: lastAss?.citations?.[0] || null,
+        },
+      };
+    });
+
     setActiveSessionId(sessionId);
-    setSelectedCitation(null);
 
-    // Hydrate immediately from cache
-    let cached: ChatMessage[] | null = null;
-    try {
-      const stored = localStorage.getItem(`medquad_messages_${sessionId}`);
-      if (stored) {
-        cached = JSON.parse(stored);
-      }
-    } catch (e) {}
-
-    if (!cached || cached.length === 0) {
-      const local = sessionsList.find((s) => s.session_id === sessionId);
-      if (local && local.cached_messages && local.cached_messages.length > 0) {
-        cached = local.cached_messages;
-      }
-    }
-
-    if (cached && cached.length > 0) {
-      const normalizedCached = cached.map((m) => ({
-        ...m,
-        citations: (m.citations || []).map((c, i) => normalizeCitation(c, i)),
-      }));
-      setMessages(normalizedCached);
-      const lastAss = normalizedCached.filter((m) => m.role === 'assistant').pop();
-      if (lastAss && lastAss.citations && lastAss.citations.length > 0) {
-        setSelectedCitation(lastAss.citations[0]);
-      }
-    }
-
+    // If session has no messages locally, hydrate from backend
     try {
       const res = await fetch(`/api/v1/sessions/${sessionId}`);
       if (res.ok) {
@@ -162,53 +305,63 @@ export const App: React.FC = () => {
           citations: (m.citations || []).map((c: any, i: number) => normalizeCitation(c, i)),
           thought_steps: m.thought_steps || [],
           safe_refusal: m.metadata?.safe_refusal || false,
+          refusal_type:
+            m.metadata?.refusal_type || (m.metadata?.safe_refusal ? 'emergency_crisis' : undefined),
           is_grounded: (m.citations || []).length > 0,
           latency_ms: m.metadata?.latency_ms || 0,
           timestamp: m.timestamp || new Date().toISOString(),
         }));
 
         if (formatted.length > 0) {
-          setMessages(formatted);
+          setSessionsMap((prev) => {
+            const s = prev[sessionId] || defaultSessionState(sessionId);
+            if (s.isLoading) return prev; // Do not overwrite an actively generating session
+            return {
+              ...prev,
+              [sessionId]: {
+                ...s,
+                messages: formatted,
+                selectedCitation: formatted.filter((m) => m.role === 'assistant').pop()?.citations?.[0] || s.selectedCitation,
+              },
+            };
+          });
           try {
             localStorage.setItem(`medquad_messages_${sessionId}`, JSON.stringify(formatted));
           } catch (e) {}
-
-          setSessionsList((prev) =>
-            prev.map((s) =>
-              s.session_id === sessionId
-                ? {
-                    ...s,
-                    cached_messages: formatted,
-                    message_count: formatted.length,
-                    preview: (formatted[formatted.length - 1]?.content || s.preview || '').substring(0, 60) + '...',
-                  }
-                : s
-            )
-          );
-
-          const lastAssistant = formatted.filter((m) => m.role === 'assistant').pop();
-          if (lastAssistant && lastAssistant.citations && lastAssistant.citations.length > 0) {
-            setSelectedCitation(lastAssistant.citations[0]);
-          }
         }
-      } else if (!cached || cached.length === 0) {
-        setMessages([]);
       }
     } catch (err) {
-      console.error('Error fetching session details:', err);
-      if (!cached || cached.length === 0) {
-        setMessages([]);
-      }
-    } finally {
-      setIsLoading(false);
+      console.debug('Error refreshing session from backend:', err);
     }
   };
 
   const handleNewConsultation = () => {
     const newId = `session-${Date.now().toString(36)}`;
+    const newSummary: SessionSummary = {
+      session_id: newId,
+      title: 'New Consultation',
+      preview: 'Ready for clinical query...',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      message_count: 0,
+      category: 'Clinical',
+    };
+
+    setSessionsMap((prev) => ({
+      ...prev,
+      [newId]: defaultSessionState(newId),
+    }));
+
+    setSessionsList((prev) => {
+      const filtered = prev.filter((s) => s.session_id !== newId);
+      const updated = [newSummary, ...filtered];
+      try {
+        localStorage.setItem('medquad_sessions', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
     setActiveSessionId(newId);
-    setMessages([]);
-    setSelectedCitation(null);
   };
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
@@ -225,15 +378,59 @@ export const App: React.FC = () => {
       localStorage.removeItem(`medquad_messages_${sessionId}`);
     } catch (e) {}
 
-    setSessionsList((prev) => prev.filter((s) => s.session_id !== sessionId));
+    setSessionsMap((prev) => {
+      const copy = { ...prev };
+      delete copy[sessionId];
+      return copy;
+    });
+
+    const remaining = sessionsList.filter((s) => s.session_id !== sessionId);
+    setSessionsList(remaining);
+    try {
+      localStorage.setItem('medquad_sessions', JSON.stringify(remaining));
+    } catch (e) {}
+
     if (activeSessionId === sessionId) {
-      handleNewConsultation();
+      if (remaining.length > 0) {
+        handleSelectSession(remaining[0].session_id);
+      } else {
+        handleNewConsultation();
+      }
     }
   };
 
+  const handleInputChange = (val: string) => {
+    setSessionsMap((prev) => {
+      const s = prev[activeSessionId] || defaultSessionState(activeSessionId);
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...s,
+          inputDraft: val,
+        },
+      };
+    });
+  };
+
+  const handleSelectCitation = (cit: Citation | null) => {
+    setSessionsMap((prev) => {
+      const s = prev[activeSessionId] || defaultSessionState(activeSessionId);
+      return {
+        ...prev,
+        [activeSessionId]: {
+          ...s,
+          selectedCitation: cit,
+        },
+      };
+    });
+  };
+
   const handleSendMessage = async (queryToSend?: string) => {
-    const q = queryToSend || inputQuery;
-    if (!q.trim() || isLoading) return;
+    const targetSessionId = activeSessionId;
+    const targetState = sessionsMap[targetSessionId] || defaultSessionState(targetSessionId);
+    const q = (queryToSend !== undefined ? queryToSend : targetState.inputDraft).trim();
+
+    if (!q || targetState.isLoading) return;
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -242,103 +439,303 @@ export const App: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
-    setInputQuery('');
-    setIsLoading(true);
+    const pendingMsg: ChatMessage = {
+      id: `pending-${Date.now()}`,
+      role: 'assistant',
+      content: '⏳ Synthesizing evidence-grounded response...',
+      category: 'Clinical',
+      is_pending: true,
+      interrupted: false,
+      timestamp: new Date().toISOString(),
+    };
 
+    const cleanPrior = targetState.messages.filter((m) => !m.is_pending);
+    const inProgressMessages: ChatMessage[] = [...cleanPrior, userMsg, pendingMsg];
+
+    // Set loading state specifically for targetSessionId
+    setSessionsMap((prev) => {
+      const s = prev[targetSessionId] || defaultSessionState(targetSessionId);
+      return {
+        ...prev,
+        [targetSessionId]: {
+          ...s,
+          messages: inProgressMessages,
+          isLoading: true,
+          liveThoughtSteps: [],
+          activeAgentName: 'Root Orchestrator (Gemini 2.5 Flash)',
+          streamingText: '',
+          inputDraft: '',
+        },
+      };
+    });
+
+    // IMMEDIATELY commit in-progress messages to localStorage
+    try {
+      localStorage.setItem(`medquad_messages_${targetSessionId}`, JSON.stringify(inProgressMessages));
+    } catch (e) {}
+
+    // Update history sidebar immediately
     setSessionsList((prev) => {
       const title = q.length > 45 ? q.substring(0, 45) + '...' : q;
-      const existing = prev.find((s) => s.session_id === activeSessionId);
+      const existing = prev.find((s) => s.session_id === targetSessionId);
+      let updated: SessionSummary[];
       if (existing) {
-        return prev.map((s) =>
-          s.session_id === activeSessionId
+        updated = prev.map((s) =>
+          s.session_id === targetSessionId
             ? {
                 ...s,
-                updated_at: new Date().toISOString(),
-                message_count: s.message_count + 1,
+                title: s.message_count === 0 || s.title === 'New Consultation' ? title : s.title,
                 preview: q,
+                message_count: s.message_count + 1,
+                cached_messages: inProgressMessages,
+                updated_at: new Date().toISOString(),
               }
             : s
         );
       } else {
-        return [
+        updated = [
           {
-            session_id: activeSessionId,
-            title: title,
+            session_id: targetSessionId,
+            title,
             preview: q,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             message_count: 1,
+            cached_messages: inProgressMessages,
             category: 'Clinical',
           },
           ...prev,
         ];
       }
+      try {
+        localStorage.setItem('medquad_sessions', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
     });
 
+    const requestStartTime = performance.now();
+
     try {
+      const historyPayload = cleanPrior
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .map((m) => ({ role: m.role, content: m.content }));
+
       const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: q,
-          session_id: activeSessionId,
+          session_id: targetSessionId,
+          stream: true,
+          history: historyPayload,
         }),
       });
 
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      if (!res.body) throw new Error('ReadableStream not supported on this browser');
 
-      const data = await res.json();
-      const normalizedCitations = (data.citations || []).map((c: any, i: number) => normalizeCitation(c, i));
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let accumulatedText = '';
+      const accumulatedThoughts: AgentThoughtStep[] = [];
+      let finalData: any = null;
+      let currentEvent = 'message';
+      let currentDataLines: string[] = [];
+
+      const dispatchEvent = (eventType: string, dataStr: string) => {
+        if (!dataStr) return;
+        try {
+          const parsed = JSON.parse(dataStr);
+          if (eventType === 'thought') {
+            accumulatedThoughts.push(parsed);
+            setSessionsMap((prev) => {
+              const s = prev[targetSessionId];
+              if (!s) return prev;
+              return {
+                ...prev,
+                [targetSessionId]: {
+                  ...s,
+                  liveThoughtSteps: [...accumulatedThoughts],
+                  activeAgentName: parsed.agent_name || s.activeAgentName,
+                },
+              };
+            });
+          } else if (eventType === 'token') {
+            if (parsed.token) {
+              accumulatedText += parsed.token;
+              setSessionsMap((prev) => {
+                const s = prev[targetSessionId];
+                if (!s) return prev;
+                return {
+                  ...prev,
+                  [targetSessionId]: {
+                    ...s,
+                    streamingText: accumulatedText,
+                  },
+                };
+              });
+            }
+          } else if (eventType === 'safety_refusal') {
+            if (parsed.agent_name) {
+              setSessionsMap((prev) => {
+                const s = prev[targetSessionId];
+                if (!s) return prev;
+                return {
+                  ...prev,
+                  [targetSessionId]: {
+                    ...s,
+                    activeAgentName: parsed.agent_name,
+                  },
+                };
+              });
+            }
+          } else if (eventType === 'final') {
+            finalData = parsed;
+          }
+        } catch (jsonErr) {
+          console.debug('SSE JSON parse error for event', eventType, jsonErr, dataStr);
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed === '') {
+            if (currentDataLines.length > 0) {
+              dispatchEvent(currentEvent, currentDataLines.join('\n'));
+              currentDataLines = [];
+              currentEvent = 'message';
+            }
+          } else if (trimmed.startsWith('event:')) {
+            currentEvent = trimmed.replace(/^event:\s*/, '').trim();
+          } else if (trimmed.startsWith('data:')) {
+            currentDataLines.push(trimmed.replace(/^data:\s*/, ''));
+          }
+        }
+      }
+
+      // Flush any trailing event
+      if (buffer.trim()) {
+        const trimmed = buffer.trim();
+        if (trimmed.startsWith('data:')) {
+          currentDataLines.push(trimmed.replace(/^data:\s*/, ''));
+        }
+      }
+      if (currentDataLines.length > 0) {
+        dispatchEvent(currentEvent, currentDataLines.join('\n'));
+      }
+
+      const elapsedMs = Math.round(performance.now() - requestStartTime);
+      const measuredLatency =
+        finalData?.latency_ms && finalData.latency_ms > 0
+          ? Math.round(finalData.latency_ms)
+          : elapsedMs;
+
+      const responseText = finalData?.response || accumulatedText || 'No response generated.';
+      const normalizedCitations = (finalData?.citations || []).map((c: any, i: number) =>
+        normalizeCitation(c, i)
+      );
+      const isRefusal = Boolean(finalData?.safe_refusal || finalData?.is_refusal);
+      const refusalType = finalData?.refusal_type || (isRefusal ? 'scope_lock' : undefined);
+
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}-resp`,
         role: 'assistant',
-        content: data.response || 'No response generated.',
-        category: data.category || 'General Clinical',
-        safe_refusal: data.safe_refusal || false,
-        is_grounded: data.is_grounded || false,
+        content: responseText,
+        category:
+          finalData?.category ||
+          (refusalType === 'security_violation'
+            ? 'Security Violation'
+            : isRefusal
+            ? 'Emergency Crisis'
+            : 'Clinical'),
+        safe_refusal: isRefusal,
+        refusal_type: refusalType,
+        is_grounded: finalData?.is_grounded ?? !isRefusal,
         citations: normalizedCitations,
-        thought_steps: data.thought_steps || [],
-        latency_ms: data.latency_ms || 0,
+        thought_steps: finalData?.thought_steps || accumulatedThoughts,
+        latency_ms: measuredLatency,
         timestamp: new Date().toISOString(),
       };
 
-      const finalMessages = [...updatedMessages, assistantMsg];
-      setMessages(finalMessages);
+      const finalMessages = [...inProgressMessages.filter((m) => !m.is_pending), assistantMsg];
+
+      setSessionsMap((prev) => {
+        const s = prev[targetSessionId] || defaultSessionState(targetSessionId);
+        return {
+          ...prev,
+          [targetSessionId]: {
+            ...s,
+            messages: finalMessages,
+            isLoading: false,
+            liveThoughtSteps: [],
+            activeAgentName: null,
+            streamingText: '',
+            selectedCitation: normalizedCitations[0] || s.selectedCitation,
+          },
+        };
+      });
 
       try {
-        localStorage.setItem(`medquad_messages_${activeSessionId}`, JSON.stringify(finalMessages));
+        localStorage.setItem(`medquad_messages_${targetSessionId}`, JSON.stringify(finalMessages));
       } catch (e) {}
 
-      setSessionsList((prev) =>
-        prev.map((s) =>
-          s.session_id === activeSessionId
+      setSessionsList((prev) => {
+        const updated = prev.map((s) =>
+          s.session_id === targetSessionId
             ? {
                 ...s,
                 cached_messages: finalMessages,
                 message_count: finalMessages.length,
-                category: data.category || s.category,
-                preview: (data.response || '').substring(0, 60) + '...',
+                category: finalData?.category || (isRefusal ? 'Refusal' : s.category),
+                preview: responseText.substring(0, 60) + '...',
                 updated_at: new Date().toISOString(),
               }
             : s
-        )
-      );
+        );
+        try {
+          localStorage.setItem('medquad_sessions', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
 
-      if (normalizedCitations.length > 0) {
-        setSelectedCitation(normalizedCitations[0]);
-      }
     } catch (err: any) {
+      console.error('Multi-agent streaming error for session', targetSessionId, err);
+      const elapsedErrMs = Math.round(performance.now() - requestStartTime);
       const errorMsg: ChatMessage = {
         id: `msg-${Date.now()}-err`,
         role: 'assistant',
         content: `⚠️ Error connecting to MedQuAD Multi-Agent Backend: ${err.message}`,
+        latency_ms: elapsedErrMs,
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, errorMsg]);
+      const withErr = [...inProgressMessages.filter((m) => !m.is_pending), errorMsg];
+      setSessionsMap((prev) => {
+        const s = prev[targetSessionId] || defaultSessionState(targetSessionId);
+        return {
+          ...prev,
+          [targetSessionId]: {
+            ...s,
+            messages: withErr,
+            isLoading: false,
+            liveThoughtSteps: [],
+            activeAgentName: null,
+            streamingText: '',
+          },
+        };
+      });
+      try {
+        localStorage.setItem(`medquad_messages_${targetSessionId}`, JSON.stringify(withErr));
+      } catch (e) {}
     } finally {
-      setIsLoading(false);
       fetchTelemetry();
     }
   };
@@ -389,28 +786,13 @@ export const App: React.FC = () => {
             ⚕️
           </div>
           <div>
-            <h1 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <h1 className="text-base font-bold text-slate-100">
               MedQuAD Clinical Research Assistant
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-950 text-teal-300 border border-teal-800">
-                ADK Multi-Agent
-              </span>
             </h1>
-            <p className="text-xs text-slate-400 hidden sm:block">
-              NIH Grounding • Gemini 2.5/3.5 Architecture • Model Armor Guardrails
-            </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2.5">
-          <button
-            onClick={() => {
-              fetchTelemetry();
-              setShowTelemetryModal(true);
-            }}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5"
-          >
-            📊 Live Telemetry HUD
-          </button>
           <button
             onClick={handleNewConsultation}
             className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-teal-600 hover:bg-teal-500 text-white shadow transition flex items-center gap-1"
@@ -453,6 +835,7 @@ export const App: React.FC = () => {
               ) : (
                 filteredSessions.map((s) => {
                   const isActive = s.session_id === activeSessionId;
+                  const isSessionLoading = Boolean(sessionsMap[s.session_id]?.isLoading);
                   return (
                     <div
                       key={s.session_id}
@@ -481,10 +864,20 @@ export const App: React.FC = () => {
                       </p>
 
                       <div className="flex items-center justify-between text-[10px] text-slate-500">
-                        <span className="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-teal-400">
-                          {s.category || 'General'}
-                        </span>
-                        <span>{s.message_count ? `${s.message_count} msgs` : 'Active'}</span>
+                        {isSessionLoading ? (
+                          <div className="flex items-center gap-1.5 text-teal-400 font-mono font-medium animate-pulse">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                            </span>
+                            <span>Synthesizing...</span>
+                          </div>
+                        ) : (
+                          <span className="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-teal-400">
+                            {s.category || 'General'}
+                          </span>
+                        )}
+                        <span>{s.message_count ? `${s.message_count} msgs` : 'New'}</span>
                       </div>
                     </div>
                   );
@@ -494,7 +887,7 @@ export const App: React.FC = () => {
 
             <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 text-[11px] text-slate-500 flex items-center justify-between">
               <span>Session: {activeSessionId.substring(0, 14)}...</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+              <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-teal-400 animate-ping' : 'bg-emerald-500'} inline-block`}></span>
             </div>
           </aside>
         )}
@@ -531,83 +924,443 @@ export const App: React.FC = () => {
                 </div>
               </div>
             ) : (
-              messages.map((msg) => (
-                <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className="text-[11px] text-slate-500 mb-1 px-1">
-                    {msg.role === 'user' ? 'Clinician' : 'MedQuAD Assistant'}
-                  </div>
+              messages.map((msg) => {
+                const isUser = msg.role === 'user';
+                const isSecurityViolation =
+                  msg.refusal_type === 'security_violation' ||
+                  msg.category === 'Security Violation' ||
+                  msg.content.includes('**Security Violation:**');
+                const isScopeLockRefusal =
+                  !isSecurityViolation &&
+                  (msg.safe_refusal ||
+                    msg.refusal_type === 'personal_diagnosis' ||
+                    msg.refusal_type === 'prescription_request' ||
+                    msg.refusal_type === 'emergency_crisis' ||
+                    msg.content.includes('EMERGENCY NOTICE:') ||
+                    msg.content.includes('Clinical Research Boundary Notice:') ||
+                    msg.content.includes('Prescription Policy Notice:') ||
+                    msg.content.includes('Clinical Scope Notice:') ||
+                    msg.content.includes('medical diagnosis or prescription request cannot be fulfilled'));
 
+                const isEmergencyCrisis =
+                  isScopeLockRefusal &&
+                  (msg.refusal_type === 'emergency_crisis' ||
+                    msg.content.includes('EMERGENCY NOTICE') ||
+                    msg.content.includes('911'));
+
+                return (
                   <div
-                    className={`max-w-3xl rounded-2xl p-5 ${
-                      msg.role === 'user'
-                        ? 'bg-teal-700/80 text-white rounded-tr-none'
-                        : msg.safe_refusal
-                        ? 'bg-amber-950/40 border border-amber-800/60 text-amber-200 rounded-tl-none'
-                        : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm'
-                    }`}
+                    key={msg.id}
+                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
                   >
-                    {msg.thought_steps && msg.thought_steps.length > 0 && (
-                      <details className="mb-4 pb-3 border-b border-slate-800/80">
-                        <summary className="text-xs font-semibold text-teal-400 cursor-pointer hover:text-teal-300 select-none flex items-center gap-1.5">
-                          ⚙️ Multi-Agent Reasoning Trace ({msg.thought_steps.length} Steps)
-                        </summary>
-                        <div className="mt-2.5 space-y-1.5 pl-3 border-l-2 border-teal-500/30">
-                          {msg.thought_steps.map((step, idx) => (
-                            <div key={idx} className="text-xs text-slate-400">
-                              <span className="font-semibold text-slate-300">[{step.agent_name}]:</span>{' '}
-                              {step.description}
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
+                    <div className="text-[11px] text-slate-500 mb-1 px-1 flex items-center gap-1.5">
+                      {isUser ? (
+                        <span>Clinician</span>
+                      ) : isSecurityViolation ? (
+                        <span className="text-rose-400 font-semibold flex items-center gap-1">
+                          <span>🛡️</span> Model Armor Guardrail
+                        </span>
+                      ) : isEmergencyCrisis ? (
+                        <span className="text-rose-400 font-semibold flex items-center gap-1">
+                          <span>🚨</span> Emergency Safety Guardrail
+                        </span>
+                      ) : isScopeLockRefusal ? (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1">
+                          <span>⚠️</span> Clinical Safety Guardrail
+                        </span>
+                      ) : (
+                        <span className="text-teal-400 font-semibold flex items-center gap-1">
+                          <span>🏥</span> MedQuAD Clinical Assistant
+                        </span>
+                      )}
+                    </div>
 
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</div>
-
-                    {msg.citations && msg.citations.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-slate-400 font-medium">Grounding Sources:</span>
-                        {msg.citations.map((c, cIdx) => {
-                          const norm = normalizeCitation(c, cIdx);
-                          const selNum = selectedCitation?.citation_number ?? selectedCitation?.citation_id;
-                          const isSelected = selNum !== undefined && selNum === norm.citation_number;
-                          return (
-                            <button
-                              key={`${norm.citation_number}-${cIdx}`}
-                              onClick={() => setSelectedCitation(norm)}
-                              className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition flex items-center gap-1 ${
-                                isSelected
-                                  ? 'bg-teal-500/20 text-teal-300 border-teal-500 ring-1 ring-teal-500/50'
-                                  : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500'
-                              }`}
-                            >
-                              [{norm.citation_number}] {norm.authoritative_org}
-                            </button>
-                          );
-                        })}
+                    {isUser ? (
+                      <div className="max-w-3xl rounded-2xl p-4 bg-teal-700 text-white rounded-tr-none shadow-md">
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</div>
                       </div>
-                    )}
+                    ) : isSecurityViolation ? (
+                      /* SECURITY VIOLATION CARD */
+                      <div className="max-w-3xl w-full rounded-2xl p-5 bg-gradient-to-br from-rose-950/90 via-red-950/60 to-slate-950 border-2 border-rose-500 text-rose-100 rounded-tl-none shadow-xl shadow-rose-950/50">
+                        <div className="flex items-center justify-between pb-3 mb-3 border-b border-rose-800/80">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-2xl select-none">🚨</span>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-900 text-rose-200 border border-rose-500 font-mono">
+                                  Security Policy Interception
+                                </span>
+                                <span className="text-[11px] text-rose-400 font-mono">CODE: SEC-01</span>
+                              </div>
+                              <div className="text-[11px] text-rose-300 mt-0.5">
+                                Model Armor Guardrail blocked prompt injection or prohibited directive
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                    {msg.role === 'assistant' && (
-                      <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2">
-                        <span>Latency: {msg.latency_ms || 0} ms</span>
-                        <button
-                          onClick={() => setFeedbackMessageId(msg.id)}
-                          className="hover:text-slate-300 text-slate-400 underline transition"
-                        >
-                          Provide Feedback
-                        </button>
+                        {msg.thought_steps && msg.thought_steps.length > 0 && (
+                          <details className="mb-4 pb-3 border-b border-rose-900/60">
+                            <summary className="text-xs font-semibold text-rose-400 cursor-pointer hover:text-rose-300 select-none flex items-center gap-1.5">
+                              ⚙️ Security Audit Trace ({msg.thought_steps.length} Steps)
+                            </summary>
+                            <div className="mt-2.5 space-y-1.5 pl-3 border-l-2 border-rose-600/40 font-mono">
+                              {msg.thought_steps.map((step, idx) => (
+                                <div key={idx} className="text-xs text-rose-300 flex items-start gap-1.5">
+                                  <span>{getStepIcon(step.step_type)}</span>
+                                  <div>
+                                    <span className="font-semibold text-rose-200">[{step.agent_name}]:</span>{' '}
+                                    {step.description}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap text-rose-100 bg-rose-950/40 p-3.5 rounded-xl border border-rose-900/80">
+                          {msg.content}
+                        </div>
+
+                        <div className="mt-4 p-3 rounded-xl bg-slate-950/90 border border-rose-900/60 text-xs text-rose-300 flex items-start gap-2.5">
+                          <span className="text-base select-none">🛡️</span>
+                          <div>
+                            <span className="font-semibold text-rose-200">Zero-Trust Guardrail Active:</span>
+                            <p className="mt-0.5 text-rose-300/80 leading-relaxed">
+                              Adversarial injections, jailbreak attempts, and system prompt extraction patterns are deterministically blocked prior to subagent reasoning to safeguard clinical data integrity.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : isScopeLockRefusal ? (
+                      /* CLINICAL SCOPE LOCK OR EMERGENCY REFUSAL CARD */
+                      <div className={`max-w-3xl w-full rounded-2xl p-5 bg-gradient-to-br ${
+                        isEmergencyCrisis
+                          ? 'from-rose-950/90 via-red-950/60 to-slate-950 border-2 border-rose-500 text-rose-100 shadow-rose-950/50'
+                          : 'from-amber-950/90 via-amber-950/50 to-slate-950 border-2 border-amber-500 text-amber-100 shadow-amber-950/50'
+                      } rounded-tl-none shadow-xl`}>
+                        <div className={`flex items-center justify-between pb-3 mb-3 border-b ${
+                          isEmergencyCrisis ? 'border-rose-800/80' : 'border-amber-800/80'
+                        }`}>
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-2xl select-none">{isEmergencyCrisis ? '🚨' : '⚠️'}</span>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full font-mono ${
+                                  isEmergencyCrisis
+                                    ? 'bg-rose-900 text-rose-200 border border-rose-500'
+                                    : 'bg-amber-900 text-amber-200 border border-amber-500'
+                                }`}>
+                                  {isEmergencyCrisis ? 'Emergency Medical Interception' : 'Clinical Scope Lock Enforced'}
+                                </span>
+                                <span className={`text-[11px] font-mono ${isEmergencyCrisis ? 'text-rose-400' : 'text-amber-400'}`}>
+                                  PATIENT SAFETY
+                                </span>
+                              </div>
+                              <div className={`text-[11px] mt-0.5 ${isEmergencyCrisis ? 'text-rose-300' : 'text-amber-300'}`}>
+                                {isEmergencyCrisis
+                                  ? 'Acute crisis or distress plea detected: Directing immediately to emergency services'
+                                  : 'Diagnostic boundary active: Personalized diagnosis or prescriptions restricted'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {msg.thought_steps && msg.thought_steps.length > 0 && (
+                          <details className="mb-4 pb-3 border-b border-amber-900/60">
+                            <summary className="text-xs font-semibold text-amber-400 cursor-pointer hover:text-amber-300 select-none flex items-center gap-1.5">
+                              ⚙️ Scope Lock Evaluation Trace ({msg.thought_steps.length} Steps)
+                            </summary>
+                            <div className="mt-2.5 space-y-1.5 pl-3 border-l-2 border-amber-600/40 font-mono">
+                              {msg.thought_steps.map((step, idx) => (
+                                <div key={idx} className="text-xs text-amber-300 flex items-start gap-1.5">
+                                  <span>{getStepIcon(step.step_type)}</span>
+                                  <div>
+                                    <span className="font-semibold text-amber-200">[{step.agent_name}]:</span>{' '}
+                                    {step.description}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap text-amber-100 bg-amber-950/40 p-3.5 rounded-xl border border-amber-900/80">
+                          {msg.content}
+                        </div>
+
+                        <div className="mt-4 p-3.5 rounded-xl bg-slate-950/90 border border-amber-800/80 text-xs text-amber-200 space-y-1.5">
+                          <div className="flex items-center gap-2 font-bold text-amber-100">
+                            <span className="text-base select-none">🚑</span>
+                            <span>Emergency Triage & Clinical Advisory Notice</span>
+                          </div>
+                          <p className="text-amber-300/90 leading-relaxed">
+                            MedQuAD Assistant is designed solely for evidence-based medical literature research. It cannot replace in-person consultation with a licensed physician or prescribe medications.
+                          </p>
+                          <div className="pt-2 border-t border-amber-900/80 flex items-center justify-between text-[11px] text-amber-400 font-medium">
+                            <span>Acute or life-threatening symptoms? Contact emergency services (911) immediately.</span>
+                            <span className="font-mono bg-amber-950 px-2 py-0.5 rounded border border-amber-800">ENFORCED</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* STANDARD GROUNDED CLINICAL ANSWER */
+                      <div className="max-w-3xl rounded-2xl p-5 bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm">
+                        {msg.thought_steps && msg.thought_steps.length > 0 && (
+                          <details className="mb-4 pb-3 border-b border-slate-800/80">
+                            <summary className="text-xs font-semibold text-teal-400 cursor-pointer hover:text-teal-300 select-none flex items-center gap-1.5">
+                              ⚙️ Multi-Agent Reasoning Trace ({msg.thought_steps.length} Steps)
+                            </summary>
+                            <div className="mt-2.5 space-y-1.5 pl-3 border-l-2 border-teal-500/30">
+                              {msg.thought_steps.map((step, idx) => (
+                                <div key={idx} className="text-xs text-slate-400 flex items-start gap-1.5">
+                                  <span>{getStepIcon(step.step_type)}</span>
+                                  <div>
+                                    <span className="font-semibold text-slate-300">[{step.agent_name}]:</span>{' '}
+                                    {step.description}
+                                    {step.tool_called && (
+                                      <span className="ml-1.5 text-[10px] text-teal-400 font-mono">
+                                        (tool: {step.tool_called})
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+
+                        {msg.interrupted ? (
+                          <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-200">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base select-none">⚠️</span>
+                              <span>Query execution was interrupted by a page refresh or network disconnection.</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const idx = messages.findIndex((m) => m.id === msg.id);
+                                const retryQuery = idx > 0 ? messages[idx - 1]?.content : null;
+                                if (retryQuery) {
+                                  handleSendMessage(retryQuery);
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs transition flex items-center gap-1.5 flex-shrink-0 shadow"
+                            >
+                              <span>🔄</span> Retry Consultation
+                            </button>
+                          </div>
+                        ) : msg.is_pending ? (
+                          <div className="flex items-center gap-2 text-xs text-teal-400 font-mono animate-pulse">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                            </span>
+                            <span>Synthesizing evidence-grounded response...</span>
+                          </div>
+                        ) : (
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</div>
+                        )}
+
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center gap-2">
+                            <span className="text-xs text-slate-400 font-medium">Grounding Sources:</span>
+                            {msg.citations.map((c, cIdx) => {
+                              const norm = normalizeCitation(c, cIdx);
+                              const selNum = selectedCitation?.citation_number ?? selectedCitation?.citation_id;
+                              const isSelected = selNum !== undefined && selNum === norm.citation_number;
+                              return (
+                                <button
+                                  key={`${norm.citation_number}-${cIdx}`}
+                                  onClick={() => handleSelectCitation(norm)}
+                                  className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition flex items-center gap-1 ${
+                                    isSelected
+                                      ? 'bg-teal-500/20 text-teal-300 border-teal-500 ring-1 ring-teal-500/50'
+                                      : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500'
+                                  }`}
+                                >
+                                  [{norm.citation_number}] {norm.authoritative_org}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex items-center justify-end text-xs text-slate-500 pt-2">
+                          <button
+                            onClick={() => setFeedbackMessageId(msg.id)}
+                            className="hover:text-slate-300 text-slate-400 underline transition"
+                          >
+                            Provide Feedback
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
 
+            {/* LIVE MULTI-AGENT EXECUTION HUD */}
             {isLoading && (
-              <div className="flex items-center space-x-3 text-slate-400 text-sm p-4 bg-slate-900/50 rounded-xl border border-slate-800 w-fit">
-                <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                <span>Multi-agent reasoning loop in progress (Researcher & Reviewer)...</span>
+              <div className="flex flex-col items-start max-w-3xl w-full animate-fadeIn">
+                <div className="text-[11px] text-teal-400 mb-1.5 px-1 flex items-center gap-2 font-mono">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+                  </span>
+                  <span>MULTI-AGENT PIPELINE RUNNING</span>
+                </div>
+
+                <div className="w-full rounded-2xl bg-slate-900/95 border border-teal-500/40 p-4 shadow-xl backdrop-blur-md space-y-3.5">
+                  {/* Current Active Agent Banner */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-base">
+                        {getAgentIcon(activeAgentName || '')}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-100 flex items-center gap-2">
+                          <span>{activeAgentName || 'Root Orchestrator (Gemini 2.5 Flash)'}</span>
+                          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-950 text-teal-300 border border-teal-700 font-mono animate-pulse">
+                            Active Step
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate max-w-md">
+                          {liveThoughtSteps.length > 0
+                            ? liveThoughtSteps[liveThoughtSteps.length - 1].description
+                            : 'Evaluating input safety and planning retrieval strategy...'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-[11px] font-mono text-teal-300 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 flex items-center gap-1.5 shadow-inner">
+                      <div className="w-3 h-3 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Step {liveThoughtSteps.length}</span>
+                    </div>
+                  </div>
+
+                  {/* Multi-Agent 4-Stage Visual Stepper */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {[
+                      {
+                        label: '1. Model Armor',
+                        icon: '🛡️',
+                        done: liveThoughtSteps.some(
+                          (s) =>
+                            s.step_type === 'security_check' ||
+                            s.step_type === 'security_violation' ||
+                            s.step_type === 'phi_redaction' ||
+                            s.agent_name.includes('Model Armor')
+                        ),
+                        active:
+                          (activeAgentName || '').includes('Model Armor') ||
+                          liveThoughtSteps.length <= 1,
+                      },
+                      {
+                        label: '2. Orchestrator',
+                        icon: '🎯',
+                        done: liveThoughtSteps.some(
+                          (s) =>
+                            s.step_type === 'routing' ||
+                            s.step_type === 'delegation' ||
+                            s.step_type === 'scope_lock_refusal'
+                        ),
+                        active:
+                          (activeAgentName || '').includes('Orchestrator') &&
+                          liveThoughtSteps.length > 1,
+                      },
+                      {
+                        label: '3. Researcher',
+                        icon: '🔍',
+                        done: liveThoughtSteps.some(
+                          (s) =>
+                            s.step_type === 'synthesize' ||
+                            s.agent_name.includes('Reviewer')
+                        ),
+                        active: (activeAgentName || '').includes('Researcher'),
+                      },
+                      {
+                        label: '4. Reviewer',
+                        icon: '🔬',
+                        done: liveThoughtSteps.some((s) => s.step_type === 'quality_approval'),
+                        active: (activeAgentName || '').includes('Reviewer'),
+                      },
+                    ].map((stage, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-2 rounded-xl border flex items-center space-x-2 transition-all ${
+                          stage.active
+                            ? 'bg-teal-950/60 border-teal-400 text-teal-200 ring-1 ring-teal-500/40 shadow-sm'
+                            : stage.done
+                            ? 'bg-slate-950/80 border-slate-700 text-slate-300'
+                            : 'bg-slate-950/40 border-slate-800 text-slate-600'
+                        }`}
+                      >
+                        <span className="text-sm">{stage.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-semibold truncate">{stage.label}</div>
+                          <div className="text-[9px] font-mono text-slate-400">
+                            {stage.active ? (
+                              <span className="text-teal-400 font-bold animate-pulse">Running...</span>
+                            ) : stage.done ? (
+                              <span className="text-emerald-400">✓ Done</span>
+                            ) : (
+                              'Pending'
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Live Stream of Agent Steps */}
+                  {liveThoughtSteps.length > 0 && (
+                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+                      {liveThoughtSteps.map((step, idx) => {
+                        const isLast = idx === liveThoughtSteps.length - 1;
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-2.5 rounded-xl border text-[11px] transition-all flex items-start gap-2.5 ${
+                              isLast
+                                ? 'bg-teal-950/40 border-teal-500/50 text-teal-200 shadow-sm ring-1 ring-teal-500/20'
+                                : 'bg-slate-950/60 border-slate-800/80 text-slate-400'
+                            }`}
+                          >
+                            <span className="text-sm select-none">{getStepIcon(step.step_type)}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-slate-200 font-sans">{step.agent_name}</span>
+                                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono">
+                                  {step.step_type.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <p className="text-slate-300 font-sans mt-0.5 leading-snug">{step.description}</p>
+                              {step.tool_called && (
+                                <div className="mt-1.5 text-[10px] text-teal-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 inline-block font-mono">
+                                  🔧 {step.tool_called}
+                                  {step.tool_output_summary ? ` → ${step.tool_output_summary}` : ''}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Live Streaming Response Preview */}
+                  {streamingText && (
+                    <div className="mt-2 pt-2 border-t border-slate-800">
+                      <div className="text-[10px] uppercase font-bold text-teal-400 tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <span>✍️ Generating Clinical Synthesis</span>
+                        <span className="inline-block w-1.5 h-3 bg-teal-400 animate-pulse" />
+                      </div>
+                      <div className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap font-sans bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 shadow-inner">
+                        {streamingText}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -623,17 +1376,22 @@ export const App: React.FC = () => {
             >
               <input
                 type="text"
-                value={inputQuery}
-                onChange={(e) => setInputQuery(e.target.value)}
-                placeholder="Ask an evidence-grounded clinical research question (e.g. diagnostic criteria, protocols)..."
-                className="flex-1 bg-slate-950 border border-slate-700 focus:border-teal-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition shadow-inner"
+                value={inputDraft}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder={
+                  isLoading
+                    ? "Synthesizing response in this consultation..."
+                    : "Ask an evidence-grounded clinical research question (e.g. diagnostic criteria, protocols)..."
+                }
+                disabled={isLoading}
+                className="flex-1 bg-slate-950 border border-slate-700 focus:border-teal-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition shadow-inner disabled:opacity-60"
               />
               <button
                 type="submit"
-                disabled={isLoading || !inputQuery.trim()}
+                disabled={isLoading || !inputDraft.trim()}
                 className="px-5 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-semibold text-sm transition shadow"
               >
-                Send
+                {isLoading ? 'Thinking...' : 'Send'}
               </button>
             </form>
           </div>
@@ -695,47 +1453,6 @@ export const App: React.FC = () => {
           )}
         </aside>
       </div>
-
-      {showTelemetryModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
-              <h3 className="text-base font-bold text-slate-100">📊 System Telemetry & Cost Accounting</h3>
-              <button
-                onClick={() => setShowTelemetryModal(false)}
-                className="text-slate-400 hover:text-slate-200 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {telemetry ? (
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-slate-400 mb-1">Total Processed Queries</div>
-                  <div className="text-xl font-bold text-teal-400">{telemetry.total_queries || 0}</div>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-slate-400 mb-1">Total Estimated Cost</div>
-                  <div className="text-xl font-bold text-emerald-400">${(telemetry.total_cost_usd || 0).toFixed(4)}</div>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-slate-400 mb-1">Average Latency</div>
-                  <div className="text-xl font-bold text-slate-200">{telemetry.avg_latency_ms || 0} ms</div>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-slate-400 mb-1">Safe Refusal Rate</div>
-                  <div className="text-xl font-bold text-amber-400">
-                    {((telemetry.safe_refusal_rate || 0) * 100).toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6 text-slate-400 text-xs">Loading telemetry records...</div>
-            )}
-          </div>
-        </div>
-      )}
 
       {feedbackMessageId && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">

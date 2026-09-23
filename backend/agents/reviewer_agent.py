@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from backend.core.config import get_settings
@@ -57,15 +58,24 @@ class ReviewerAgent:
         query: str,
         draft_answer: str,
         retrieved_chunks: list[GroundedSearchResult],
+        on_thought: Callable[[AgentThoughtStep], Awaitable[None]] | None = None,
     ) -> ReviewResult:
         """Audits research draft for factuality, citation integrity, and safety compliance."""
         start_time = time.perf_counter()
         thought_steps: list[AgentThoughtStep] = []
 
+        async def record_thought(step: AgentThoughtStep) -> None:
+            thought_steps.append(step)
+            if on_thought:
+                try:
+                    await on_thought(step)
+                except Exception as e:
+                    logger.debug("on_thought callback error: %s", e)
+
         # Step 1: Safety & Persona Audit (Scope Lock Check)
         for pattern in PRESCRIPTIVE_PATTERNS:
             if pattern.search(draft_answer):
-                thought_steps.append(
+                await record_thought(
                     AgentThoughtStep(
                         agent_name="Reviewer Subagent (Gemini 3.5 Flash)",
                         step_type="safety_violation",
@@ -81,14 +91,23 @@ class ReviewerAgent:
                 break
 
         # Step 2: Citation Mapping and Verification
+        await record_thought(
+            AgentThoughtStep(
+                agent_name="Reviewer Subagent (Gemini 3.5 Flash)",
+                step_type="audit_active",
+                description="Auditing draft factuality and verifying citations against NIH MedQuAD corpus...",
+            )
+        )
+
         verify_start = time.perf_counter()
         verification: CitationVerificationResult = self.verifier.verify_and_resolve_citations(
             text=draft_answer,
             retrieved_chunks=retrieved_chunks,
+            fallback_on_empty=True,
         )
         verify_ms = (time.perf_counter() - verify_start) * 1000
 
-        thought_steps.append(
+        await record_thought(
             AgentThoughtStep(
                 agent_name="Reviewer Subagent (Gemini 3.5 Flash)",
                 step_type="citation_audit",
@@ -111,7 +130,7 @@ class ReviewerAgent:
         else:
             critique = "Draft fully grounded in authoritative NIH MedQuAD evidence with 100% citation resolution."
 
-        thought_steps.append(
+        await record_thought(
             AgentThoughtStep(
                 agent_name="Reviewer Subagent (Gemini 3.5 Flash)",
                 step_type="quality_approval",

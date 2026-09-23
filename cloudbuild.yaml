@@ -1,0 +1,110 @@
+# ==============================================================================
+# Google Cloud Build CI/CD Pipeline for MedQuAD Clinical Assistant
+# ==============================================================================
+# Usage:
+#   gcloud builds submit --config=cloudbuild.yaml .
+# ==============================================================================
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: medquad-backend
+  _REPO_NAME: medquad
+  _IMAGE_NAME: medquad-backend
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Step 1: Run Linting and Unit Tests
+  # ----------------------------------------------------------------------------
+  - name: "python:3.11-slim"
+    id: "test-and-lint"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        echo "Installing uv & dependencies..."
+        pip install --no-cache-dir uv
+        uv pip install --system -e ".[dev]"
+        echo "Running Ruff code quality checks..."
+        ruff check backend/ tests/
+        echo "Running Pytest unit & guardrail tests..."
+        ENVIRONMENT=test GCP_PROJECT_ID=$PROJECT_ID USE_MOCK_SEARCH=true ENABLE_IAP=false pytest tests/unit/ -v
+
+  # ----------------------------------------------------------------------------
+  # Step 2: Build Multi-Stage Production Docker Image
+  # ----------------------------------------------------------------------------
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-image"
+    waitFor: ["test-and-lint"]
+    args:
+      - "build"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:latest"
+      - "--cache-from"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:latest"
+      - "-f"
+      - "Dockerfile"
+      - "."
+
+  # ----------------------------------------------------------------------------
+  # Step 3: Push Image to Google Artifact Registry
+  # ----------------------------------------------------------------------------
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-image"
+    waitFor: ["build-image"]
+    args:
+      - "push"
+      - "--all-tags"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}"
+
+  # ----------------------------------------------------------------------------
+  # Step 4: Deploy Revision to Google Cloud Run
+  # ----------------------------------------------------------------------------
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    id: "deploy-cloud-run"
+    waitFor: ["push-image"]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+      - "--region=${_REGION}"
+      - "--project=$PROJECT_ID"
+      - "--platform=managed"
+      - "--cpu=2"
+      - "--memory=2Gi"
+      - "--concurrency=80"
+      - "--timeout=300"
+      - "--min-instances=1"
+      - "--max-instances=10"
+      - "--set-env-vars=ENVIRONMENT=production,GCP_PROJECT_ID=$PROJECT_ID,USE_MOCK_SEARCH=false,VERTEX_DATASTORE_ID=medquad-corpus-v1,VERTEX_AI_SEARCH_DATASTORE_ID=medquad-corpus-v1,VERTEX_AI_SEARCH_ENGINE_ID=medquad-search-app-v2,MEDQUAD_CORPUS_PATH=data/full_medquad.json,BIGQUERY_TELEMETRY_TABLE=$PROJECT_ID.telemetry.agent_metrics,ROOT_ORCHESTRATOR_MODEL=gemini-2.5-flash,RESEARCHER_MODEL=gemini-2.5-pro,REVIEWER_MODEL=gemini-3.5-flash,ENABLE_MODEL_ARMOR=true,MODEL_ARMOR_PROJECT_ID=$PROJECT_ID,MODEL_ARMOR_LOCATION=us-central1,MODEL_ARMOR_TEMPLATE_ID=medquad-safety-template,ENABLE_IAP=true,IAP_AUDIENCE=/projects/1055109340350/global/backendServices/8170589415761269874"
+
+  # ----------------------------------------------------------------------------
+  # Step 5: Post-Deployment Smoke Test Endpoint Verification
+  # ----------------------------------------------------------------------------
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    id: "smoke-test"
+    waitFor: ["deploy-cloud-run"]
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --project=$PROJECT_ID --format="value(status.url)")
+        echo "Validating health endpoint at: $${SERVICE_URL}/api/v1/health"
+        curl -s -f -m 10 "$${SERVICE_URL}/api/v1/health" || {
+          echo "Health check verification failed!"
+          exit 1
+        }
+        echo "✔ Deployment and smoke tests succeeded for $COMMIT_SHA!"
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:latest"
+
+timeout: "1800s"
+options:
+  logging: CLOUD_LOGGING_ONLY

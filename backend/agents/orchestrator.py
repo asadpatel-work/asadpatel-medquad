@@ -9,9 +9,12 @@ Orchestrates multi-agent clinical workflow:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from backend.agents.researcher_agent import ResearcherAgent
 from backend.agents.reviewer_agent import ReviewerAgent
@@ -61,203 +64,377 @@ class RootOrchestrator:
                 return cat
         return MedicalCategory.GENERAL_MEDICINE
 
-    async def process_chat(self, request: ChatRequest) -> ChatResponse:
-        """Executes full multi-agent Supervisor-Worker workflow with safety and telemetry."""
+    async def process_chat_stream(
+        self, request: ChatRequest
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Streams real-time thoughts, tokens, safety refusal events, and final response."""
         start_time = time.perf_counter()
         query_id = f"q-{uuid.uuid4().hex[:10]}"
         session_id = request.session_id or f"session-{uuid.uuid4().hex[:8]}"
         thought_steps: list[AgentThoughtStep] = []
 
-        with trace_span(
-            "orchestrator.process_chat", {"session.id": session_id, "query.id": query_id}
-        ):
-            # Step 1: Model Armor Security & PHI Sanitization
-            with trace_span("guardrails.model_armor"):
-                sanitization = self.armor.sanitize(request.query)
+        queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
 
-            if not sanitization.is_safe:
-                # Jailbreak intercepted
-                thought_steps.append(
+        async def emit(event_type: str, data: dict[str, Any]) -> None:
+            await queue.put({"event": event_type, "data": data})
+
+        async def on_thought_step(step: AgentThoughtStep) -> None:
+            thought_steps.append(step)
+            await emit("thought", step.model_dump(mode="json"))
+
+        emit_thought = on_thought_step
+
+        async def run_pipeline() -> None:
+            try:
+                # Step 1: Model Armor Security & PHI Sanitization
+                await emit(
+                    "thought",
                     AgentThoughtStep(
+                        agent_name="Model Armor Security Guardrail",
+                        step_type="security_check",
+                        description="Auditing prompt for adversarial injections and Protected Health Information (PHI)...",
+                    ).model_dump(mode="json"),
+                )
+
+                with trace_span("guardrails.model_armor"):
+                    sanitization = self.armor.sanitize(request.query)
+
+                if not sanitization.is_safe:
+                    step = AgentThoughtStep(
                         agent_name="Model Armor Security Guardrail",
                         step_type="security_violation",
                         description="Adversarial prompt injection attempt intercepted and blocked.",
                     )
-                )
-                refusal_msg = (
-                    "**Security Violation:** The submitted query violates the system safety policy "
-                    "(adversarial prompt injection or prohibited control instruction detected)."
-                )
-                total_ms = (time.perf_counter() - start_time) * 1000
+                    thought_steps.append(step)
+                    await emit("thought", step.model_dump(mode="json"))
 
-                self.telemetry.record_query_metrics(
-                    query_id=query_id,
-                    session_id=session_id,
-                    category="Security Violation",
-                    prompt_tokens=len(request.query.split()) * 2,
-                    completion_tokens=len(refusal_msg.split()) * 2,
-                    latency_ms=total_ms,
-                    safe_refusal=True,
-                    model_name=self.model_name,
-                )
+                    refusal_msg = (
+                        "**Security Violation:** The submitted query violates the system safety policy "
+                        "(adversarial prompt injection or prohibited control instruction detected)."
+                    )
+                    total_ms = (time.perf_counter() - start_time) * 1000
 
-                return ChatResponse(
-                    session_id=session_id,
-                    response=refusal_msg,
-                    citations=[],
-                    category=MedicalCategory.UNKNOWN,
-                    safe_refusal=True,
-                    is_grounded=False,
-                    thought_steps=thought_steps,
-                    latency_ms=round(total_ms, 2),
-                )
+                    self.telemetry.record_query_metrics(
+                        query_id=query_id,
+                        session_id=session_id,
+                        category="Security Violation",
+                        prompt_tokens=len(request.query.split()) * 2,
+                        completion_tokens=len(refusal_msg.split()) * 2,
+                        latency_ms=total_ms,
+                        safe_refusal=True,
+                        model_name=self.model_name,
+                    )
 
-            clean_query = sanitization.sanitized_text
-            if sanitization.redacted_phi_count > 0:
-                thought_steps.append(
-                    AgentThoughtStep(
+                    self.memory.add_message(
+                        session_id=session_id, role="user", content=request.query
+                    )
+                    self.memory.add_message(
+                        session_id=session_id,
+                        role="assistant",
+                        content=refusal_msg,
+                        thought_steps=thought_steps,
+                        metadata={
+                            "safe_refusal": True,
+                            "is_refusal": True,
+                            "refusal_type": "security_violation",
+                            "category": "Security Violation",
+                            "latency_ms": round(total_ms, 2),
+                        },
+                    )
+
+                    await emit(
+                        "safety_refusal",
+                        {
+                            "refusal_type": "security_violation",
+                            "category": "Security Violation",
+                            "reason": "Adversarial prompt injection or prohibited control instruction detected.",
+                            "message": refusal_msg,
+                        },
+                    )
+
+                    final_resp = ChatResponse(
+                        session_id=session_id,
+                        response=refusal_msg,
+                        citations=[],
+                        category=MedicalCategory.UNKNOWN,
+                        safe_refusal=True,
+                        is_refusal=True,
+                        refusal_type="security_violation",
+                        is_grounded=False,
+                        thought_steps=thought_steps,
+                        latency_ms=round(total_ms, 2),
+                    )
+                    await emit("final", final_resp.model_dump(mode="json"))
+                    return
+
+                clean_query = sanitization.sanitized_text
+                if sanitization.redacted_phi_count > 0:
+                    phi_step = AgentThoughtStep(
                         agent_name="Model Armor PHI Guardrail",
                         step_type="phi_redaction",
                         description=f"Masked {sanitization.redacted_phi_count} protected health information (PHI) token(s).",
                     )
-                )
+                    thought_steps.append(phi_step)
+                    await emit("thought", phi_step.model_dump(mode="json"))
 
-            # Step 2: Intent Classification & Safe Refusal Check
-            category = self.classify_category(clean_query)
-            with trace_span("guardrails.safe_refusal"):
-                refusal_eval = self.safe_refusal.evaluate(clean_query)
+                # Step 2: Intent Classification & Safe Refusal Check
+                category = self.classify_category(clean_query)
+                with trace_span("guardrails.safe_refusal"):
+                    refusal_eval = self.safe_refusal.evaluate(clean_query)
 
-            thought_steps.append(
-                AgentThoughtStep(
+                route_step = AgentThoughtStep(
                     agent_name="Root Orchestrator (Gemini 2.5 Flash)",
                     step_type="routing",
                     description=f"Classified clinical domain: {category.value}.",
                 )
-            )
+                thought_steps.append(route_step)
+                await emit("thought", route_step.model_dump(mode="json"))
 
-            if refusal_eval.is_refusal:
-                thought_steps.append(
-                    AgentThoughtStep(
+                if refusal_eval.is_refusal:
+                    refusal_type_str = refusal_eval.refusal_category.value
+                    scope_step = AgentThoughtStep(
                         agent_name="Root Orchestrator (Gemini 2.5 Flash)",
                         step_type="scope_lock_refusal",
-                        description=f"Scope Lock triggered ({refusal_eval.refusal_category.value}). Enforcing safe clinical disclaimer.",
+                        description=f"Scope Lock triggered ({refusal_type_str}). Enforcing safe clinical disclaimer.",
                     )
-                )
+                    thought_steps.append(scope_step)
+                    await emit("thought", scope_step.model_dump(mode="json"))
 
-                total_ms = (time.perf_counter() - start_time) * 1000
-                refusal_text = (
-                    refusal_eval.refusal_message
-                    or "Personal medical diagnosis or prescription request cannot be fulfilled."
-                )
+                    total_ms = (time.perf_counter() - start_time) * 1000
+                    refusal_text = (
+                        refusal_eval.refusal_message
+                        or "Personal medical diagnosis or prescription request cannot be fulfilled."
+                    )
+
+                    self.memory.add_message(
+                        session_id=session_id, role="user", content=request.query
+                    )
+                    self.memory.add_message(
+                        session_id=session_id,
+                        role="assistant",
+                        content=refusal_text,
+                        thought_steps=thought_steps,
+                        metadata={
+                            "safe_refusal": True,
+                            "is_refusal": True,
+                            "refusal_type": refusal_type_str,
+                            "category": category.value
+                            if hasattr(category, "value")
+                            else str(category),
+                            "latency_ms": round(total_ms, 2),
+                        },
+                    )
+
+                    self.telemetry.record_query_metrics(
+                        query_id=query_id,
+                        session_id=session_id,
+                        category=category.value,
+                        prompt_tokens=len(clean_query.split()) * 2,
+                        completion_tokens=len(refusal_text.split()) * 2,
+                        latency_ms=total_ms,
+                        safe_refusal=True,
+                        model_name=self.model_name,
+                    )
+
+                    await emit(
+                        "safety_refusal",
+                        {
+                            "refusal_type": refusal_type_str,
+                            "category": category.value,
+                            "reason": refusal_type_str.replace("_", " ").title(),
+                            "message": refusal_text,
+                        },
+                    )
+
+                    final_resp = ChatResponse(
+                        session_id=session_id,
+                        response=refusal_text,
+                        citations=[],
+                        category=category,
+                        safe_refusal=True,
+                        is_refusal=True,
+                        refusal_type=refusal_type_str,
+                        is_grounded=False,
+                        thought_steps=thought_steps,
+                        latency_ms=round(total_ms, 2),
+                    )
+                    await emit("final", final_resp.model_dump(mode="json"))
+                    return
+
+                # Step 3: Retrieve Conversation History Context
+                # Hydrate from client-supplied history if memory service lacks prior turns (e.g. replica failover)
+                client_history = [
+                    {
+                        "role": str(m.get("role", "user")),
+                        "content": str(m.get("content", "")).strip(),
+                    }
+                    for m in (request.history or [])
+                    if m.get("content")
+                ]
+                memory_history = self.memory.get_history_formatted(session_id)
+                if len(client_history) > len(memory_history):
+                    session = self.memory.get_or_create_session(session_id)
+                    existing_contents = {msg.content.strip() for msg in session.messages}
+                    for h_msg in client_history:
+                        if h_msg["content"] and h_msg["content"] not in existing_contents:
+                            self.memory.add_message(
+                                session_id=session_id,
+                                role=h_msg["role"],
+                                content=h_msg["content"],
+                            )
+                            existing_contents.add(h_msg["content"])
+                    history = self.memory.get_history_formatted(session_id)
+                else:
+                    history = memory_history if memory_history else client_history
 
                 self.memory.add_message(session_id=session_id, role="user", content=request.query)
+
+                # Step 4: Delegate to Researcher Subagent (Gemini 2.5 Pro)
+                deleg_res_step = AgentThoughtStep(
+                    agent_name="Root Orchestrator (Gemini 2.5 Flash)",
+                    step_type="delegation",
+                    description=f"Delegating retrieval and synthesis to Researcher Subagent ({self.settings.gemini_researcher_model}).",
+                )
+                thought_steps.append(deleg_res_step)
+                await emit("thought", deleg_res_step.model_dump(mode="json"))
+
+                with trace_span("agent.researcher"):
+                    research_draft = await self.researcher.conduct_research(
+                        query=clean_query,
+                        category=category,
+                        conversation_history=history,
+                        on_thought=emit_thought,
+                    )
+                thought_steps.extend(research_draft.thought_steps)
+
+                # Step 5: Delegate to Reviewer Subagent (Gemini 3.5 Flash)
+                deleg_rev_step = AgentThoughtStep(
+                    agent_name="Root Orchestrator (Gemini 2.5 Flash)",
+                    step_type="delegation",
+                    description=f"Delegating quality control and citation verification to Reviewer Subagent ({self.settings.gemini_reviewer_model}).",
+                )
+                thought_steps.append(deleg_rev_step)
+                await emit("thought", deleg_rev_step.model_dump(mode="json"))
+
+                with trace_span("agent.reviewer"):
+                    review_result = await self.reviewer.review_draft(
+                        query=clean_query,
+                        draft_answer=research_draft.draft_answer,
+                        retrieved_chunks=research_draft.retrieved_chunks,
+                        on_thought=emit_thought,
+                    )
+                thought_steps.extend(review_result.thought_steps)
+
+                # Check if Reviewer flagged prescriptive advice
+                if not review_result.approved and review_result.critique_notes:
+                    audit_flag_step = AgentThoughtStep(
+                        agent_name="Root Orchestrator (Gemini 2.5 Flash)",
+                        step_type="audit_critique",
+                        description=f"Reviewer Audit Notice: {review_result.critique_notes}",
+                    )
+                    thought_steps.append(audit_flag_step)
+                    await emit("thought", audit_flag_step.model_dump(mode="json"))
+
+                total_ms = (time.perf_counter() - start_time) * 1000
+
+                # Step 6: Persist Assistant Response in Memory
                 self.memory.add_message(
                     session_id=session_id,
                     role="assistant",
-                    content=refusal_text,
+                    content=review_result.final_answer,
+                    citations=review_result.citations,
                     thought_steps=thought_steps,
-                    metadata={"safe_refusal": True},
+                    metadata={
+                        "confidence_score": review_result.confidence_score,
+                        "latency_ms": round(total_ms, 2),
+                        "safe_refusal": False,
+                        "is_refusal": False,
+                        "category": category.value if hasattr(category, "value") else str(category),
+                    },
                 )
 
+                # Step 7: Record Telemetry Metrics & Estimated Cost
+                prompt_toks = len(clean_query.split()) * 3 + sum(
+                    len(c.content.split()) for c in research_draft.retrieved_chunks
+                )
+                comp_toks = len(review_result.final_answer.split()) * 2
                 self.telemetry.record_query_metrics(
                     query_id=query_id,
                     session_id=session_id,
                     category=category.value,
-                    prompt_tokens=len(clean_query.split()) * 2,
-                    completion_tokens=len(refusal_text.split()) * 2,
+                    prompt_tokens=prompt_toks,
+                    completion_tokens=comp_toks,
                     latency_ms=total_ms,
-                    safe_refusal=True,
-                    model_name=self.model_name,
+                    safe_refusal=False,
+                    citations_count=len(review_result.citations),
+                    model_name=self.settings.researcher_model,
                 )
 
-                return ChatResponse(
+                # Step 8: Stream response tokens to frontend
+                words = review_result.final_answer.split(" ")
+                for i, word in enumerate(words):
+                    tok = word if i == len(words) - 1 else word + " "
+                    await emit("token", {"token": tok})
+                    await asyncio.sleep(0.005)
+
+                final_resp = ChatResponse(
                     session_id=session_id,
-                    response=refusal_text,
-                    citations=[],
+                    response=review_result.final_answer,
+                    citations=review_result.citations,
                     category=category,
-                    safe_refusal=True,
-                    is_grounded=False,
+                    safe_refusal=False,
+                    is_refusal=False,
+                    refusal_type=None,
+                    is_grounded=True,
                     thought_steps=thought_steps,
                     latency_ms=round(total_ms, 2),
                 )
+                await emit("final", final_resp.model_dump(mode="json"))
 
-            # Step 3: Retrieve Conversation History Context
-            history = self.memory.get_history_formatted(session_id)
-
-            # Step 4: Delegate to Researcher Subagent (Gemini 2.5 Pro)
-            thought_steps.append(
-                AgentThoughtStep(
+            except Exception as exc:
+                logger.exception("Error in multi-agent orchestration stream: %s", exc)
+                err_step = AgentThoughtStep(
                     agent_name="Root Orchestrator (Gemini 2.5 Flash)",
-                    step_type="delegation",
-                    description="Delegated literature retrieval and synthesis to Researcher Subagent.",
+                    step_type="error",
+                    description=f"Encountered unexpected internal error: {str(exc)[:120]}",
                 )
-            )
-
-            with trace_span("agent.researcher"):
-                research_draft = await self.researcher.conduct_research(
-                    query=clean_query,
-                    category=category,
-                    conversation_history=history,
+                thought_steps.append(err_step)
+                await emit("thought", err_step.model_dump(mode="json"))
+                err_resp = ChatResponse(
+                    session_id=session_id,
+                    response="An error occurred while processing your request. Please try again.",
+                    citations=[],
+                    category=MedicalCategory.UNKNOWN,
+                    safe_refusal=False,
+                    is_grounded=False,
+                    thought_steps=thought_steps,
+                    latency_ms=round((time.perf_counter() - start_time) * 1000, 2),
                 )
-            thought_steps.extend(research_draft.thought_steps)
+                await emit("final", err_resp.model_dump(mode="json"))
+            finally:
+                await queue.put(None)
 
-            # Step 5: Delegate to Reviewer Subagent (Gemini 3.5 Flash)
-            thought_steps.append(
-                AgentThoughtStep(
-                    agent_name="Root Orchestrator (Gemini 2.5 Flash)",
-                    step_type="delegation",
-                    description="Delegated draft verification and citation audit to Reviewer Subagent.",
-                )
-            )
+        task = asyncio.create_task(run_pipeline())
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield item
+        finally:
+            if not task.done():
+                task.cancel()
 
-            with trace_span("agent.reviewer"):
-                review_result = await self.reviewer.review_draft(
-                    query=clean_query,
-                    draft_answer=research_draft.draft_answer,
-                    retrieved_chunks=research_draft.retrieved_chunks,
-                )
-            thought_steps.extend(review_result.thought_steps)
+    async def process_chat(self, request: ChatRequest) -> ChatResponse:
+        """Executes full multi-agent Supervisor-Worker workflow synchronously."""
+        final_response: ChatResponse | None = None
+        async for event in self.process_chat_stream(request):
+            if event.get("event") == "final":
+                final_response = ChatResponse.model_validate(event["data"])
 
-            total_ms = (time.perf_counter() - start_time) * 1000
-
-            # Step 6: Persist in Memory
-            self.memory.add_message(session_id=session_id, role="user", content=request.query)
-            self.memory.add_message(
-                session_id=session_id,
-                role="assistant",
-                content=review_result.final_answer,
-                citations=review_result.citations,
-                thought_steps=thought_steps,
-                metadata={"confidence_score": review_result.confidence_score},
-            )
-
-            # Step 7: Record Telemetry Metrics & Estimated Cost
-            prompt_toks = len(clean_query.split()) * 3 + sum(
-                len(c.content.split()) for c in research_draft.retrieved_chunks
-            )
-            comp_toks = len(review_result.final_answer.split()) * 2
-            self.telemetry.record_query_metrics(
-                query_id=query_id,
-                session_id=session_id,
-                category=category.value,
-                prompt_tokens=prompt_toks,
-                completion_tokens=comp_toks,
-                latency_ms=total_ms,
-                safe_refusal=False,
-                citations_count=len(review_result.citations),
-                model_name=self.settings.researcher_model,
-            )
-
-            return ChatResponse(
-                session_id=session_id,
-                response=review_result.final_answer,
-                citations=review_result.citations,
-                category=category,
-                safe_refusal=False,
-                is_grounded=True,
-                thought_steps=thought_steps,
-                latency_ms=round(total_ms, 2),
-            )
+        if final_response is None:
+            raise RuntimeError("No final response generated by orchestrator stream")
+        return final_response
 
 
 # Global singleton orchestrator

@@ -19,9 +19,13 @@ def test_default_settings():
 def test_cors_origins_parsing():
     """Verify that CORS origins can be parsed from comma-separated string or JSON list."""
     # Comma-separated
-    s1 = Settings(_env_file=None, ALLOWED_ORIGINS="https://app.example.com, https://portal.example.com")
+    s1 = Settings(
+        _env_file=None, ALLOWED_ORIGINS="https://app.example.com, https://portal.example.com"
+    )
     assert s1.cors_allowed_origins == ["https://app.example.com", "https://portal.example.com"]
 
     # JSON list
-    s2 = Settings(_env_file=None, ALLOWED_ORIGINS='["https://app2.example.com", "http://localhost:8080"]')
+    s2 = Settings(
+        _env_file=None, ALLOWED_ORIGINS='["https://app2.example.com", "http://localhost:8080"]'
+    )
     assert s2.cors_allowed_origins == ["https://app2.example.com", "http://localhost:8080"]

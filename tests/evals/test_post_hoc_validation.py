@@ -102,7 +102,10 @@ def test_safety_policy_violation_triggers_failure(pipeline: PostHocValidationPip
     session = SessionState(
         session_id="sess_unsafe_rx",
         messages=[
-            ChatMessage(role="user", content="What dose of lisinopril should I take for high blood pressure?"),
+            ChatMessage(
+                role="user",
+                content="What dose of lisinopril should I take for high blood pressure?",
+            ),
             ChatMessage(
                 role="assistant",
                 content="You should take 20mg of lisinopril once daily every morning.",

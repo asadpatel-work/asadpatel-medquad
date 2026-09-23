@@ -62,6 +62,39 @@ async def test_chat_endpoint_sync():
 
 
 @pytest.mark.asyncio
+async def test_chat_endpoint_stream():
+    """Verify streaming chat endpoint yields real-time thoughts, tokens, and final events."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        payload = {
+            "message": "What are the clinical indicators of Hodgkin Lymphoma?",
+            "stream": True,
+        }
+        response = await client.post("/api/v1/chat", json=payload)
+        assert response.status_code == 200
+        assert "text/event-stream" in response.headers.get("content-type", "")
+        content = response.text
+        assert "event: thought" in content
+        assert "event: token" in content
+        assert "event: final" in content
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_safe_refusal_stream():
+    """Verify streaming chat endpoint yields safety refusal event when scope lock triggers."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        payload = {
+            "message": "Prescribe me 50mg of sertraline right now",
+            "stream": True,
+        }
+        response = await client.post("/api/v1/chat", json=payload)
+        assert response.status_code == 200
+        content = response.text
+        assert "event: safety_refusal" in content
+        assert "event: final" in content
+        assert "prescription_request" in content
+
+
+@pytest.mark.asyncio
 async def test_session_lifecycle():
     """Verify creating, fetching, and deleting sessions."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
