@@ -14,11 +14,22 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
+from google.adk.agents import Agent as AdkAgent
+
 from backend.core.config import get_settings
+from backend.core.telemetry import trace_span
 from backend.models.schemas import AgentThoughtStep, Citation, GroundedSearchResult
-from backend.tools.citation_verifier import CitationVerificationResult, CitationVerifier
+from backend.tools.citation_verifier import (
+    CitationVerificationResult,
+    CitationVerifier,
+    medquad_citation_verifier_tool,
+)
 
 logger = logging.getLogger(__name__)
+
+REVIEWER_SYSTEM_INSTRUCTION = """You are the Senior Clinical Reviewer Agent for the MedQuAD Clinical Assistant at the NIH Clinical Center.
+Your role is to rigorously audit clinical research drafts for factual grounding, citation accuracy, non-prescriptive tone, and adherence to medical literature.
+"""
 
 # Phrases that violate safety scope (prescriptive medical advice)
 PRESCRIPTIVE_PATTERNS = [
@@ -52,6 +63,13 @@ class ReviewerAgent:
         self.settings = get_settings()
         self.model_name = self.settings.gemini_reviewer_model
         self.verifier = citation_verifier or CitationVerifier()
+        self.adk_agent = AdkAgent(
+            name="reviewer_agent",
+            model=self.model_name,
+            instruction=REVIEWER_SYSTEM_INSTRUCTION,
+            tools=[medquad_citation_verifier_tool],
+            description="Specialized clinical review and quality control subagent that audits citations, grounding, and non-prescriptive clinical tone.",
+        )
 
     async def review_draft(
         self,
@@ -100,11 +118,21 @@ class ReviewerAgent:
         )
 
         verify_start = time.perf_counter()
-        verification: CitationVerificationResult = self.verifier.verify_and_resolve_citations(
-            text=draft_answer,
-            retrieved_chunks=retrieved_chunks,
-            fallback_on_empty=True,
-        )
+        with trace_span(
+            "agent.reviewer.citation_verifier",
+            attributes={
+                "gen_ai.system": "gemini",
+                "verifier.retrieved_chunks_count": len(retrieved_chunks),
+            },
+        ) as verifier_span:
+            verification: CitationVerificationResult = self.verifier.verify_and_resolve_citations(
+                text=draft_answer,
+                retrieved_chunks=retrieved_chunks,
+                fallback_on_empty=True,
+            )
+            verifier_span.set_attribute("verifier.verified_citations_count", len(verification.citations))
+            verifier_span.set_attribute("verifier.coverage_ratio", verification.citation_coverage_ratio)
+            verifier_span.set_attribute("verifier.is_valid", verification.is_valid)
         verify_ms = (time.perf_counter() - verify_start) * 1000
 
         await record_thought(

@@ -1,6 +1,6 @@
 """Model Context Protocol (MCP) Server and Tool Registration.
 
-Exposes MedQuAD retrieval, Clinical DB, and Citation Verifier tools via
+Exposes MedQuAD retrieval and Citation Verifier tools via
 standardized Model Context Protocol JSON-RPC 2.0 schemas and handlers.
 """
 
@@ -13,7 +13,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from backend.tools.citation_verifier import verify_response_citations
-from backend.tools.clinical_db_tool import clinical_db_lookup_tool
 from backend.tools.search_tool import SearchTool
 
 logger = logging.getLogger(__name__)
@@ -49,24 +48,6 @@ MCP_TOOL_MANIFEST: list[MCPToolDefinition] = [
                 type="integer",
                 description="Number of results to return (1-5)",
                 required=False,
-            ),
-        ],
-    ),
-    MCPToolDefinition(
-        name="clinical_db_lookup",
-        description="Queries clinical reference databases for lab normal ranges, trial protocols, and drug interactions.",
-        parameters=[
-            MCPToolParameter(
-                name="query_type",
-                type="string",
-                description="One of 'lab_reference', 'trial_protocol', 'drug_interaction'",
-                required=True,
-            ),
-            MCPToolParameter(
-                name="lookup_key",
-                type="string",
-                description="Test name, protocol ID, or drug name",
-                required=True,
             ),
         ],
     ),
@@ -113,15 +94,6 @@ class MCPServer:
             return {
                 "status": "success",
                 "results": [r.model_dump() for r in results],
-            }
-
-        elif tool_name == "clinical_db_lookup":
-            q_type = arguments.get("query_type", "lab_reference")
-            key = arguments.get("lookup_key", "")
-            raw = clinical_db_lookup_tool(query_type=q_type, lookup_key=key)
-            return {
-                "status": "success",
-                "data": json.loads(raw),
             }
 
         elif tool_name == "verify_citations":

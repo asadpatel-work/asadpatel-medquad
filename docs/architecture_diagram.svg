@@ -232,13 +232,13 @@
 
     <!-- Container Replica 1 (Front Active Service) -->
     <rect x="0" y="12" width="1100" height="235" rx="12" ry="12" fill="#FFFFFF" stroke="#4285F4" stroke-width="2.2"/>
-    
+
     <!-- Cloud Run Header Banner -->
     <path d="M 0 24 Q 0 12 12 12 L 1088 12 Q 1100 12 1100 24 L 1100 48 L 0 48 Z" fill="#E8F0FE"/>
     <g transform="translate(16, 18)"><use href="#logo-cloud-run"/></g>
     <text x="48" y="32" font-size="11" font-weight="700" fill="#1A73E8" letter-spacing="0.5">TIER 2: GOOGLE CLOUD RUN (SERVERLESS CONTAINER WORKLOAD • 0 → N REPLICAS)</text>
     <text x="48" y="44" font-size="8.5" font-weight="500" fill="#5F6368">FastAPI ASGI Microservice • Multi-Agent Core (Python 3.11)</text>
-    
+
     <!-- Autoscaling Badge -->
     <rect x="980" y="18" width="108" height="20" rx="4" ry="4" fill="#1A73E8"/>
     <text x="1034" y="32" font-size="8" font-weight="700" fill="#FFFFFF" text-anchor="middle">Autoscaling (0 → N)</text>
@@ -255,11 +255,11 @@
       <rect x="10" y="38" width="150" height="34" rx="4" ry="4" fill="#F1F3F4"/>
       <text x="85" y="55" font-size="8.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Uvicorn ASGI Server</text>
       <text x="85" y="66" font-size="7.5" fill="#5F6368" text-anchor="middle">Async Request Handling</text>
-      
+
       <rect x="10" y="80" width="150" height="42" rx="4" ry="4" fill="#F8F9FA" stroke="#DADCE0" stroke-width="0.8"/>
       <text x="85" y="97" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Session Memory</text>
       <text x="85" y="111" font-size="7.5" fill="#5F6368" text-anchor="middle">Multi-turn History Context</text>
-      
+
       <text x="85" y="145" font-size="8" font-weight="600" fill="#5F6368" text-anchor="middle">Max Concurrency = 80</text>
     </g>
 
@@ -274,7 +274,7 @@
       <rect width="225" height="28" rx="8" ry="8" fill="#E8F0FE"/>
       <rect y="18" width="225" height="10" fill="#E8F0FE"/>
       <text x="112" y="19" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Root Orchestrator</text>
-      
+
       <!-- Supervisor Box -->
       <rect x="12" y="38" width="201" height="42" rx="4" ry="4" fill="#F1F3F4"/>
       <text x="112" y="53" font-size="8.5" font-weight="700" fill="#202124" text-anchor="middle">Supervisor Agent</text>
@@ -299,7 +299,7 @@
       <rect x="12" y="2" width="245" height="165" rx="8" ry="8" fill="#E8EAED" stroke="#BDC1C6" stroke-width="1"/>
       <rect x="175" y="5" width="76" height="12" rx="3" ry="3" fill="#BDC1C6"/>
       <text x="213" y="14" font-size="6.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker M</text>
-      
+
       <!-- Worker Replica 2 (Middle) -->
       <rect x="6" y="5" width="245" height="165" rx="8" ry="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
       <rect x="169" y="8" width="76" height="12" rx="3" ry="3" fill="#DADCE0"/>
@@ -404,9 +404,9 @@
       <ellipse cx="120" cy="92" rx="112" ry="9" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="52" rx="112" ry="9" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
       <g transform="translate(20, 34)"><use href="#logo-clinical-db"/></g>
-      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Reference DB</text>
-      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Biomarkers &amp; Lab Ranges</text>
-      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Reference Tables &amp; Thresholds</text>
+      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Cloud Storage (GCS)</text>
+      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Corpus &amp; Session Store</text>
+      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">19,204 Chunks &amp; State Store</text>
     </g>
 
     <!-- Store 3: Vector DB Fallback -->

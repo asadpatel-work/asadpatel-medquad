@@ -135,7 +135,10 @@ class Settings(BaseSettings):
 
     # Observability
     enable_opentelemetry: bool = True
-    export_to_cloud_trace: bool = False
+    export_to_cloud_trace: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("EXPORT_TO_CLOUD_TRACE", "ENABLE_CLOUD_TRACE"),
+    )
     bigquery_telemetry_table: str = "capstone-506616.telemetry.agent_metrics"
 
     # Automated Nightly Clinical Conversation Auditing

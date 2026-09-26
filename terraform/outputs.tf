@@ -58,4 +58,19 @@ output "iap_enabled" {
   value       = var.enable_iap
 }
 
+output "cloud_trace_console_url" {
+  description = "Direct Google Cloud Console URL for Cloud Trace Explorer"
+  value       = "https://console.cloud.google.com/traces/list?project=${var.project_id}"
+}
+
+output "wif_provider_id" {
+  description = "Workload Identity Provider resource URI to configure in GitHub Secrets"
+  value       = "${google_iam_workload_identity_pool.github_pool.name}/providers/${google_iam_workload_identity_pool_provider.github_provider.workload_identity_pool_provider_id}"
+}
+
+output "wif_service_account_email" {
+  description = "GitHub Actions Service Account email to configure in GitHub Secrets"
+  value       = google_service_account.github_actions_sa.email
+}
+
 

@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class MedicalCategory(StrEnum):
@@ -59,6 +59,21 @@ class GroundedSearchResult(BaseModel):
     authoritative_org: str = "NIH"
     score: float = Field(default=0.0, ge=0.0, le=1.0)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def _sanitize_metadata(cls, v: Any) -> dict[str, Any]:
+        if not isinstance(v, dict):
+            return {}
+
+        def _clean(val: Any) -> Any:
+            if hasattr(val, "items"):
+                return {str(k): _clean(sub_v) for k, sub_v in val.items()}
+            if hasattr(val, "__iter__") and not isinstance(val, (str, bytes, dict)):
+                return [_clean(sub_v) for sub_v in val]
+            return val
+
+        return {str(k): _clean(val) for k, val in v.items()}
 
 
 class ChatRequest(BaseModel):

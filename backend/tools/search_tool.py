@@ -629,4 +629,4 @@ async def medquad_search_tool(
     """
     search_tool = SearchTool()
     results = await search_tool.search(query=query, category=category, top_k=top_k)
-    return json.dumps([r.model_dump() for r in results], indent=2)
+    return json.dumps([r.model_dump(mode="json") for r in results], indent=2, default=str)

@@ -669,16 +669,16 @@ def build_deck() -> Presentation:
         descriptor="16,400+ verified medical Q&A pairs\n500-token chunks with 10% overlap",
     )
 
-    # Store 2: ClinicalDBTool
+    # Store 2: Cloud Storage (GCS)
     add_clean_diag_box(
         s4,
         left=Inches(3.8),
         top=Inches(5.82),
         width=Inches(2.7),
         height=Inches(1.1),
-        title="ClinicalDBTool",
-        subtitle="Biomarker Reference DB",
-        descriptor="Diagnostic reference ranges &\nclinical lab test thresholds",
+        title="Cloud Storage (GCS)",
+        subtitle="Corpus & Session Store",
+        descriptor="19,204 preprocessed chunks &\nmulti-turn session state store",
     )
 
     # Store 3: In-Memory Vector Fallback
@@ -751,7 +751,7 @@ def build_deck() -> Presentation:
         "1. Ingress & Perimeter: Clinician queries enter via Cloud Armor and FastAPI on Cloud Run. Model Armor scrubs 18 HIPAA PHI identifiers.\n\n"
         "2. Safe Refusal Branch: If personal medical advice or dosing is detected, it exits in <5ms without model token consumption.\n\n"
         "3. Multi-Agent Orchestration: Root Orchestrator (Gemini 2.5 Flash) routes to Clinical Researcher (Gemini 2.5 Pro).\n\n"
-        "4. Grounding: Researcher retrieves 500-token chunks from Vertex AI Search and queries ClinicalDBTool.\n\n"
+        "4. Grounding: Researcher retrieves 500-token chunks from Vertex AI Search across the NIH MedQuAD corpus.\n\n"
         "5. Independent Verification: Reviewer & QC gate (Gemini 3.5 Flash) audits 100% citation ID matching before streaming release.\n\n"
         "6. Observability: Spans are sent to Cloud Trace, and telemetry is logged to BigQuery."
     )

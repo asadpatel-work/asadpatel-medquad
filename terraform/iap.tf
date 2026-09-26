@@ -76,10 +76,10 @@ resource "google_compute_global_forwarding_rule" "medquad_forwarding_rule" {
 resource "google_iap_web_backend_service_iam_member" "iap_accessors" {
   for_each = var.enable_iap ? toset(var.iap_accessors) : toset([])
 
-  project                 = var.project_id
-  web_backend_service     = google_compute_backend_service.backend_service.name
-  role                    = "roles/iap.httpsResourceAccessor"
-  member                  = each.key
+  project             = var.project_id
+  web_backend_service = google_compute_backend_service.backend_service.name
+  role                = "roles/iap.httpsResourceAccessor"
+  member              = each.key
 
   depends_on = [google_compute_backend_service.backend_service]
 }

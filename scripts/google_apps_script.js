@@ -222,8 +222,8 @@ function drawArchitectureDiagram() {
   // Store 1: Vertex AI Search
   addCleanBox(55, 395, 200, 90, 'Vertex AI Search', 'NIH Literature Datastore', '16,400+ verified medical Q&A pairs\n500-token chunks with 10% overlap', COLOR_BORDER, COLOR_CARD, COLOR_PRIMARY);
 
-  // Store 2: ClinicalDBTool
-  addCleanBox(270, 395, 200, 90, 'ClinicalDBTool', 'Biomarker Reference DB', 'Diagnostic reference ranges &\nclinical lab test thresholds', COLOR_BORDER, COLOR_CARD, COLOR_PRIMARY);
+  // Store 2: Cloud Storage (GCS)
+  addCleanBox(270, 395, 200, 90, 'Cloud Storage (GCS)', 'Corpus & Session Store', '19,204 preprocessed chunks\nmulti-turn session state store', COLOR_BORDER, COLOR_CARD, COLOR_PRIMARY);
 
   // Store 3: In-Memory Vector Fallback
   addCleanBox(485, 395, 195, 90, 'Vector DB Fallback', 'Circuit Breaker Store', 'Local FAISS in-memory index\nSub-50ms fallback on 504 timeouts', COLOR_BORDER, COLOR_CARD, COLOR_PRIMARY);
@@ -246,7 +246,7 @@ function drawArchitectureDiagram() {
     "1. Ingress & Perimeter: Clinician queries enter via Cloud Armor and FastAPI on Cloud Run. Model Armor scrubs 18 HIPAA PHI identifiers.\n\n" +
     "2. Safe Refusal Branch: If personal medical advice or dosing is detected, it exits in <5ms without model token consumption.\n\n" +
     "3. Multi-Agent Orchestration: Root Orchestrator (Gemini 2.5 Flash) routes to Clinical Researcher (Gemini 2.5 Pro).\n\n" +
-    "4. Grounding: Researcher retrieves 500-token chunks from Vertex AI Search and queries ClinicalDBTool.\n\n" +
+    "4. Grounding: Researcher retrieves 500-token chunks from Vertex AI Search across the NIH MedQuAD corpus.\n\n" +
     "5. Independent Verification: Reviewer & QC gate (Gemini 3.5 Flash) audits 100% citation ID matching before streaming release.\n\n" +
     "6. Observability: Spans are sent to Cloud Trace, and telemetry is logged to BigQuery."
   );

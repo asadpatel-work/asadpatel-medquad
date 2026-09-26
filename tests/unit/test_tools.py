@@ -1,4 +1,4 @@
-"""Unit tests for search, clinical DB, and citation verification tools."""
+"""Unit tests for search and citation verification tools."""
 
 import json
 
@@ -6,7 +6,6 @@ import pytest
 
 from backend.models.schemas import GroundedSearchResult, MedicalCategory
 from backend.tools.citation_verifier import verify_response_citations
-from backend.tools.clinical_db_tool import ClinicalDBTool, clinical_db_lookup_tool
 from backend.tools.search_tool import SearchTool, medquad_search_tool
 
 
@@ -46,40 +45,6 @@ async def test_medquad_search_tool_json_wrapper():
         "diabetes" in item["content"].lower() or "hba1c" in item["content"].lower()
         for item in parsed
     )
-
-
-def test_clinical_db_tool_queries():
-    """Verify mock clinical database queries for labs, protocols, and drugs."""
-    db = ClinicalDBTool()
-
-    # 1. Lab Reference Range Query
-    lab_res = db.query_lab_reference("hba1c")
-    assert lab_res["status"] == "found"
-    assert lab_res["data"]["test_name"] == "Hemoglobin A1c (HbA1c)"
-    assert "< 5.7%" in lab_res["data"]["normal_range"]
-
-    # 2. Trial Protocol Query
-    trial_res = db.query_trial_protocol("NCI-2026-HL01")
-    assert trial_res["status"] == "found"
-    assert "Hodgkin Lymphoma" in trial_res["data"]["title"]
-    assert len(trial_res["data"]["eligibility_criteria"]) >= 3
-
-    # 3. Drug Interaction Query
-    drug_res = db.query_drug_info("lisinopril")
-    assert drug_res["status"] == "found"
-    assert len(drug_res["data"]["major_interactions"]) > 0
-
-    # 4. Unknown lookup
-    unknown_res = db.query_lab_reference("nonexistent_test_xyz")
-    assert unknown_res["status"] == "not_found"
-
-
-def test_clinical_db_lookup_tool_wrapper():
-    """Verify clinical_db_lookup_tool JSON output."""
-    raw_res = clinical_db_lookup_tool(query_type="lab_reference", lookup_key="esr")
-    data = json.loads(raw_res)
-    assert data["status"] == "found"
-    assert "Erythrocyte Sedimentation Rate" in data["data"]["test_name"]
 
 
 def test_citation_verifier_valid_mapping():
@@ -170,10 +135,9 @@ async def test_mcp_server_discovery_and_execution():
 
     server = get_mcp_server()
     tools = server.list_tools()
-    assert len(tools) >= 3
+    assert len(tools) >= 2
     tool_names = [t["name"] for t in tools]
     assert "medquad_search" in tool_names
-    assert "clinical_db_lookup" in tool_names
     assert "verify_citations" in tool_names
 
     # Test tool execution

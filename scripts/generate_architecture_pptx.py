@@ -9,11 +9,12 @@ Creates docs/medquad_architecture_diagram.pptx:
 """
 
 import os
+
 from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
-from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
 
 # Palette
 COLOR_BG = RGBColor(248, 249, 250)         # #F8F9FA
@@ -43,14 +44,14 @@ def add_header(slide, category: str, title: str, subtitle: str):
     tf = tb.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
-    
+
     p_cat = tf.paragraphs[0]
     p_cat.text = category.upper()
     p_cat.font.name = FONT_FAMILY
     p_cat.font.size = Pt(10)
     p_cat.font.bold = True
     p_cat.font.color.rgb = COLOR_PRIMARY
-    
+
     p_title = tf.add_paragraph()
     p_title.text = title
     p_title.font.name = FONT_FAMILY
@@ -58,7 +59,7 @@ def add_header(slide, category: str, title: str, subtitle: str):
     p_title.font.bold = True
     p_title.font.color.rgb = COLOR_TEXT_DARK
     p_title.space_before = Pt(2)
-    
+
     p_sub = tf.add_paragraph()
     p_sub.text = subtitle
     p_sub.font.name = FONT_FAMILY
@@ -72,14 +73,14 @@ def add_container(slide, left, top, width, height, label: str, border_color=COLO
     container.fill.fore_color.rgb = fill_color
     container.line.color.rgb = border_color
     container.line.width = Pt(border_width)
-    
+
     tf = container.text_frame
     tf.word_wrap = True
     tf.margin_left = Inches(0.18)
     tf.margin_top = Inches(0.08)
     tf.margin_right = Inches(0.18)
     tf.margin_bottom = 0
-    
+
     p = tf.paragraphs[0]
     p.text = label.upper()
     p.font.name = FONT_FAMILY
@@ -96,21 +97,21 @@ def add_card(slide, left, top, width, height, title: str, subtitle: str, body_li
     card.fill.fore_color.rgb = fill_color
     card.line.color.rgb = border_color
     card.line.width = Pt(border_width)
-    
+
     tf = card.text_frame
     tf.word_wrap = True
     tf.margin_left = Inches(0.14)
     tf.margin_top = Inches(0.12)
     tf.margin_right = Inches(0.14)
     tf.margin_bottom = Inches(0.1)
-    
+
     p0 = tf.paragraphs[0]
     p0.text = title
     p0.font.name = FONT_FAMILY
     p0.font.size = Pt(10.5)
     p0.font.bold = True
     p0.font.color.rgb = title_color
-    
+
     if subtitle:
         p1 = tf.add_paragraph()
         p1.text = subtitle
@@ -119,7 +120,7 @@ def add_card(slide, left, top, width, height, title: str, subtitle: str, body_li
         p1.font.bold = True
         p1.font.color.rgb = COLOR_TEXT_DARK
         p1.space_before = Pt(1)
-        
+
     for line in body_lines:
         p = tf.add_paragraph()
         p.text = f"•  {line}"
@@ -127,7 +128,7 @@ def add_card(slide, left, top, width, height, title: str, subtitle: str, body_li
         p.font.size = Pt(7.5)
         p.font.color.rgb = COLOR_TEXT_MUTED
         p.space_before = Pt(2)
-        
+
     if model_badge:
         p_badge = tf.add_paragraph()
         p_badge.text = f"[{model_badge}]"
@@ -136,7 +137,7 @@ def add_card(slide, left, top, width, height, title: str, subtitle: str, body_li
         p_badge.font.bold = True
         p_badge.font.color.rgb = badge_color
         p_badge.space_before = Pt(4)
-        
+
     return card
 
 def add_arrow_with_pill(slide, x1, y1, x2, y2, label: str, color=COLOR_PRIMARY, is_horizontal=True):
@@ -148,19 +149,19 @@ def add_arrow_with_pill(slide, x1, y1, x2, y2, label: str, color=COLOR_PRIMARY, 
     arrow.fill.solid()
     arrow.fill.fore_color.rgb = color
     arrow.line.fill.background()
-    
+
     # Pill label
     pill_w = Inches(len(label) * 0.065 + 0.25)
     pill_h = Inches(0.22)
     pill_x = (x1 + x2) / 2 - pill_w / 2
     pill_y = (y1 + y2) / 2 - pill_h / 2 - Inches(0.15) if is_horizontal else (y1 + y2) / 2 - pill_h / 2
-    
+
     pill = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, pill_x, pill_y, pill_w, pill_h)
     pill.fill.solid()
     pill.fill.fore_color.rgb = COLOR_CARD_BG
     pill.line.color.rgb = color
     pill.line.width = Pt(0.8)
-    
+
     tf = pill.text_frame
     tf.word_wrap = False
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
@@ -177,54 +178,54 @@ def build_presentation():
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
     blank_layout = prs.slide_layouts[6]
-    
+
     # =========================================================================
     # SLIDE 1: End-to-End System Architecture (3-Tier Native Shapes)
     # =========================================================================
     s1 = prs.slides.add_slide(blank_layout)
     set_slide_background(s1)
-    
+
     add_header(
         s1,
         category="System Architecture",
         title="MedQuAD Multi-Agent Clinical Research Platform",
         subtitle="Google Cloud Run Serverless Workload • Google ADK Multi-Agent Topology • Vertex AI Foundation Models"
     )
-    
+
     # -------------------------------------------------------------------------
     # TIER 1: Ingress & Perimeter Defense
     # -------------------------------------------------------------------------
     add_container(s1, Inches(0.8), Inches(1.30), Inches(11.733), Inches(1.18),
                   label="Tier 1: Ingress & Perimeter Defense (Zero-Trust Security Perimeter)",
                   border_color=COLOR_BORDER, fill_color=COLOR_BG)
-                  
+
     # Card 1: Clinician UI
     add_card(s1, Inches(1.0), Inches(1.52), Inches(2.7), Inches(0.84),
              title="Clinician Portal (UI)",
              subtitle="React 18 SPA • Cloud Run",
              body_lines=["HTTPS / SSE streaming response", "Zero-state client memory hydration"],
              border_color=COLOR_PRIMARY, title_color=COLOR_PRIMARY)
-             
+
     # Arrow 1: UI -> Cloud Armor
     add_arrow_with_pill(s1, Inches(3.7), Inches(1.94), Inches(4.5), Inches(1.94), label="1. TLS 1.3 / SSO")
-    
+
     # Card 2: Cloud Armor + IAP
     add_card(s1, Inches(4.5), Inches(1.52), Inches(3.0), Inches(0.84),
              title="Cloud Armor + IAP Proxy",
              subtitle="L7 WAF & Zero-Trust SSO",
              body_lines=["OWASP Top 10 • DDoS throttling", "Cryptographic JWT token validation"],
              border_color=COLOR_PRIMARY, title_color=COLOR_TEXT_DARK)
-             
+
     # Arrow 2: Cloud Armor -> Model Armor
     add_arrow_with_pill(s1, Inches(7.5), Inches(1.94), Inches(8.3), Inches(1.94), label="2. WAF Clean")
-    
+
     # Card 3: Model Armor
     add_card(s1, Inches(8.3), Inches(1.52), Inches(4.0), Inches(0.84),
              title="Google Cloud Model Armor",
              subtitle="Pre-Flight Guardrail & HIPAA DLP",
              body_lines=["Masks 18 Safe Harbor PHI identifiers before tokenization", "Deterministic Safe Refusal engine: blocks personal diagnosis in <5ms ($0 token spend)"],
              border_color=COLOR_PRIMARY, title_color=COLOR_PRIMARY)
-             
+
     # -------------------------------------------------------------------------
     # Step-down connector from Model Armor to Tier 2 Cloud Run
     # -------------------------------------------------------------------------
@@ -248,10 +249,10 @@ def build_presentation():
     # -------------------------------------------------------------------------
     # TIER 2: Google Cloud Run Serverless Workload Container
     # -------------------------------------------------------------------------
-    c_t2 = add_container(s1, Inches(0.8), Inches(2.80), Inches(11.733), Inches(2.35),
-                         label="Tier 2: Google Cloud Run (Serverless Workload • In-Process Google ADK Multi-Agent Runtime)",
-                         border_color=COLOR_PRIMARY, border_width=1.8, fill_color=COLOR_CARD_BG)
-                         
+    add_container(s1, Inches(0.8), Inches(2.80), Inches(11.733), Inches(2.35),
+                  label="Tier 2: Google Cloud Run (Serverless Workload • In-Process Google ADK Multi-Agent Runtime)",
+                  border_color=COLOR_PRIMARY, border_width=1.8, fill_color=COLOR_CARD_BG)
+
     # Autoscaling pill top-right
     badge_auto = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(10.6), Inches(2.88), Inches(1.7), Inches(0.22))
     badge_auto.fill.solid()
@@ -334,7 +335,7 @@ def build_presentation():
     arr_d.fill.solid()
     arr_d.fill.fore_color.rgb = COLOR_PRIMARY
     arr_d.line.fill.background()
-    
+
     pill_ret = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.6), Inches(5.20), Inches(1.8), Inches(0.20))
     pill_ret.fill.solid()
     pill_ret.fill.fore_color.rgb = COLOR_CARD_BG
@@ -387,10 +388,10 @@ def build_presentation():
 
     # Store 2: Clinical DB Tool
     add_card(s1, Inches(3.9), Inches(5.70), Inches(2.7), Inches(1.12),
-             title="Clinical Reference DB",
-             subtitle="Diagnostic Biomarkers & Labs",
+             title="Cloud Storage (GCS)",
+             subtitle="Corpus & Session Store",
              body_lines=[
-                 "Standard laboratory reference ranges",
+                 "19,204 preprocessed chunks",
                  "Diagnostic cutoffs & normal intervals",
                  "Mock EHR clinical protocol tables"
              ],
@@ -433,7 +434,7 @@ def build_presentation():
         "1. Ingress & Perimeter Defense: Clinician queries enter via Cloud Armor and FastAPI on Cloud Run. Model Armor scrubs 18 HIPAA PHI identifiers before any tokenization occurs.\n\n"
         "2. Safe Refusal Fast-Path: If personal medical advice or dosing is detected, the boundary engine halts execution in <5ms, returning an emergency disclaimer with zero token consumption.\n\n"
         "3. Multi-Agent Orchestration: Root Orchestrator (Gemini 2.5 Flash) triages intent and routes to Clinical Researcher (Gemini 2.5 Pro) under a strict max_iterations=2 loop ceiling.\n\n"
-        "4. Grounding: Researcher retrieves 500-token semantic chunks from Vertex AI Search and reference lab ranges from ClinicalDBTool.\n\n"
+        "4. Grounding: Researcher retrieves 500-token semantic chunks from Vertex AI Search from Vertex AI Search.\n\n"
         "5. Independent Verification: Reviewer & QC gate (Gemini 3.5 Flash) operates with zero shared hidden state, deterministically validating 100% citation ID matching before streaming release.\n\n"
         "6. High Availability: Circuit breaker gracefully falls back to local in-memory vector store on Vertex latency spikes or 504 timeouts."
     )
@@ -514,14 +515,14 @@ def build_presentation():
     tf_s.margin_left = Inches(0.2)
     tf_s.margin_top = Inches(0.1)
     tf_s.margin_right = Inches(0.2)
-    
+
     p_s_t = tf_s.paragraphs[0]
     p_s_t.text = "KEY ARCHITECTURAL ADVANTAGES OF THE SUPERVISOR-WORKER TOPOLOGY"
     p_s_t.font.name = FONT_FAMILY
     p_s_t.font.size = Pt(9.5)
     p_s_t.font.bold = True
     p_s_t.font.color.rgb = COLOR_PRIMARY
-    
+
     p_s_b = tf_s.add_paragraph()
     p_s_b.text = "1. Zero Self-Evaluation Bias: Reviewer has no memory of the Researcher's draft generation, eliminating confirmation bias.  •  2. FinOps Optimization: Blended query cost of $0.0035 (vs $0.018 for monolithic Pro).  •  3. Deterministic Safety: Sub-5ms short-circuit for off-policy queries with zero model token spend."
     p_s_b.font.name = FONT_FAMILY

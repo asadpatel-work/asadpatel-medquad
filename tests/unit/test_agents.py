@@ -12,7 +12,6 @@ from backend.models.schemas import (
 )
 from backend.services.memory_service import MemoryService
 from backend.tools.citation_verifier import CitationVerifier
-from backend.tools.clinical_db_tool import ClinicalDBTool
 from backend.tools.search_tool import SearchTool
 
 
@@ -20,8 +19,7 @@ from backend.tools.search_tool import SearchTool
 async def test_researcher_agent_execution():
     """Verify Researcher Subagent executes search and synthesizes cited response."""
     search_tool = SearchTool(use_mock=True)
-    clinical_db = ClinicalDBTool()
-    researcher = ResearcherAgent(search_tool=search_tool, clinical_db=clinical_db)
+    researcher = ResearcherAgent(search_tool=search_tool)
 
     draft = await researcher.conduct_research(
         query="What is the Stupp protocol and molecular markers for Glioblastoma?",
@@ -245,3 +243,41 @@ async def test_orchestrator_hydrates_client_history():
     persisted = memory.get_session(session_id)
     assert persisted is not None
     assert len(persisted.messages) == 4
+
+
+def test_adk_agent_hierarchy_and_tool_registration():
+    """Verify Google ADK Agent instances, supervisor-worker hierarchy, and tool registrations."""
+    from google.adk.agents import Agent as AdkAgent
+    from google.adk.runners import Runner as AdkRunner
+
+    from backend.agents import root_agent
+
+    orchestrator = RootOrchestrator(
+        researcher=ResearcherAgent(search_tool=SearchTool(use_mock=True)),
+        reviewer=ReviewerAgent(),
+        memory_service=MemoryService(),
+    )
+
+    # 1. Assert supervisor ADK Agent properties
+    assert isinstance(orchestrator.adk_agent, AdkAgent)
+    assert orchestrator.adk_agent.name == "root_orchestrator"
+    assert len(orchestrator.adk_agent.sub_agents) == 2
+
+    # 2. Assert sub-agents are properly registered in the hierarchy
+    subagent_names = [a.name for a in orchestrator.adk_agent.sub_agents]
+    assert "researcher_agent" in subagent_names
+    assert "reviewer_agent" in subagent_names
+
+    # 3. Assert ADK tools are properly registered with callable signatures
+    researcher_tools = [t.__name__ for t in orchestrator.researcher.adk_agent.tools]
+    assert "medquad_search_tool" in researcher_tools
+
+    reviewer_tools = [t.__name__ for t in orchestrator.reviewer.adk_agent.tools]
+    assert "medquad_citation_verifier_tool" in reviewer_tools
+
+    # 4. Assert ADK Runner is initialized and bound to the supervisor
+    assert isinstance(orchestrator.adk_runner, AdkRunner)
+
+    # 5. Assert module-level root_agent export matches supervisor
+    assert isinstance(root_agent, AdkAgent)
+    assert root_agent.name == "root_orchestrator"

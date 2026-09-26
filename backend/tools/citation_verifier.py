@@ -7,6 +7,7 @@ and detecting hallucinated or out-of-bounds references.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -136,3 +137,32 @@ def verify_response_citations(
     """Convenience helper to verify citations."""
     verifier = CitationVerifier()
     return verifier.verify_and_resolve_citations(text, retrieved_chunks)
+
+
+def medquad_citation_verifier_tool(
+    draft_text: str,
+) -> str:
+    """Tool function: Audits inline bracket citations [1], [2] in clinical text for syntax and bounds.
+
+    Args:
+        draft_text: The drafted clinical answer text containing inline bracket citations.
+
+    Returns:
+        JSON string containing validation status, referenced indices, and audit outcome.
+    """
+    verifier = CitationVerifier()
+    indices = verifier.extract_citation_indices(draft_text)
+    has_citations = len(indices) > 0
+    return json.dumps(
+        {
+            "status": "valid" if has_citations else "no_citations",
+            "referenced_indices": indices,
+            "citation_count": len(indices),
+            "message": (
+                f"Identified {len(indices)} citation reference(s): {indices}"
+                if has_citations
+                else "No citation brackets found."
+            ),
+        },
+        indent=2,
+    )

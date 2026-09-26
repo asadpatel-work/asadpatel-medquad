@@ -77,8 +77,8 @@ resource "google_project_iam_member" "sa_roles" {
 
 # 3. Google Cloud Storage Bucket for MedQuAD Grounding Corpus
 resource "google_storage_bucket" "corpus_bucket" {
-  name                     = "${var.project_id}-medquad-corpus"
-  location                 = var.region
+  name                        = "${var.project_id}-medquad-corpus"
+  location                    = var.region
   uniform_bucket_level_access = true
   versioning {
     enabled = true
@@ -87,22 +87,22 @@ resource "google_storage_bucket" "corpus_bucket" {
 
 # 3b. Vertex AI Search / Discovery Engine Data Store & Search Engine
 resource "google_discovery_engine_data_store" "medquad_ds" {
-  location                     = "global"
-  data_store_id                = "medquad-corpus-v1"
-  display_name                 = "MedQuAD Grounding Corpus"
-  industry_vertical            = "GENERIC"
-  content_config               = "CONTENT_REQUIRED"
-  solution_types               = ["SOLUTION_TYPE_SEARCH"]
-  create_advanced_site_search  = false
-  depends_on                   = [google_project_service.apis]
+  location                    = "global"
+  data_store_id               = "medquad-corpus-v1"
+  display_name                = "MedQuAD Grounding Corpus"
+  industry_vertical           = "GENERIC"
+  content_config              = "CONTENT_REQUIRED"
+  solution_types              = ["SOLUTION_TYPE_SEARCH"]
+  create_advanced_site_search = false
+  depends_on                  = [google_project_service.apis]
 }
 
 resource "google_discovery_engine_search_engine" "medquad_search" {
-  location         = "global"
-  collection_id    = "default_collection"
-  engine_id        = "medquad-search-app-v2"
-  display_name     = "MedQuAD Search Engine v2 (Full Corpus)"
-  data_store_ids   = [google_discovery_engine_data_store.medquad_ds.data_store_id]
+  location       = "global"
+  collection_id  = "default_collection"
+  engine_id      = "medquad-search-app-v2"
+  display_name   = "MedQuAD Search Engine v2 (Full Corpus)"
+  data_store_ids = [google_discovery_engine_data_store.medquad_ds.data_store_id]
   search_engine_config {
     search_tier    = "SEARCH_TIER_STANDARD"
     search_add_ons = ["SEARCH_ADD_ON_LLM"]
@@ -110,7 +110,7 @@ resource "google_discovery_engine_search_engine" "medquad_search" {
   lifecycle {
     ignore_changes = [industry_vertical]
   }
-  depends_on       = [google_discovery_engine_data_store.medquad_ds]
+  depends_on = [google_discovery_engine_data_store.medquad_ds]
 }
 
 resource "google_artifact_registry_repository" "medquad_repo" {
@@ -178,9 +178,9 @@ EOF
 
 # 5. Cloud Run Service: MedQuAD Multi-Agent Backend
 resource "google_cloud_run_v2_service" "backend" {
-  name                 = "medquad-backend"
-  location             = var.region
-  ingress              = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  name     = "medquad-backend"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     service_account = google_service_account.runtime_sa.email
@@ -272,6 +272,10 @@ resource "google_cloud_run_v2_service" "backend" {
         name  = "MODEL_ARMOR_TEMPLATE_ID"
         value = "medquad-safety-template"
       }
+      env {
+        name  = "EXPORT_TO_CLOUD_TRACE"
+        value = "true"
+      }
     }
   }
 
@@ -280,9 +284,9 @@ resource "google_cloud_run_v2_service" "backend" {
 
 # 6. Cloud Run Service: React Frontend
 resource "google_cloud_run_v2_service" "frontend" {
-  name                 = "medquad-frontend"
-  location             = var.region
-  ingress              = "INGRESS_TRAFFIC_ALL"
+  name     = "medquad-frontend"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     scaling {

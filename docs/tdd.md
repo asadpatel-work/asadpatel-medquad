@@ -45,11 +45,10 @@ graph TD
         CO -->|6b. Delegate Validation| RE[Reviewer Subagent - Gemini 3.5 Flash]
 
         RA -->|7. Search Tool| VAIS[Vertex AI Search - MedQuAD Index]
-        RA -->|8. Fetch Mock Records| MDB[Mock Clinical DB Tool]
     end
     
-    MDB -->|Query Simulated Records| CS[Cloud SQL PostgreSQL]
-    VAIS -->|Semantic Query| GCS[Google Cloud Storage - MedQuAD Corpus]
+    VAIS -->|Semantic Query| GCS[Google Cloud Storage - MedQuAD Corpus & Sessions]
+    CO -->|8. Persist Session State| GCS
     
     BE -->|9. Export Spans/Traces| OTEL[OpenTelemetry / Cloud Trace]
     BE -->|10. Stream Logs/Metrics| BQ[BigQuery Telemetry Sink]
@@ -67,7 +66,7 @@ graph TD
   * **ResearcherAgent**: Owns tool use and semantic search execution over medical datasets.  
   * **ReviewerAgent**: Acts as an independent clinical quality controller, scoring responses before final output.  
 * **Reasoning Strategy**: Employs a structured ReAct (Reasoning and Action) execution loop. The agent plans its task manifest, executes API tools, reviews intermediate payloads, and loops until the clinical success criteria are met.  
-* **Context & Memory Strategy**: Utilizes an asynchronous PostgreSQL-backed session service. Conversational history and short-term context are managed in active state caches, while long-term session summaries are persisted in the database to prevent token bloat.
+* **Context & Memory Strategy**: Utilizes an asynchronous Cloud Storage (GCS)-backed session service. Conversational history and short-term context are managed in active state caches, while long-term session states are persisted to GCS JSON storage to prevent token bloat and enable multi-turn continuity.
 
 ### Tooling & External Integrations
 

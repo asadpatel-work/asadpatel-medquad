@@ -16,6 +16,10 @@ import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from google.adk.agents import Agent as AdkAgent
+from google.adk.runners import Runner as AdkRunner
+from google.adk.sessions import InMemorySessionService
+
 from backend.agents.researcher_agent import ResearcherAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.core.config import get_settings
@@ -33,6 +37,10 @@ from backend.services.telemetry_service import TelemetryService, get_telemetry_s
 from scripts.ingest_medquad import infer_topic_category
 
 logger = logging.getLogger(__name__)
+
+SUPERVISOR_SYSTEM_INSTRUCTION = """You are the Root Clinical Orchestrator Supervisor for the MedQuAD Clinical Assistant at the NIH Clinical Center.
+You oversee the multi-agent clinical workflow, routing clinician inquiries between the ResearcherAgent and ReviewerAgent to deliver safe, grounded, and verified medical literature responses.
+"""
 
 
 class RootOrchestrator:
@@ -55,6 +63,21 @@ class RootOrchestrator:
         self.armor = model_armor or get_model_armor()
         self.safe_refusal = safe_refusal_engine or get_safe_refusal_engine()
         self.telemetry = telemetry_service or get_telemetry_service()
+
+        # Google ADK Supervisor-Worker topology initialization
+        self.adk_agent = AdkAgent(
+            name="root_orchestrator",
+            model=self.model_name,
+            instruction=SUPERVISOR_SYSTEM_INSTRUCTION,
+            sub_agents=[self.researcher.adk_agent, self.reviewer.adk_agent],
+            description="Root Clinical Orchestrator supervising Researcher and Reviewer subagents.",
+        )
+        self.adk_session_service = InMemorySessionService()
+        self.adk_runner = AdkRunner(
+            agent=self.adk_agent,
+            app_name="medquad_clinical_assistant",
+            session_service=self.adk_session_service,
+        )
 
     def classify_category(self, query: str) -> MedicalCategory:
         """Classifies query into standard clinical sub-specialties."""
@@ -96,7 +119,10 @@ class RootOrchestrator:
                     ).model_dump(mode="json"),
                 )
 
-                with trace_span("guardrails.model_armor"):
+                with trace_span(
+                    "guardrails.model_armor",
+                    attributes={"guardrail.type": "hipaa_phi_and_jailbreak_shield"},
+                ):
                     sanitization = self.armor.sanitize(request.query)
 
                 if not sanitization.is_safe:
@@ -179,7 +205,10 @@ class RootOrchestrator:
 
                 # Step 2: Intent Classification & Safe Refusal Check
                 category = self.classify_category(clean_query)
-                with trace_span("guardrails.safe_refusal"):
+                with trace_span(
+                    "guardrails.safe_refusal",
+                    attributes={"guardrail.type": "deterministic_clinical_boundary"},
+                ):
                     refusal_eval = self.safe_refusal.evaluate(clean_query)
 
                 route_step = AgentThoughtStep(
@@ -298,7 +327,15 @@ class RootOrchestrator:
                 thought_steps.append(deleg_res_step)
                 await emit("thought", deleg_res_step.model_dump(mode="json"))
 
-                with trace_span("agent.researcher"):
+                with trace_span(
+                    "agent.researcher",
+                    attributes={
+                        "gen_ai.system": "gemini",
+                        "gen_ai.request.model": self.settings.gemini_researcher_model,
+                        "gen_ai.operation.name": "clinical_synthesis",
+                        "clinical.category": category,
+                    },
+                ):
                     research_draft = await self.researcher.conduct_research(
                         query=clean_query,
                         category=category,
@@ -316,7 +353,14 @@ class RootOrchestrator:
                 thought_steps.append(deleg_rev_step)
                 await emit("thought", deleg_rev_step.model_dump(mode="json"))
 
-                with trace_span("agent.reviewer"):
+                with trace_span(
+                    "agent.reviewer",
+                    attributes={
+                        "gen_ai.system": "gemini",
+                        "gen_ai.request.model": self.settings.gemini_reviewer_model,
+                        "gen_ai.operation.name": "citation_verification",
+                    },
+                ):
                     review_result = await self.reviewer.review_draft(
                         query=clean_query,
                         draft_answer=research_draft.draft_answer,
@@ -447,3 +491,11 @@ def get_orchestrator() -> RootOrchestrator:
     if _orchestrator_instance is None:
         _orchestrator_instance = RootOrchestrator()
     return _orchestrator_instance
+
+
+def get_root_agent() -> AdkAgent:
+    """Returns the configured root Google ADK agent for CLI runners and external harnesses."""
+    return get_orchestrator().adk_agent
+
+
+root_agent = get_root_agent()

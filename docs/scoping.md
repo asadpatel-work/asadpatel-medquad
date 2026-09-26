@@ -62,7 +62,7 @@ This engagement focuses on establishing a secure, scalable "AI Sandbox" inside t
 | :---- | :---- |
 | Design of the Multi-Agent RAG Topology: Root Orchestrator with specialized sub-agents (e.g., General Medicine vs. Specialized Disease/Oncology agents). | Google FDE (Noogler) |
 | Ingestion Pipeline & Grounding Index: Automated ingestion of the MedQuAD NIH medical Q\&A dataset into Vertex AI Search. | Google FDE (Noogler) |
-| External API Tool Integrations: Simulating mock clinical databases and NIH research lookups with robust error-handling, rate-limiting, and retry logic. | Google FDE (Noogler) |
+| Tool Integrations & Retrieval Grounding: Integrating Vertex AI Search and Citation Verification tools via MCP with robust error-handling, rate-limiting, and circuit breaker fallbacks. | Google FDE (Noogler) |
 | Security & Safety Integrations: Implementation of SPIFFE-based Agent Identities, Secret Manager, and GCP Agent Runtime Model Armor to redact PII and prevent jailbreaks. | Google FDE (Noogler) |
 | Observability Setup: Complete OpenTelemetry (OTEL) and Google Cloud Trace integration for end-to-end latency tracing. | Google FDE (Noogler) |
 | Automated Verification: Development of a pytest suite with mocked LLM and Search APIs, achieving \>80% code coverage. | Google FDE (Noogler) |
@@ -70,7 +70,7 @@ This engagement focuses on establishing a secure, scalable "AI Sandbox" inside t
 ### Out of Scope
 
 * Direct write-back integrations into live, production Electronic Health Record (EHR) databases.  
-* Processing of real, un-sanitized patient health records or active Personally Identifiable Information (PII) beyond mock clinical sandbox data.  
+* Processing of real, un-sanitized patient health records or active Personally Identifiable Information (PII).  
 * Deployments beyond the allocated, self-contained Argolis Sandbox environment.
 
 &nbsp;

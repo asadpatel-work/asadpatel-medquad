@@ -16,7 +16,7 @@
 
 ### Steering Rabbit Holes & Scope Management
 * **Panel Question during Demo:** *"Can this agent connect directly to our Epic/Cerner EHR database right now?"*
-* **Response Protocol:** *"That is a critical production integration point. In this Phase 1 sandbox, we designed the system boundaries with mock clinical databases and FHIR schemas to protect against live EHR writes. In Phase 2 of our GCP roadmap, we connect directly via Google Cloud Healthcare API with bi-directional consent. Let's take the deep Epic integration details into our Q&A section so we can review the core citation grounding today."*
+* **Response Protocol:** *"That is a critical production integration point. In this Phase 1 sandbox, we designed the system boundaries with read-only MedQuAD literature indexes to protect against live EHR writes. In Phase 2 of our GCP roadmap, we connect directly via Google Cloud Healthcare API with bi-directional consent. Let's take the deep Epic integration details into our Q&A section so we can review the core citation grounding today."*
 
 ### Intellectual Honesty & Unknowns
 * **Panel Question on Unverified Edge Case:** *"How does your chunking strategy handle multi-page nested clinical trial tables with sub-headers?"*
@@ -43,7 +43,7 @@
    * Expand the **Multi-Agent Reasoning Trace** accordion.
    * Highlight:
      1. `Root Orchestrator`: Classified domain as **Oncology** and verified safety boundaries.
-     2. `Researcher Agent`: Invoked `medquad_search_tool` across NIH PDQ cancer corpus and `clinical_db_lookup_tool` for biomarker ranges.
+     2. `Researcher Agent`: Invoked `medquad_search_tool` across the NIH PDQ cancer corpus.
      3. `Reviewer Agent`: Audited citation completeness and confirmed non-prescriptive tone.
 3. **Inspect Citations in Split-Pane:**
    * Click on citation chip **`[1]`** in the assistant answer.

@@ -7,19 +7,19 @@ and synthesizes evidence-grounded drafts with inline citations.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any
+
+from google.adk.agents import Agent as AdkAgent
 
 from backend.core.config import get_settings
+from backend.core.telemetry import trace_span
 from backend.models.schemas import AgentThoughtStep, GroundedSearchResult, MedicalCategory
-from backend.tools.clinical_db_tool import ClinicalDBTool
-from backend.tools.search_tool import SearchTool
+from backend.tools.search_tool import SearchTool, medquad_search_tool
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,10 @@ CLINICAL OPERATIONAL GUIDELINES:
    - When asked about a condition (e.g. Blepharitis, Type 2 Diabetes, Glioblastoma), synthesize an authoritative clinical overview covering pathophysiology, clinical presentation/symptoms, etiology/causes, diagnostic evaluation, and evidence-based treatments.
    - Maintain seamless conversational continuity across multi-turn consultations. When the clinician asks a follow-up query (e.g. "describe the symptoms", "what causes it", "how is it treated"), ensure your response specifically addresses the active condition under discussion in the consultation history.
 2. GROUNDING & CITATION INTEGRITY:
-   - Ground your factual assertions in the provided authoritative NIH MedQuAD grounding passages and clinical database context.
+   - Ground your factual assertions in the provided authoritative NIH MedQuAD grounding passages.
    - Every factual statement should cite its source using inline bracketed numbers, e.g. [1], [2], corresponding to the order of retrieved sources.
    - Number your citations sequentially starting at [1] matching the order of Grounding Passages.
 3. CLINICAL RIGOR & SCOPE:
-   - If clinical trial protocols or lab values are mentioned, incorporate precise criteria and normal ranges.
    - Maintain an objective, academic, evidence-based clinical tone suited for healthcare professionals. Do not provide personal medical directives or individual diagnoses.
 """
 
@@ -46,7 +45,6 @@ class ResearchDraft:
 
     draft_answer: str
     retrieved_chunks: list[GroundedSearchResult] = field(default_factory=list)
-    clinical_data: list[dict[str, Any]] = field(default_factory=list)
     thought_steps: list[AgentThoughtStep] = field(default_factory=list)
     execution_time_ms: float = 0.0
 
@@ -57,12 +55,17 @@ class ResearcherAgent:
     def __init__(
         self,
         search_tool: SearchTool | None = None,
-        clinical_db: ClinicalDBTool | None = None,
     ) -> None:
         self.settings = get_settings()
         self.model_name = self.settings.gemini_researcher_model
         self.search_tool = search_tool or SearchTool()
-        self.clinical_db = clinical_db or ClinicalDBTool()
+        self.adk_agent = AdkAgent(
+            name="researcher_agent",
+            model=self.model_name,
+            instruction=RESEARCHER_SYSTEM_INSTRUCTION,
+            tools=[medquad_search_tool],
+            description="Specialized clinical research subagent that retrieves NIH MedQuAD literature and drafts evidence-grounded responses.",
+        )
 
     @classmethod
     def _is_follow_up_query(cls, query: str) -> bool:
@@ -407,11 +410,20 @@ class ResearcherAgent:
         )
 
         retrieval_start = time.perf_counter()
-        retrieved_chunks = await self.search_tool.search(
-            query=resolved_query,
-            category=category,
-            top_k=3,
-        )
+        with trace_span(
+            "retrieval.vertex_ai_search",
+            attributes={
+                "search.query": resolved_query,
+                "search.category": str(category),
+                "search.top_k": 3,
+            },
+        ) as search_span:
+            retrieved_chunks = await self.search_tool.search(
+                query=resolved_query,
+                category=category,
+                top_k=3,
+            )
+            search_span.set_attribute("search.results_count", len(retrieved_chunks))
         retrieval_ms = (time.perf_counter() - retrieval_start) * 1000
 
         await record_thought(
@@ -426,47 +438,7 @@ class ResearcherAgent:
             )
         )
 
-        # Step 3: Check for supplemental Clinical DB references (Labs / Protocols)
-        clinical_data: list[dict[str, Any]] = []
-        lower_query = f"{query} {resolved_query}".lower()
-
-        # Lab references lookup
-        for lab_key in ["hba1c", "esr", "lactate", "troponin"]:
-            if lab_key in lower_query:
-                lab_info = self.clinical_db.query_lab_reference(lab_key)
-                if lab_info.get("status") == "found":
-                    clinical_data.append(lab_info["data"])
-                    await record_thought(
-                        AgentThoughtStep(
-                            agent_name="Researcher Subagent (Gemini 2.5 Pro)",
-                            step_type="tool_execution",
-                            description=f"Queried reference range for lab test: {lab_key.upper()}.",
-                            tool_called="clinical_db_lookup_tool",
-                            tool_input={"query_type": "lab_reference", "lookup_key": lab_key},
-                            tool_output_summary=f"Normal range: {lab_info['data'].get('normal_range', 'Found')}",
-                        )
-                    )
-
-        # Protocol lookup
-        if "protocol" in lower_query or "trial" in lower_query or "nci" in lower_query:
-            for proto_id in ["NCI-2026-HL01", "NIH-NIDDK-DM02"]:
-                if proto_id.lower() in lower_query or "lymphoma" in lower_query:
-                    proto_info = self.clinical_db.query_trial_protocol(proto_id)
-                    if proto_info.get("status") == "found":
-                        clinical_data.append(proto_info["data"])
-                        await record_thought(
-                            AgentThoughtStep(
-                                agent_name="Researcher Subagent (Gemini 2.5 Pro)",
-                                step_type="tool_execution",
-                                description=f"Queried NCI clinical trial protocol: {proto_id}.",
-                                tool_called="clinical_db_protocol_tool",
-                                tool_input={"protocol_id": proto_id},
-                                tool_output_summary=f"Protocol: {proto_info['data'].get('title', 'Found')[:60]}...",
-                            )
-                        )
-                        break
-
-        # Step 4: Synthesize Evidence-Grounded Draft
+        # Step 3: Synthesize Evidence-Grounded Draft
         await record_thought(
             AgentThoughtStep(
                 agent_name="Researcher Subagent (Gemini 2.5 Pro)",
@@ -478,7 +450,6 @@ class ResearcherAgent:
         draft_text = await self._synthesize_draft(
             query=query,
             retrieved_chunks=retrieved_chunks,
-            clinical_data=clinical_data,
             conversation_history=conversation_history,
             resolved_query=resolved_query,
             active_topic=active_topic,
@@ -497,7 +468,6 @@ class ResearcherAgent:
         return ResearchDraft(
             draft_answer=draft_text,
             retrieved_chunks=retrieved_chunks,
-            clinical_data=clinical_data,
             thought_steps=thought_steps,
             execution_time_ms=round(total_ms, 2),
         )
@@ -506,7 +476,6 @@ class ResearcherAgent:
         self,
         query: str,
         retrieved_chunks: list[GroundedSearchResult],
-        clinical_data: list[dict[str, Any]],
         conversation_history: list[dict[str, str]] | None = None,
         resolved_query: str | None = None,
         active_topic: str | None = None,
@@ -545,12 +514,6 @@ class ResearcherAgent:
                         f"[{idx}] Source: {chunk.title} ({chunk.authoritative_org})\n{chunk.content}"
                     )
 
-                clinical_db_context = ""
-                if clinical_data:
-                    clinical_db_context = (
-                        f"\n\nAuthoritative Clinical Data:\n{json.dumps(clinical_data, indent=2)}"
-                    )
-
                 history_context = ""
                 if conversation_history:
                     formatted_turns = []
@@ -581,7 +544,7 @@ class ResearcherAgent:
                     f"{search_note}\n"
                     f"Grounding Passages (Authoritative NIH Literature):\n"
                     + "\n\n".join(grounding_context)
-                    + f"{clinical_db_context}\n\n"
+                    + "\n\n"
                     "Clinical Synthesis Instructions:\n"
                     "1. Provide a comprehensive, structured clinical answer addressing the query directly.\n"
                     "2. Maintain strict clinical continuity with the ongoing consultation dialogue.\n"
@@ -590,14 +553,31 @@ class ResearcherAgent:
                     "5. Maintain an objective, evidence-based academic clinical tone."
                 )
 
-                response = await client.aio.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config={
-                        "system_instruction": RESEARCHER_SYSTEM_INSTRUCTION,
-                        "temperature": 0.1,
+                with trace_span(
+                    "gen_ai.gemini.generate_content",
+                    attributes={
+                        "gen_ai.system": "gemini",
+                        "gen_ai.request.model": self.model_name,
+                        "gen_ai.operation.name": "generate_content",
+                        "gen_ai.request.temperature": 0.1,
                     },
-                )
+                ) as gemini_span:
+                    response = await client.aio.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt,
+                        config={
+                            "system_instruction": RESEARCHER_SYSTEM_INSTRUCTION,
+                            "temperature": 0.1,
+                        },
+                    )
+                    if hasattr(response, "usage_metadata") and response.usage_metadata:
+                        in_tok = getattr(response.usage_metadata, "prompt_token_count", 0)
+                        out_tok = getattr(response.usage_metadata, "candidates_token_count", 0)
+                        tot_tok = getattr(response.usage_metadata, "total_token_count", 0)
+                        gemini_span.set_attribute("gen_ai.usage.input_tokens", in_tok)
+                        gemini_span.set_attribute("gen_ai.usage.output_tokens", out_tok)
+                        gemini_span.set_attribute("gen_ai.usage.total_tokens", tot_tok)
+
                 if response.text:
                     return response.text.strip()
             except Exception as e:
@@ -618,17 +598,5 @@ class ResearcherAgent:
             if "Answer:" in text:
                 text = text.split("Answer:", 1)[1].strip()
             paragraphs.append(f"{text} [{idx}]")
-
-        if clinical_data:
-            for item in clinical_data:
-                if "normal_range" in item:
-                    paragraphs.append(
-                        f"Reference standard for {item.get('test_name', 'lab')}: normal range is {item.get('normal_range')}."
-                    )
-                elif "eligibility_criteria" in item:
-                    criteria_str = "; ".join(item.get("eligibility_criteria", [])[:2])
-                    paragraphs.append(
-                        f"Clinical trial protocol {item.get('protocol_id')} eligibility includes: {criteria_str}."
-                    )
 
         return "\n\n".join(paragraphs)

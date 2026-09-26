@@ -56,9 +56,15 @@ variable "iap_client_secret" {
 variable "iap_accessors" {
   description = "List of IAM identities granted roles/iap.httpsResourceAccessor"
   type        = list(string)
-  default     = [
+  default = [
     "user:admin@asadpatel.altostrat.com"
   ]
+}
+
+variable "github_repository" {
+  description = "GitHub repository authorized for Workload Identity Federation (format: owner/repo)"
+  type        = string
+  default     = "asadpatel-work/asadpatel-medquad"
 }
 
 

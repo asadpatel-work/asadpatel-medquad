@@ -119,7 +119,7 @@
                                                      (6. Query)│                │(7. Chunks)                          │(Telemetry)
                                                                ▼                │                                     ▼
 [3. Grounding Data Stores & Observability]             Vertex AI Search (16.4k NIH pairs)                     Cloud Trace & BigQuery
-                                                       ClinicalDBTool (Lab Ranges)
+                                                       Cloud Storage (Corpus & Sessions)
                                                        Vector DB Fallback (Circuit Breaker)
 ```
 
@@ -136,7 +136,7 @@
    * **Reviewer & QC Gate (Auditor - Gemini 3.5 Flash):** Operates with zero shared hidden state; runs `CitationVerifier` to validate 100% 1-to-1 chunk ID provenance before streaming release.
 3. **Tier 3 — Grounding & Observability:**
    * **Vertex AI Search:** 16,400+ NIH Q&A pairs indexed in 500-token semantic chunks.
-   * **ClinicalDBTool:** Structured clinical reference ranges and diagnostic biomarker values.
+   * **Cloud Storage:** Bucket persistence for MedQuAD JSONL corpus and multi-turn session states.
    * **Vector DB Fallback:** Local in-memory FAISS store for sub-50ms circuit-breaker resilience on 504 timeouts.
    * **Cloud Trace & BigQuery:** OpenTelemetry distributed tracing spans and nightly automated quality evaluation sink.
 

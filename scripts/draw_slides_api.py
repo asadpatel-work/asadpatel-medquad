@@ -200,7 +200,7 @@ def build_batch_update_requests(slide_id: str) -> list[dict]:
     # Row 3: Grounding
     make_clean_box("c3_ground", 45, 375, 870, 120, "3. GROUNDING DATA STORES & OBSERVABILITY SINK", border_color=COLOR_BORDER, title_color=COLOR_MUTED)
     make_clean_box("b9_vsearch", 55, 395, 200, 90, "Vertex AI Search", "NIH Literature Datastore", "16,400+ verified medical Q&A pairs\n500-token chunks with 10% overlap")
-    make_clean_box("b10_cdb", 270, 395, 200, 90, "ClinicalDBTool", "Biomarker Reference DB", "Diagnostic reference ranges &\nclinical lab test thresholds")
+    make_clean_box("b10_gcs", 270, 395, 200, 90, "Cloud Storage (GCS)", "Corpus & Session Store", "19,204 preprocessed chunks &\nmulti-turn session state store")
     make_clean_box("b11_faiss", 485, 395, 195, 90, "Vector DB Fallback", "Circuit Breaker Store", "Local FAISS in-memory index\nSub-50ms fallback on 504 timeouts")
     make_clean_box("b12_obs", 695, 395, 210, 90, "Cloud Trace & BigQuery", "Observability & Audit Sink", "OpenTelemetry distributed spans &\nnightly continuous evaluation logs")
 

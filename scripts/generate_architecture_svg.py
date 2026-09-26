@@ -414,9 +414,9 @@ SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" 
       <ellipse cx="120" cy="92" rx="112" ry="9" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.8"/>
       <ellipse cx="120" cy="52" rx="112" ry="9" fill="none" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
       <g transform="translate(20, 34)"><use href="#logo-clinical-db"/></g>
-      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Clinical Reference DB</text>
-      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Biomarkers &amp; Lab Ranges</text>
-      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">Reference Tables &amp; Thresholds</text>
+      <text x="135" y="46" font-size="11.5" font-weight="700" fill="#1A73E8" text-anchor="middle">Cloud Storage (GCS)</text>
+      <text x="135" y="61" font-size="9" font-weight="600" fill="#202124" text-anchor="middle">Corpus &amp; Session Store</text>
+      <text x="135" y="73" font-size="8" fill="#5F6368" text-anchor="middle">19,204 Chunks &amp; State Store</text>
     </g>
 
     <!-- Store 3: Vector DB Fallback -->

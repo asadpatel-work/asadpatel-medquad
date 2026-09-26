@@ -27,15 +27,13 @@ graph TD
             CO -->|6b. Route Review & Quality Check| RE[Reviewer Subagent - Gemini 3.5 Flash]
             
             RA -->|7. MCP / SSE Tool Protocol| MCP[Model Context Protocol Server]
-            MCP -->|8a. Semantic Query| SearchTool[Vertex AI Search Tool]
-            MCP -->|8b. Mock EHR / Protocol Query| MockDBTool[Mock Clinical DB Tool]
+            MCP -->|8. Semantic Query| SearchTool[Vertex AI Search Tool]
         end
         
         SearchTool -->|9. Dense Retrieval| VAIS[(Vertex AI Search - MedQuAD Index)]
         VAIS -->|Indexed Documents| GCS[(GCS Bucket: MedQuAD Corpus)]
-        MockDBTool -->|Simulated Patient Records| CS[(Cloud SQL PostgreSQL)]
         
-        CO -->|10. Persist Session & Summaries| SessionDB[(PostgreSQL Session & Memory Store)]
+        CO -->|10. Persist Session & Summaries| SessionDB[(GCS Bucket: Session Store)]
         BE -->|11. Distributed Spans & Traces| OTEL[OpenTelemetry / Google Cloud Trace]
         BE -->|12. Telemetry & Cost Metrics| BQ[(BigQuery Telemetry Sink)]
     end
@@ -73,8 +71,6 @@ sequenceDiagram
         loop ReAct Execution Loop
             Researcher->>Tools: Execute Semantic Search (MedQuAD)
             Tools-->>Researcher: Return Top-K Grounded NIH Chunks
-            Researcher->>Tools: Query Mock Clinical DB (if protocol lookup needed)
-            Tools-->>Researcher: Return Clinical Reference
         end
         Researcher-->>Root: Draft Response with Inline Citations [1], [2]
         
@@ -145,7 +141,7 @@ graph TD
 | **Agent Orchestration** | Supervisor & Workers | Google ADK, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 3.5 Flash | Routing, ReAct research loop, quality control |
 | **Tool Protocol** | Tool Server | Model Context Protocol (MCP) over SSE | Standardized, isolated tool execution |
 | **Knowledge Engine** | RAG / Grounding | Vertex AI Search (GEAP), Cloud Storage (GCS) | Managed semantic index over NIH MedQuAD corpus |
-| **Database** | Memory & Mock EHR | Cloud SQL PostgreSQL | Multi-turn session persistence, mock clinical database |
+| **Storage & Memory** | Multi-Turn Memory | Google Cloud Storage (GCS) | Multi-turn session persistence, conversation state archiving |
 | **Security** | IAM & Guardrails | GCP Agent Runtime Model Armor, Secret Manager, IAP, KMS | Least-privilege IAM, PII redaction, CMEK encryption |
 | **Observability** | Tracing & Telemetry | OpenTelemetry, Cloud Trace, Cloud Logging, BigQuery | Distributed latency tracing, token cost accounting |
 | **Infrastructure as Code** | Provisioning | Terraform HCL, Docker, Cloud Run | 100% reproducible serverless deployment |
