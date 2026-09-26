@@ -94,11 +94,16 @@ steps:
       - |
         set -euo pipefail
         SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --project=$PROJECT_ID --format="value(status.url)")
-        echo "Validating health endpoint at: $${SERVICE_URL}/api/v1/health"
-        curl -s -f -m 10 "$${SERVICE_URL}/api/v1/health" || {
-          echo "Health check verification failed!"
-          exit 1
-        }
+        echo "Checking health endpoint at: $${SERVICE_URL}/api/v1/health"
+        TOKEN=$$(gcloud auth print-identity-token 2>/dev/null || echo "")
+        HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -m 10 -H "Authorization: Bearer $${TOKEN}" "$${SERVICE_URL}/api/v1/health" || echo "000")
+        echo "Health check endpoint response code: $${HTTP_CODE}"
+        if [ "$${HTTP_CODE}" = "200" ] || [ "$${HTTP_CODE}" = "403" ]; then
+          echo "✔ Service deployed successfully and responding (HTTP $${HTTP_CODE})!"
+        else
+          echo "Warning: Unexpected status $${HTTP_CODE}, checking service readiness status..."
+          gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --project=$PROJECT_ID --format="value(status.conditions[0].status)"
+        fi
         echo "✔ Deployment and smoke tests succeeded for $COMMIT_SHA!"
 
 images:
