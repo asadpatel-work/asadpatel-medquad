@@ -28,7 +28,7 @@ dependencies = [
     "google-cloud-modelarmor>=0.7.1",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
