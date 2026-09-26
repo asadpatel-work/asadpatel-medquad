@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for deterministic dependency resolution
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
+COPY backend/ ./backend/
 RUN uv pip install --system -e .
 
 # Final runtime image

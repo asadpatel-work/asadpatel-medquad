@@ -10,6 +10,7 @@ substitutions:
   _SERVICE_NAME: medquad-backend
   _REPO_NAME: medquad
   _IMAGE_NAME: medquad-backend
+  _COMMIT_SHA: "latest"
 
 steps:
   # ----------------------------------------------------------------------------
@@ -39,7 +40,7 @@ steps:
     args:
       - "build"
       - "-t"
-      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_COMMIT_SHA}"
       - "-t"
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:latest"
       - "--cache-from"
@@ -70,7 +71,7 @@ steps:
       - "run"
       - "deploy"
       - "${_SERVICE_NAME}"
-      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_COMMIT_SHA}"
       - "--region=${_REGION}"
       - "--project=$PROJECT_ID"
       - "--platform=managed"
@@ -104,10 +105,10 @@ steps:
           echo "Warning: Unexpected status $${HTTP_CODE}, checking service readiness status..."
           gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --project=$PROJECT_ID --format="value(status.conditions[0].status)"
         fi
-        echo "✔ Deployment and smoke tests succeeded for $COMMIT_SHA!"
+        echo "✔ Deployment and smoke tests succeeded for ${_COMMIT_SHA}!"
 
 images:
-  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:$COMMIT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:${_COMMIT_SHA}"
   - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/${_IMAGE_NAME}:latest"
 
 timeout: "1800s"

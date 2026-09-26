@@ -43,6 +43,10 @@ dev = [
 url = "https://pypi.org/simple"
 default = true
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
